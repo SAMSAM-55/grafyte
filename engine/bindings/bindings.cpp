@@ -8,7 +8,6 @@
 
 #include "High/Application.h"
 #include "Intermediate/Object.h"
-#include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
 namespace py = pybind11;
@@ -17,7 +16,6 @@ namespace py = pybind11;
 #error "GRAFYTE_PY_MODULE_NAME not defined"
 #endif
 
-// Trick: macro-expand to identifier
 #define PYBIND11_MODULE_NAME_IMPL(x) x
 #define PYBIND11_MODULE_NAME(x) PYBIND11_MODULE_NAME_IMPL(x)
 
@@ -26,9 +24,10 @@ PYBIND11_MODULE(GRAFYTE_PY_MODULE_NAME, m)
     m.doc() = "Python bindings for the Grafyte engine";
 
     py::class_<Grafyte::Object, std::shared_ptr<Grafyte::Object>>(m, "Object")
-        .def(py::init([](py::buffer positions, unsigned int vertexCount, py::buffer indices, const std::string& shaderSourcePath) {
-            py::buffer_info pos_info = positions.request();
-            py::buffer_info idx_info = indices.request();
+        .def(py::init([](const py::buffer& positions, const unsigned int vertexCount, const py::buffer &indices,
+                         const std::string &shaderSourcePath, const float &pos_x, const float &pos_y, const int &layer) {
+            const py::buffer_info pos_info = positions.request();
+            const py::buffer_info idx_info = indices.request();
 
             if (pos_info.format != py::format_descriptor<float>::value)
                 throw std::runtime_error("Positions must be a float buffer");
@@ -41,17 +40,21 @@ PYBIND11_MODULE(GRAFYTE_PY_MODULE_NAME, m)
                 vertexCount,
                 static_cast<const unsigned int*>(idx_info.ptr),
                 static_cast<unsigned int>(idx_info.size),
-                shaderSourcePath
+                shaderSourcePath,
+                pos_x,
+                pos_y,
+                layer
             );
-        }), py::arg("positions"), py::arg("vertex_count"), py::arg("indices"), py::arg("shader_source_path"))
+        }), py::arg("positions"), py::arg("vertex_count"), py::arg("indices"), py::arg("shader_source_path"),
+             py::arg("pos_x"), py::arg("pos_y"), py::arg("layer"))
         .def("set_texture", &Grafyte::Object::SetTexture, py::arg("texture_source_path"), py::arg("slot"))
         .def("add_layout_slot", &Grafyte::Object::AddLayoutSlot, py::arg("type"), py::arg("size"))
         .def("add_buffer_to_vertex_array", &Grafyte::Object::AddBufferToVertexArray)
         .def("set_shader_uniform_1f", &Grafyte::Object::SetShaderUniform1f, py::arg("name"), py::arg("value"))
         .def("set_shader_uniform_4f", &Grafyte::Object::SetShaderUniform4f, py::arg("name"), py::arg("float_x"),
              py::arg("float_y"), py::arg("float_z"), py::arg("float_w"))
-        .def("set_shader_uniform_mat4f", [](Grafyte::Object& self, const std::string& name, py::buffer matrix) {
-            py::buffer_info info = matrix.request();
+        .def("set_shader_uniform_mat4f", [](Grafyte::Object& self, const std::string& name, const py::buffer& matrix) {
+            const py::buffer_info info = matrix.request();
             if (info.format != py::format_descriptor<float>::value)
                 throw std::runtime_error("Matrix must be a float buffer");
             if (info.size != 16)
@@ -59,7 +62,8 @@ PYBIND11_MODULE(GRAFYTE_PY_MODULE_NAME, m)
 
             self.SetShaderUniformMat4f(name, glm::make_mat4(static_cast<const float*>(info.ptr)));
         }, py::arg("name"), py::arg("matrix"))
-        .def("move", &Grafyte::Object::Move, py::arg("offset_x"), py::arg("offset_y"));
+        .def("_native_move", &Grafyte::Object::Move, py::arg("offset_x"), py::arg("offset_y"))
+        .def("_native_move_to", &Grafyte::Object::MoveTo, py::arg("pos_x"), py::arg("pos_y"));
 
     py::class_<Grafyte::Renderer>(m, "Renderer")
         .def(py::init<>())

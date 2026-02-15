@@ -13,7 +13,7 @@ namespace Grafyte {
     public:
         inline void AddObject(const std::shared_ptr<Object>& obj) { m_obj.push_back(obj); }
 
-        void Render(const glm::mat4& MVP) const;
+        void Render(const glm::mat4& MVP);
         static void Clear() ;
     };
 }

@@ -112,8 +112,7 @@ namespace Grafyte
         float x, float y,
         float scale,
         const glm::vec4& color,
-        const glm::mat4& mvp)
-    {
+        const glm::mat4& mvp) const {
         shader.Bind();
         shader.SetUniform4f("u_TextColor", color.r, color.g, color.b, color.a);
         shader.SetUniformMat4f("u_MVP", mvp);
