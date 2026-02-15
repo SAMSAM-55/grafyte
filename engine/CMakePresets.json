@@ -1,0 +1,62 @@
+{
+  "version": 6,
+  "configurePresets": [
+    {
+      "name": "base-vs",
+      "hidden": true,
+      "generator": "Visual Studio 17 2022",
+      "architecture": "x64",
+      "cacheVariables": {
+        "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
+        "VCPKG_TARGET_TRIPLET": "x64-windows-static",
+        "PYBIND11_FINDPYTHON": "ON",
+        "Python_FIND_REGISTRY": "NEVER",
+        "Python_FIND_STRATEGY": "LOCATION"
+      }
+    },
+
+    {
+      "name": "py310",
+      "inherits": "base-vs",
+      "binaryDir": "${sourceDir}/build/py310",
+      "cacheVariables": {
+        "GRAFYTE_PY_TAG": "py310",
+        "Python_EXECUTABLE": "$env{PYTHON_HOME}/Python310/python.exe"
+      }
+    },
+    {
+      "name": "py311",
+      "inherits": "base-vs",
+      "binaryDir": "${sourceDir}/build/py311",
+      "cacheVariables": {
+        "GRAFYTE_PY_TAG": "py311",
+        "Python_EXECUTABLE": "$env{PYTHON_HOME}/Python311/python.exe"
+      }
+    },
+    {
+      "name": "py312",
+      "inherits": "base-vs",
+      "binaryDir": "${sourceDir}/build/py312",
+      "cacheVariables": {
+        "GRAFYTE_PY_TAG": "py312",
+        "Python_EXECUTABLE": "$env{PYTHON_HOME}/Python312/python.exe"
+      }
+    },
+    {
+      "name": "py313",
+      "inherits": "base-vs",
+      "binaryDir": "${sourceDir}/build/py313",
+      "cacheVariables": {
+        "GRAFYTE_PY_TAG": "py313",
+        "Python_EXECUTABLE": "$env{PYTHON_HOME}/Python313/python.exe"
+      }
+    }
+  ],
+
+  "buildPresets": [
+    { "name": "build-py310", "configurePreset": "py310", "configuration": "Release", "targets": [ "grafyte_py310" ] },
+    { "name": "build-py311", "configurePreset": "py311", "configuration": "Release", "targets": [ "grafyte_py311" ] },
+    { "name": "build-py312", "configurePreset": "py312", "configuration": "Release", "targets": [ "grafyte_py312" ] },
+    { "name": "build-py313", "configurePreset": "py313", "configuration": "Release", "targets": [ "grafyte_py313" ] }
+  ]
+}

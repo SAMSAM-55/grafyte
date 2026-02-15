@@ -1,0 +1,2 @@
+recursive-include src/__grafyte_internal *.pyd *.pyi py.typed
+recursive-include src/grafyte *.pyi py.typed

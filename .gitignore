@@ -1,0 +1,22 @@
+.idea
+
+# builds
+**bin
+**bin-int
+**obj
+**build
+**cmake-build-*
+**vcpkg_installed
+
+# dev project for testing (removal is planned)
+engine/sandbox
+engine/res
+
+# ignore python builds and environment
+*.pyd
+*.egg-info
+.*env
+*__pycache__
+dist
+dist_repaired
+build
