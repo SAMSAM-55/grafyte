@@ -3,9 +3,9 @@ requires = ["setuptools>=68", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "Grafyte"
-version = "0.1.2"
-description = "A simple rendering engine with some game engine features made in OpenGL for Python"
+name = "grafyte"
+version = "0.2.0"
+description = "A simple rendering engine with some game engine features made with OpenGL for Python"
 readme = "README.md"
 requires-python = ">=3.10"
 license = { text = "MIT" }
