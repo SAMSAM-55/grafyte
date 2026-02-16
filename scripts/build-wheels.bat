@@ -5,6 +5,7 @@ rem Always run pip through the same interpreter that built the wheel
 set PY=python
 
 if exist dist rmdir /s /q dist
+if exist build rmdir /s /q build
 
 python -m build --wheel
 if errorlevel 1 exit /b 1

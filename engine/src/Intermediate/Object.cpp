@@ -1,5 +1,6 @@
 #include "Object.h"
 
+#include <cstring>
 #include <iostream>
 #include <GLFW/glfw3.h>
 
@@ -50,7 +51,7 @@ namespace Grafyte
 		else if (type == "unsigned char")
 			m_renderData.layout.Push<unsigned char>(size);
 		else
-			__debugbreak();
+			DEBUG_BREAK();
 	}
 
 	void Object::AddBufferToVertexArray() {

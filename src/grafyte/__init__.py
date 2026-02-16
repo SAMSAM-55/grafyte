@@ -1,5 +1,4 @@
 from array import array
-from typing_extensions import Buffer, SupportsInt
 
 from __grafyte_internal import Application as _NativeApplication
 from __grafyte_internal import Object as _NativeObject

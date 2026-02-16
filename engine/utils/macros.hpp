@@ -1,9 +1,18 @@
 #pragma once
 
-#include "GL/glew.h"
+#include "glad/glad.h"
 #include <iostream>
 
-#define ASSERT(x) if (!(x)) __debugbreak()
+
+#if defined(_MSC_VER)
+  #define DEBUG_BREAK() __debugbreak()
+#elif defined(__GNUC__) || defined(__clang__)
+  #define DEBUG_BREAK() __builtin_trap()
+#else
+  #define DEBUG_BREAK() std::abort()
+#endif
+
+#define ASSERT(x) do { if(!(x)) { DEBUG_BREAK(); } } while(0)
 #define GLCall(x) GLClearError();\
     x;\
     ASSERT(GLLogCall(#x, __FILE__, __LINE__))

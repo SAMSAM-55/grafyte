@@ -59,8 +59,8 @@ namespace Grafyte
 
         glfwMakeContextCurrent(m_window);
 
-        if (glewInit() != GLEW_OK)
-            std::cout << "Error!" << std::endl;
+        if (!gladLoadGLLoader(reinterpret_cast<GLADloadproc>(glfwGetProcAddress)))
+            throw std::runtime_error("Could not load glad.");
 
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);

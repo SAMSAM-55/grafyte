@@ -1,7 +1,8 @@
 #pragma once
 
 #include <vector>
-#include <GL/glew.h>
+#include <glad/glad.h>
+#include "macros.hpp"
 
 namespace Grafyte
 {
@@ -19,7 +20,7 @@ namespace Grafyte
 			case GL_FLOAT:			return 4;
 			case GL_UNSIGNED_INT:  return 4;
 			case GL_UNSIGNED_BYTE: return 1;
-				default: __debugbreak(); return 0;
+				default: DEBUG_BREAK(); return 0;
 			}
 		}
 	};

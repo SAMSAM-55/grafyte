@@ -1,6 +1,6 @@
 // grafyte_bindings.cpp
 
-#include <GL/glew.h>
+#include <glad/glad.h>
 
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>

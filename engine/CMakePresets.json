@@ -1,5 +1,5 @@
 {
-  "version": 6,
+  "version": 3,
   "configurePresets": [
     {
       "name": "base-vs",
@@ -14,6 +14,30 @@
         "Python_FIND_STRATEGY": "LOCATION"
       }
     },
+
+    {
+      "name": "base-linux",
+      "hidden": true,
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build-linux/_base",
+      "vendor": {
+        "jetbrains.com/clion": {
+          "toolchain": "WSL"
+        }
+      },
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
+        "VCPKG_TARGET_TRIPLET": "x64-linux",
+        "PYBIND11_FINDPYTHON": "ON",
+        "Python_FIND_REGISTRY": "NEVER",
+        "Python_FIND_STRATEGY": "LOCATION"
+      },
+      "environment": {
+        "VCPKG_ROOT": "/home/sami/vcpkg"
+      }
+    },
+
 
     {
       "name": "py310",
@@ -50,13 +74,68 @@
         "GRAFYTE_PY_TAG": "py313",
         "Python_EXECUTABLE": "$env{PYTHON_HOME}/Python313/python.exe"
       }
+    },
+    {
+      "name": "py314",
+      "inherits": "base-vs",
+      "binaryDir": "${sourceDir}/build/py314",
+      "cacheVariables": {
+        "GRAFYTE_PY_TAG": "py314",
+        "Python_EXECUTABLE": "$env{PYTHON_HOME}/Python314/python.exe"
+      }
+    },
+
+    {
+      "name": "py310-linux",
+      "inherits": "base-linux",
+      "binaryDir": "${sourceDir}/build-linux/py310",
+      "cacheVariables": {
+        "GRAFYTE_PY_TAG": "py310",
+        "Python_EXECUTABLE": "/usr/bin/python3.10"
+      }
+    },
+    {
+      "name": "py311-linux",
+      "inherits": "base-linux",
+      "binaryDir": "${sourceDir}/build-linux/py311",
+      "cacheVariables": {
+        "GRAFYTE_PY_TAG": "py311",
+        "Python_EXECUTABLE": "/usr/bin/python3.11"
+      }
+    },
+    {
+      "name": "py312-linux",
+      "inherits": "base-linux",
+      "binaryDir": "${sourceDir}/build-linux/py312",
+      "cacheVariables": {
+        "GRAFYTE_PY_TAG": "py312",
+        "Python_EXECUTABLE": "/usr/bin/python3.12"
+      }
+    },
+    {
+      "name": "py313-linux",
+      "inherits": "base-linux",
+      "binaryDir": "${sourceDir}/build-linux/py313",
+      "cacheVariables": {
+        "GRAFYTE_PY_TAG": "py313",
+        "Python_EXECUTABLE": "/usr/bin/python3.13"
+      }
+    },
+    {
+      "name": "py314-linux",
+      "inherits": "base-linux",
+      "binaryDir": "${sourceDir}/build-linux/py314",
+      "cacheVariables": {
+        "GRAFYTE_PY_TAG": "py314",
+        "Python_EXECUTABLE": "/usr/bin/python3.14"
+      }
     }
   ],
 
   "buildPresets": [
-    { "name": "build-py310", "configurePreset": "py310", "configuration": "Release", "targets": [ "grafyte_py310" ] },
-    { "name": "build-py311", "configurePreset": "py311", "configuration": "Release", "targets": [ "grafyte_py311" ] },
-    { "name": "build-py312", "configurePreset": "py312", "configuration": "Release", "targets": [ "grafyte_py312" ] },
-    { "name": "build-py313", "configurePreset": "py313", "configuration": "Release", "targets": [ "grafyte_py313" ] }
+    { "name": "build-py310", "configurePreset": "py310", "configuration": "Release", "targets": ["grafyte_py310"] },
+    { "name": "build-py311", "configurePreset": "py311", "configuration": "Release", "targets": ["grafyte_py311"] },
+    { "name": "build-py312", "configurePreset": "py312", "configuration": "Release", "targets": ["grafyte_py312"] },
+    { "name": "build-py313", "configurePreset": "py313", "configuration": "Release", "targets": ["grafyte_py313"] }
   ]
 }

@@ -14,6 +14,6 @@ setup(
     include_package_data=True,
     package_data={
         "grafyte": ["__init__.pyi", "py.typed", "*.py"],
-        "__grafyte_internal": ["*.pyd", "*.pyi", "py.typed"],
+        "__grafyte_internal": ["*.so", "*.pyd", "*.pyi", "py.typed"],
     },
 )

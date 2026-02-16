@@ -11,10 +11,11 @@ _name = {
     "311": "grafyte_py311",
     "312": "grafyte_py312",
     "313": "grafyte_py313",
+    "314": "grafyte_py314"
 }.get(_tag)
 
 if _name is None:
-    raise ImportError(f"Grafyte: unsupported Python {_major}.{_minor} (supported: 3.10–3.13)")
+    raise ImportError(f"Grafyte: unsupported Python {_major}.{_minor} (supported: 3.10–3.14)")
 
 _mod = importlib.import_module("." + _name, __package__)
 
