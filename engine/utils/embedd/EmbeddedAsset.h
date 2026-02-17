@@ -2,16 +2,16 @@
 #include <cstdint>
 #include <cstddef>
 
-// Assets
-#include "basic_shader.embed"
-#include "texture_shader.embed"
-
 namespace grafyte::embedded {
+
     struct EmbeddedAsset {
-        std::uint8_t* data;
+        const std::uint8_t* data;
         std::size_t size;
     };
+    // Helpers “assets”
+    extern const EmbeddedAsset basicShader;
+    extern const EmbeddedAsset textureShader;
+    extern const EmbeddedAsset textShader;
+    extern const EmbeddedAsset baseFont;
 
-    constexpr EmbeddedAsset basicShader = {basicShader_embed, sizeof(basicShader_embed)};
-    constexpr EmbeddedAsset textureShader = {textureShader_embed, sizeof(textureShader_embed)};
-}
+} // namespace grafyte::embedded

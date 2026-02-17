@@ -141,6 +141,14 @@ namespace grafyte
                 size
             };
         }
+        if (idOrPath == "@embed/Shaders/Text") {
+            const auto&[data, size] = embedded::textShader;
+
+            return {
+                reinterpret_cast<const char *>(data),
+                size
+            };
+        }
 
         std::ifstream file(idOrPath, std::ios::binary);
         if (!file) throw std::runtime_error("[OpenGL Shader Processing] Could not open shader file: " + idOrPath);

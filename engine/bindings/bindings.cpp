@@ -72,8 +72,7 @@ PYBIND11_MODULE(GRAFYTE_PY_MODULE_NAME, m)
         .def("clear", &grafyte::Renderer::Clear, "Clear the screen");
 
     py::class_<grafyte::Application>(m, "Application")
-        // Default constructor (you call init() from Python)
-        .def(py::init<const std::string&>(), py::arg("name"))
+        .def(py::init<const std::string&, const std::string&>(), py::arg("name"), py::arg("font"))
 
         // init(winWidth, winHeight) -> int
         .def(
@@ -127,10 +126,41 @@ PYBIND11_MODULE(GRAFYTE_PY_MODULE_NAME, m)
             "Render all objects using the internal renderer"
         )
 
-        // getCurrentInput() -> bool
+        // add_text() -> int
         .def(
+            "_native_add_text",
+            &grafyte::Application::addText,
+            py::arg("text"),
+            py::arg("scale"),
+            py::arg("pos_x"),
+            py::arg("pos_y"),
+            "Adds the given text to the app"
+        )
+
+        // remove_text()
+        .def(
+        "remove_text",
+        &grafyte::Application::removeText,
+        py::arg("id"),
+        "Removes the given text from the app"
+        )
+
+        // inputs
+        .def_static(
             "is_key_down",
             &grafyte::Application::isKeyDown,
+            py::arg("key"),
+            "Return current input state (placeholder for now)"
+        )
+        .def_static(
+            "was_key_pressed",
+            &grafyte::Application::wasKeyPressed,
+            py::arg("key"),
+            "Return current input state (placeholder for now)"
+        )
+        .def_static(
+            "was_key_released",
+            &grafyte::Application::wasKeyReleased,
             py::arg("key"),
             "Return current input state (placeholder for now)"
         )

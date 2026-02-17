@@ -1,27 +1,25 @@
 #include "TextRenderer.h"
-#include <ft2build.h>
-#include FT_FREETYPE_H
+
 #include <vector>
 #include <iostream>
-#include <minmax.h>
 
-namespace Grafyte
+#include <algorithm>
+
+#include "embedd/EmbeddedAsset.h"
+
+namespace grafyte
 {
-    TextRenderer::TextRenderer(const std::string& fontPath, int pixelSize)
-        : shader("res/shaders/Text.shader"), vao(0), vbo(0)
+    TextRenderer::TextRenderer(const std::string& fontPath, const int pixelSize)
+        : shader("@embed/Shaders/Text"), vao(0), vbo(0)
     {
         // --- Load FreeType ---
         FT_Library ft;
         if (FT_Init_FreeType(&ft)) {
-            std::cout << "[FreeType] Failed to initialize\n";
             return;
         }
 
         FT_Face face;
-        if (FT_New_Face(ft, fontPath.c_str(), 0, &face)) {
-            std::cout << "[FreeType] Failed to load font\n";
-            return;
-        }
+        InitFaceFromSource(fontPath, ft, &face);
 
         FT_Set_Pixel_Sizes(face, 0, pixelSize);
 
@@ -55,10 +53,10 @@ namespace Grafyte
             }
 
             Glyph glyph;
-            glyph.u0 = xOffset / float(font.atlasWidth);
-            glyph.v0 = (yOffset + g->bitmap.rows) / float(font.atlasHeight);
-            glyph.u1 = (xOffset + g->bitmap.width) / float(font.atlasWidth);
-            glyph.v1 = yOffset / float(font.atlasHeight);
+            glyph.u0 = xOffset / static_cast<float>(font.atlasWidth);
+            glyph.v0 = (yOffset + g->bitmap.rows) / static_cast<float>(font.atlasHeight);
+            glyph.u1 = (xOffset + g->bitmap.width) / static_cast<float>(font.atlasWidth);
+            glyph.v1 = yOffset / static_cast<float>(font.atlasHeight);
 
             glyph.width = g->bitmap.width;
             glyph.height = g->bitmap.rows;
@@ -69,7 +67,7 @@ namespace Grafyte
             font.glyphs[c] = glyph;
 
             xOffset += g->bitmap.width;
-            maxRowHeight = max(maxRowHeight, g->bitmap.rows);
+            maxRowHeight = std::max(maxRowHeight, static_cast<int>(g->bitmap.rows));
         }
 
         // Upload atlas
@@ -90,18 +88,17 @@ namespace Grafyte
 
         glBindVertexArray(vao);
         glBindBuffer(GL_ARRAY_BUFFER, vbo);
-        glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 6 * 4, NULL, GL_DYNAMIC_DRAW);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 6 * 4, nullptr, GL_DYNAMIC_DRAW);
 
         glEnableVertexAttribArray(0);
-        glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, sizeof(float) * 4, (void*)0);
+        glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, sizeof(float) * 4, static_cast<void *>(nullptr));
 
         FT_Done_Face(face);
         FT_Done_FreeType(ft);
     }
 
     TextRenderer::~TextRenderer()
-    {
-    }
+    = default;
 
     const Font& TextRenderer::GetFont()
     {
@@ -150,6 +147,27 @@ namespace Grafyte
             glDrawArrays(GL_TRIANGLES, 0, 6);
 
             x += g.advance * scale; // Move cursor
+        }
+    }
+
+    void TextRenderer::InitFaceFromSource(const std::string &idOrPath, const FT_Library& library, FT_Face* face) {
+        const bool is_embedded = (
+            idOrPath == "@embed/Font/Default"
+            || idOrPath == "@embed/Font/Base"
+            || idOrPath == "@embed/Fonts/Default"
+            || idOrPath == "@embed/Fonts/Base"
+            );
+
+        if (is_embedded) {
+            if (const auto [data, size] = grafyte::embedded::baseFont;
+                FT_New_Memory_Face(library, data, size, 0, face)) {
+                throw std::runtime_error("[Freetype Face] Could not initialize the freetype face");
+            }
+            return;
+        }
+
+        if (FT_New_Face(library, idOrPath.c_str(), 0, face)) {
+            throw std::runtime_error("[Freetype Face] Could not initialize the freetype face");
         }
     }
 

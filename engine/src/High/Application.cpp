@@ -1,44 +1,46 @@
 #include "Application.h"
 
 #include <iostream>
+#include <ranges>
 #include <utility>
 
 #include <glm/ext/matrix_clip_space.hpp>
 #include <glm/ext/matrix_transform.hpp>
 
 
-namespace grafyte 
+namespace grafyte
 {
-    Application::Application(std::string name)
-        :m_winWidth(0), m_winHeight(0), m_clearColor({0, 0, 0, 0}), m_name(std::move(name)), m_currentInput(-1)
-    {
+    Application* Application::g_appInstance = nullptr;
+
+    Application::Application(std::string  name, std::string font)
+        : m_name(std::move(name)), m_window(nullptr), m_winWidth(0), m_winHeight(0), m_clearColor({0, 0, 0, 0}),
+          m_font(std::move(font)), m_texts({}) {
         const glm::mat4 proj = glm::ortho(-100.0f, 100.0f, -100.0f, 100.0f, -1.0f, 1.0f);
         constexpr glm::mat4 view = glm::translate(glm::mat4(1.0f), glm::vec3(0, 0, 0));
         constexpr auto model = glm::mat4(1.0f);
-
         this->m_MVP = proj * view * model;
     }
+
     Application::~Application()
     = default;
 
-    void Application::on_key(GLFWwindow* window, const int key, int scancode, const int action, int mods)
-    {
-        if (action == GLFW_PRESS)
-            m_currentInput = key;
-        if (action == GLFW_RELEASE)
-            m_currentInput = -1;
+    void Application::on_key(GLFWwindow* window, const int key, int scancode, const int action, int mods) {
+        if (action == GLFW_PRESS) {
+            g_appInstance->m_keyDown[key] = true;
+            g_appInstance->m_keyPressed[key] = true;
+        }
+        if (action == GLFW_RELEASE) {
+            g_appInstance->m_keyReleased[key] = true;
+            g_appInstance->m_keyDown[key] = false;
+        }
     }
 
-    static Application* g_appInstance = nullptr;
-
-    static void key_callback(GLFWwindow* window, const int key, const int scancode, const int action, const int mods)
-    {
-        if (g_appInstance)
-            g_appInstance->on_key(window, key, scancode, action, mods);
+    static void key_callback(GLFWwindow* window, const int key, const int scancode, const int action, const int mods) {
+        if (Application::g_appInstance)
+            Application::on_key(window, key, scancode, action, mods);
     }
 
-    int Application::init(const int winWidth, const int winHeight)
-	{
+    int Application::init(const int winWidth, const int winHeight) {
         if (!glfwInit())
             return -1;
 
@@ -68,6 +70,7 @@ namespace grafyte
 
         g_appInstance = this;
         glfwSetKeyCallback(m_window, key_callback);
+        m_textRenderer = std::make_unique<TextRenderer>(m_font, 32);
 
         return 0;
 	}
@@ -85,6 +88,8 @@ namespace grafyte
 	}
 
     void Application::render() {
+        BeginFrame();
+
         m_now = glfwGetTime();
         m_deltaTime = m_now - m_lastFrame;
         m_lastFrame = m_now;
@@ -105,6 +110,7 @@ namespace grafyte
         this->m_MVP = proj * view * model;
 
         m_renderer.Render(m_MVP);
+        drawTexts();
 
         /* Swap front and back buffers */
         glfwSwapBuffers(m_window);
@@ -113,17 +119,30 @@ namespace grafyte
         glfwPollEvents();
 
     }
-	int Application::getCurrentInput() const
-	{
-		return m_currentInput;
-	}
 
-    void Application::setClearColor(const float r, const float g, const float b, const float a)
-	{
+    void Application::drawTexts() const {
+        for (const auto &[text, scale, posX, posY]: m_texts | std::views::values) {
+            const float textWidth = m_textRenderer->MeasureTextWidth(text, scale);
+            const float posXFinal = posX - textWidth / 2;
+
+            m_textRenderer->DrawText(text,
+                posXFinal, posY+scale,
+                scale,
+                glm::vec4(0.0f, 0.0f, 0.0f, 1.0f),
+                m_MVP);
+        }
+    }
+
+    void Application::setClearColor(const float r, const float g, const float b, const float a) {
         m_clearColor = Color4(r, g, b, a);
 	}
 
     void Application::useRenderer(const grafyte::Renderer &renderer) {
         this->m_renderer = renderer;
+    }
+
+    void Application::BeginFrame() {
+        g_appInstance->m_keyPressed.clear();
+        g_appInstance->m_keyReleased.clear();
     }
 }

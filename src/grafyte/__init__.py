@@ -22,14 +22,18 @@ class Application(_NativeApplication):
     def __init__(self, name: str, window_dimensions: _vec2d):
         _ensure_vec2d("Application(window_dimensions=...)", window_dimensions)
 
-        super().__init__(name)
+        super().__init__(name, "@embed/Fonts/Base")
         super().init(*window_dimensions)
 
-    def set_background_color(self, r: int, g: int, b: int):
-        super().set_clear_color(r / 255, g / 255, b / 255, 1)
+    def set_background_color(self, color: _color):
+        super().set_clear_color(color[0] / 255, color[1] / 255, color[2] / 255, 1)
 
     def is_key_down(self, key: str) -> bool:
         return super().is_key_down(key.upper())
+    
+    def add_text(self, text, scale, pos: _vec2d) -> int:
+        pos = _ensure_vec2d("Application.draw_text(pos=...)", pos)
+        return super()._native_add_text(text, scale, *pos)
 
 
 class Renderer(_NativeRenderer): ...

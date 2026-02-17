@@ -40,6 +40,9 @@ add_library(grafyte_core STATIC
         src/GL-Core/Texture.cpp
         src/GL-Core/VertexArray.cpp
         src/GL-Core/VertexBuffer.cpp
+        src/Text/TextRenderer.cpp
+        utils/embedd/EmbeddedAsset.cpp
+        src/Text/Text.h
 )
 
 target_include_directories(grafyte_core PUBLIC
