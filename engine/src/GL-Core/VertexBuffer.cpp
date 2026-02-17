@@ -3,7 +3,7 @@
 #include "glad/glad.h"
 #include <GLFW/glfw3.h>
 
-namespace Grafyte
+namespace grafyte
 {
     VertexBuffer::VertexBuffer(const void* data, unsigned int size)
     {

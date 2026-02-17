@@ -136,6 +136,13 @@
     { "name": "build-py310", "configurePreset": "py310", "configuration": "Release", "targets": ["grafyte_py310"] },
     { "name": "build-py311", "configurePreset": "py311", "configuration": "Release", "targets": ["grafyte_py311"] },
     { "name": "build-py312", "configurePreset": "py312", "configuration": "Release", "targets": ["grafyte_py312"] },
-    { "name": "build-py313", "configurePreset": "py313", "configuration": "Release", "targets": ["grafyte_py313"] }
+    { "name": "build-py313", "configurePreset": "py313", "configuration": "Release", "targets": ["grafyte_py313"] },
+    { "name": "build-py314", "configurePreset": "py314", "configuration": "Release", "targets": ["grafyte_py314"] },
+
+    { "name": "build-py310-linux", "configurePreset": "py310-linux", "configuration": "Release", "targets": ["grafyte_py310"] },
+    { "name": "build-py311-linux", "configurePreset": "py311-linux", "configuration": "Release", "targets": ["grafyte_py311"] },
+    { "name": "build-py312-linux", "configurePreset": "py312-linux", "configuration": "Release", "targets": ["grafyte_py312"] },
+    { "name": "build-py313-linux", "configurePreset": "py313-linux", "configuration": "Release", "targets": ["grafyte_py313"] },
+    { "name": "build-py314-linux", "configurePreset": "py314-linux", "configuration": "Release", "targets": ["grafyte_py314"] }
   ]
 }

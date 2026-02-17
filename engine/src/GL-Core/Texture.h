@@ -2,7 +2,7 @@
 
 #include <string>
 
-namespace Grafyte
+namespace grafyte
 {
 	class Texture
 	{

@@ -98,5 +98,5 @@ add_custom_command(TARGET ${MODNAME} POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy
         "$<TARGET_FILE:${MODNAME}>"
         "${GRAFYTE_INTERNAL_DIR}/${MODNAME}.${PY_EXT}"
-        COMMENT "Copy + rename -> ${GRAFYTE_INTERNAL_DIR}/${MODNAME}.${PY_EXT}"
+        COMMENT "Copy + rename to ${GRAFYTE_INTERNAL_DIR}/${MODNAME}.${PY_EXT}"
 )

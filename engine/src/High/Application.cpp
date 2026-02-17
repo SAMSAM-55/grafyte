@@ -7,7 +7,7 @@
 #include <glm/ext/matrix_transform.hpp>
 
 
-namespace Grafyte 
+namespace grafyte 
 {
     Application::Application(std::string name)
         :m_winWidth(0), m_winHeight(0), m_clearColor({0, 0, 0, 0}), m_name(std::move(name)), m_currentInput(-1)
@@ -90,7 +90,7 @@ namespace Grafyte
         m_lastFrame = m_now;
 
         glClearColor(m_clearColor.x, m_clearColor.y, m_clearColor.z, m_clearColor.w);
-        Grafyte::Renderer::Clear();
+        grafyte::Renderer::Clear();
 
         glfwGetFramebufferSize(m_window, &m_winWidth, &m_winHeight);
         glViewport(0, 0, m_winWidth, m_winHeight);
@@ -117,12 +117,13 @@ namespace Grafyte
 	{
 		return m_currentInput;
 	}
-	void Application::setClearColor(const float r, const float g, const float b, const float a)
+
+    void Application::setClearColor(const float r, const float g, const float b, const float a)
 	{
         m_clearColor = Color4(r, g, b, a);
 	}
 
-    void Application::useRenderer(const Grafyte::Renderer &renderer) {
+    void Application::useRenderer(const grafyte::Renderer &renderer) {
         this->m_renderer = renderer;
     }
 }

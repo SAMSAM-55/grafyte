@@ -2,7 +2,7 @@
 
 #include "VertexBuffer.h"
 
-namespace Grafyte
+namespace grafyte
 {
 	class VertexBufferLayout;
 

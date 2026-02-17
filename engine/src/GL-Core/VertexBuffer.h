@@ -1,6 +1,6 @@
 #pragma once
 
-namespace Grafyte
+namespace grafyte
 {
 	class VertexBuffer
 	{

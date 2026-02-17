@@ -1,10 +1,10 @@
 #pragma once
-namespace Grafyte
+namespace grafyte
 {
 	class IndexBuffer
 	{
 	private:
-		unsigned int m_RendererID;
+		unsigned int m_RendererID{};
 		unsigned int m_Count;
 
 	public:

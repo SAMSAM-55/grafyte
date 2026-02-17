@@ -4,7 +4,7 @@
 #include <glad/glad.h>
 #include "macros.hpp"
 
-namespace Grafyte
+namespace grafyte
 {
 	struct VertexBufferElement
 	{

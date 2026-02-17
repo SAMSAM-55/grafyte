@@ -1,4 +1,16 @@
-import sys, importlib
+import sys, importlib, inspect
+
+
+def _imported_from_grafyte() -> bool:
+    for frame_info in inspect.stack()[2:8]:
+        modname = frame_info.frame.f_globals.get("__name__", "")
+        if modname.startswith("grafyte"):
+            return True
+    return False
+
+if not _imported_from_grafyte():
+    raise ImportError("This module is internal to the grafyte library and is not meant to be a public API.")
+
 
 _major, _minor = sys.version_info[:2]
 _tag = f"{_major}{_minor}"

@@ -4,7 +4,7 @@
 #include <iostream>
 #include <GLFW/glfw3.h>
 
-namespace Grafyte 
+namespace grafyte 
 {
 	Object::Object(const void *positions, const unsigned int positionsSize, const unsigned int vertexCount,
 	               const unsigned int *indices, const unsigned int indicesCount, const std::string &shaderSourcePath,

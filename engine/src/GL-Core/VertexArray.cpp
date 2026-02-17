@@ -7,7 +7,7 @@
 
 #include "macros.hpp"
 
-namespace Grafyte
+namespace grafyte
 {
 	VertexArray::VertexArray()
 	{

@@ -6,7 +6,7 @@
 
 #include "Intermediate/Renderer.h"
 
-namespace Grafyte 
+namespace grafyte 
 {
 	class Application
 	{
@@ -32,9 +32,10 @@ namespace Grafyte
 
 		void render();
 		[[nodiscard]] int getCurrentInput() const;
+		[[nodiscard]] inline bool isKeyDown(const char16_t& key) const {return glfwGetKey(m_window, key) == GLFW_PRESS;};
 		void setClearColor(float r, float g, float b, float a);
 
-		void useRenderer(const Grafyte::Renderer &renderer);
+		void useRenderer(const Renderer &renderer);
 
 	private:
 		GLFWwindow* m_window;

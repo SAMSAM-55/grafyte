@@ -9,7 +9,7 @@
 
 #include <string>
 
-namespace Grafyte 
+namespace grafyte 
 {
 	struct ObjectRenderData
 	{

@@ -3,7 +3,7 @@
 #include <algorithm>
 #include "glad/glad.h"
 
-namespace Grafyte {
+namespace grafyte {
 
     // Source - https://stackoverflow.com/a/72025044
     // Posted by 463035818_is_not_an_ai
@@ -17,7 +17,7 @@ namespace Grafyte {
         });
     }
 
-    void Renderer::Draw(const Grafyte::ObjectRenderData& data) {
+    void Renderer::Draw(const grafyte::ObjectRenderData& data) {
         data.shader.Bind();
         data.va.Bind();
         data.ib.Bind();
