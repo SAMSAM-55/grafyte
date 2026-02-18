@@ -8,8 +8,7 @@
 **cmake-build-*
 **vcpkg_installed
 
-# dev project for testing (removal is planned)
-engine/sandbox
+# source assets that ae then embedded into the engine
 engine/res
 
 # ignore python builds and environment
