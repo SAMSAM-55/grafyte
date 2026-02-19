@@ -17,6 +17,7 @@ engine/res
 *.so
 *.egg-info
 .*env
+.venv*
 *__pycache__
 dist
 dist_repaired

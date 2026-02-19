@@ -86,15 +86,17 @@ set_target_properties(${MODNAME} PROPERTIES
 # Extension pour le module Python (.pyd sur Windows, .so sur Unix)
 if (WIN32)
     set(PY_EXT "pyd")
+    set(GRAFYTE_INTERNAL_DIR
+            "${CMAKE_CURRENT_SOURCE_DIR}/../src/built-win"
+            CACHE PATH "Destination folder for built modules"
+    )
 else()
     set(PY_EXT "so")
+    set(GRAFYTE_INTERNAL_DIR
+            "${CMAKE_CURRENT_SOURCE_DIR}/../src/built-linux"
+            CACHE PATH "Destination folder for built modules"
+    )
 endif()
-
-# dossier commun où tu copies les 4 modules
-set(GRAFYTE_INTERNAL_DIR
-        "${CMAKE_CURRENT_SOURCE_DIR}/../src/__grafyte_internal"
-        CACHE PATH "Destination folder for built modules"
-)
 
 message(STATUS "Will copy .${PY_EXT} to: ${GRAFYTE_INTERNAL_DIR}")
 
