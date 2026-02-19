@@ -7,7 +7,7 @@ universal = 0
 
 [project]
 name = "grafyte"
-version = "0.2.1"
+version = "0.2.2"
 description = "A simple rendering engine with some game engine features made with OpenGL for Python"
 readme = "README.md"
 requires-python = ">=3.10"
