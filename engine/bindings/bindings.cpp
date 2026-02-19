@@ -10,6 +10,8 @@
 #include "Intermediate/Object.h"
 #include <glm/gtc/type_ptr.hpp>
 
+#include "Inputs/InputManager.h"
+
 namespace py = pybind11;
 
 #ifndef GRAFYTE_PY_MODULE_NAME
@@ -22,6 +24,53 @@ namespace py = pybind11;
 PYBIND11_MODULE(GRAFYTE_PY_MODULE_NAME, m)
 {
     m.doc() = "Python bindings for the Grafyte engine";
+
+    // Expose grafyte::inputs::Key as a Python enum
+    py::enum_<grafyte::inputs::Key>(m, "Key")
+        .value("Space", grafyte::inputs::Key::Space)
+        .value("Num0", grafyte::inputs::Key::Num0)
+        .value("Num1", grafyte::inputs::Key::Num1)
+        .value("Num2", grafyte::inputs::Key::Num2)
+        .value("Num3", grafyte::inputs::Key::Num3)
+        .value("Num4", grafyte::inputs::Key::Num4)
+        .value("Num5", grafyte::inputs::Key::Num5)
+        .value("Num6", grafyte::inputs::Key::Num6)
+        .value("Num7", grafyte::inputs::Key::Num7)
+        .value("Num8", grafyte::inputs::Key::Num8)
+        .value("Num9", grafyte::inputs::Key::Num9)
+        .value("A", grafyte::inputs::Key::A)
+        .value("B", grafyte::inputs::Key::B)
+        .value("C", grafyte::inputs::Key::C)
+        .value("D", grafyte::inputs::Key::D)
+        .value("E", grafyte::inputs::Key::E)
+        .value("F", grafyte::inputs::Key::F)
+        .value("G", grafyte::inputs::Key::G)
+        .value("H", grafyte::inputs::Key::H)
+        .value("I", grafyte::inputs::Key::I)
+        .value("J", grafyte::inputs::Key::J)
+        .value("K", grafyte::inputs::Key::K)
+        .value("L", grafyte::inputs::Key::L)
+        .value("M", grafyte::inputs::Key::M)
+        .value("N", grafyte::inputs::Key::N)
+        .value("O", grafyte::inputs::Key::O)
+        .value("P", grafyte::inputs::Key::P)
+        .value("Q", grafyte::inputs::Key::Q)
+        .value("R", grafyte::inputs::Key::R)
+        .value("S", grafyte::inputs::Key::S)
+        .value("T", grafyte::inputs::Key::T)
+        .value("U", grafyte::inputs::Key::U)
+        .value("V", grafyte::inputs::Key::V)
+        .value("W", grafyte::inputs::Key::W)
+        .value("X", grafyte::inputs::Key::X)
+        .value("Y", grafyte::inputs::Key::Y)
+        .value("Z", grafyte::inputs::Key::Z)
+        .value("Right", grafyte::inputs::Key::Right)
+        .value("Left", grafyte::inputs::Key::Left)
+        .value("Down", grafyte::inputs::Key::Down)
+        .value("Up", grafyte::inputs::Key::Up)
+        .value("LeftShift", grafyte::inputs::Key::LeftShift)
+        .value("RightShift", grafyte::inputs::Key::RightShift)
+        .export_values();
 
     py::class_<grafyte::Object, std::shared_ptr<grafyte::Object>>(m, "Object")
         .def(py::init([](const py::buffer& positions, const unsigned int vertexCount, const py::buffer &indices,
@@ -162,6 +211,32 @@ PYBIND11_MODULE(GRAFYTE_PY_MODULE_NAME, m)
             "was_key_released",
             &grafyte::Application::wasKeyReleased,
             py::arg("key"),
+            "Return current input state (placeholder for now)"
+        )
+
+        .def_static(
+            "create_input_action",
+            &grafyte::Application::createInputAction,
+            py::arg("name"),
+            py::arg("key"),
+            "Creates a new input action for the current application"
+        )
+        .def_static(
+            "is_action_down",
+            &grafyte::Application::isActionDown,
+            py::arg("action"),
+            "Return current input state (placeholder for now)"
+        )
+        .def_static(
+            "was_action_pressed",
+            &grafyte::Application::wasActionPressed,
+            py::arg("action"),
+            "Return current input state (placeholder for now)"
+        )
+        .def_static(
+            "was_action_released",
+            &grafyte::Application::wasActionReleased,
+            py::arg("action"),
             "Return current input state (placeholder for now)"
         )
 

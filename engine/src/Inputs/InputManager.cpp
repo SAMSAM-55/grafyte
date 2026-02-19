@@ -1,0 +1,79 @@
+#include "InputManager.h"
+#include <GLFW/glfw3.h>
+#include <iostream>
+#include <cstring>
+#include <cctype>
+
+namespace grafyte {
+    void InputManager::Init() {
+        m_keyToGLFW.clear();
+        m_glfwToKey.clear();
+        for (int glfwKey = GLFW_KEY_SPACE; glfwKey <= GLFW_KEY_LAST; glfwKey++) {
+            const int scancode = glfwGetKeyScancode(glfwKey);
+            const char* name = glfwGetKeyName(glfwKey, scancode);
+
+            if (!name) continue;
+            if (const size_t nameLen = std::strlen(name); nameLen != 1) continue;
+
+            const char produced = static_cast<char>(std::tolower(static_cast<unsigned char>(name[0])));
+
+            for (const auto&[key, expected]: m_logicalKeys) {
+                if (std::tolower(static_cast<unsigned char>(expected)) == produced) {
+                    m_keyToGLFW[key] = glfwKey;
+                    m_glfwToKey[glfwKey] = key;
+                    break;
+                }
+            }
+        }
+
+        m_keyToGLFW[Key::Left] = GLFW_KEY_LEFT;
+        m_glfwToKey[GLFW_KEY_LEFT] = Key::Left;
+
+        m_keyToGLFW[Key::Right] = GLFW_KEY_RIGHT;
+        m_glfwToKey[GLFW_KEY_RIGHT] = Key::Right;
+
+        m_keyToGLFW[Key::Up] = GLFW_KEY_UP;
+        m_glfwToKey[GLFW_KEY_UP] = Key::Up;
+
+        m_keyToGLFW[Key::Down] = GLFW_KEY_DOWN;
+        m_glfwToKey[GLFW_KEY_DOWN] = Key::Down;
+
+        m_keyToGLFW[Key::LeftShift] = GLFW_KEY_LEFT_SHIFT;
+        m_glfwToKey[GLFW_KEY_LEFT_SHIFT] = Key::LeftShift;
+
+        m_keyToGLFW[Key::RightShift] = GLFW_KEY_RIGHT_SHIFT;
+        m_glfwToKey[GLFW_KEY_RIGHT_SHIFT] = Key::RightShift;
+    }
+
+    void InputManager::on_key(GLFWwindow *window, int key, int scancode, int action, int mods) {
+        if (action == GLFW_PRESS) {
+            if (m_glfwToKey.contains(key)) {
+                const Key k = m_glfwToKey[key];
+                m_keyDown[k] = true;
+                m_keyPressed[k] = true;
+            }
+
+            for (const auto&[inputAction, inputKey]: m_inputActions) {
+                if (m_keyToGLFW[inputKey] == key) {
+                    m_actionDown[inputAction] = true;
+                    m_actionPressed[inputAction] = true;
+                }
+            }
+        }
+
+        if (action == GLFW_RELEASE) {
+            if (m_glfwToKey.contains(key)) {
+                const Key k = m_glfwToKey[key];
+                m_keyDown[k] = false;
+                m_keyReleased[k] = true;
+            }
+
+            for (const auto&[inputAction, inputKey]: m_inputActions) {
+                if (m_keyToGLFW[inputKey] == key) {
+                    m_actionDown[inputAction] = false;
+                    m_actionReleased[inputAction] = true;
+                }
+            }
+        }
+    }
+}

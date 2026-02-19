@@ -1,10 +1,10 @@
 from array import array
+
 from grafyte.__converters import *
 
 from __grafyte_internal import Application as _NativeApplication
 from __grafyte_internal import Object as _NativeObject
-from __grafyte_internal import Renderer as _NativeRenderer
-
+from __grafyte_internal import Key, Renderer
 
 class Application(_NativeApplication):
     def __init__(self, name: str, window_dimensions: Vec2d):
@@ -16,16 +16,10 @@ class Application(_NativeApplication):
 
     def set_background_color(self, color: Color):
         super().set_clear_color(color[0] / 255, color[1] / 255, color[2] / 255, 1)
-
-    def is_key_down(self, key: str) -> bool:
-        return super().is_key_down(key.upper())
     
     def add_text(self, text, scale, pos: Vec2d) -> int:
         pos = ensure_vec2d("Application.draw_text(pos=...)", pos)
         return super()._native_add_text(text, scale, *pos)
-
-
-class Renderer(_NativeRenderer): ...
 
 
 class Object(_NativeObject):
@@ -74,10 +68,10 @@ class Object(_NativeObject):
         super().set_shader_uniform_4f("u_Color", r / 255, g / 255, b / 255, a)
 
     def move(self, offset: Vec2d):
-        super()._native_move(offset[0], offset[1])
+        super()._native_move(*offset)
 
     def move_to(self, pos: Vec2d):
-        super()._native_move_to(pos[0], pos[1])
+        super()._native_move_to(*pos)
 
     def use_texture(self, path: str):
         if not self.__has_texture:

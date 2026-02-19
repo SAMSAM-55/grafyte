@@ -5,11 +5,12 @@
 #include "glm/glm.hpp"
 #include <memory>
 
+#include "Inputs/InputManager.h"
 #include "Intermediate/Renderer.h"
 #include "Text/TextRenderer.h"
 #include "Text/Text.h"
 
-namespace grafyte 
+namespace grafyte
 {
 	class Application
 	{
@@ -38,8 +39,7 @@ namespace grafyte
 
 		int addText(const std::string &text, const float &scale, const float &pos_x, const float &pos_y) {
 			const int id = m_nextTextId++;
-			m_texts.reserve(1);
-			m_texts[id] = {text, scale, pos_x, pos_y};
+			m_texts.emplace(id, Text{text, scale, pos_x, pos_y});
 			return id;
 		}
 
@@ -47,9 +47,17 @@ namespace grafyte
 			m_texts.erase(id);
 		}
 
-		[[nodiscard]] static bool isKeyDown(const char16_t& key) {return g_appInstance->m_keyDown[key];};
-		[[nodiscard]] static bool wasKeyPressed(const char16_t& key) {return g_appInstance->m_keyPressed[key];};
-		[[nodiscard]] static bool wasKeyReleased(const char16_t& key) {return g_appInstance->m_keyReleased[key];};
+		static bool isKeyDown(const Key& key) {return InputManager::isKeyDown(key);};
+		static bool wasKeyPressed(const Key& key) {return InputManager::wasKeyPressed(key);};
+		static bool wasKeyReleased(const Key& key) {return InputManager::wasKeyReleased(key);};
+		
+		static bool isActionDown(const std::string& name) {return InputManager::isActionDown(name);};
+		static bool wasActionPressed(const std::string& name) {return InputManager::wasActionPressed(name);};
+		static bool wasActionReleased(const std::string& name) {return InputManager::wasActionReleased(name);};
+		static void createInputAction(const std::string &name, const Key &key) {
+			InputManager::createAction(name, key);
+		}
+		
 		void setClearColor(float r, float g, float b, float a);
 
 		void useRenderer(const Renderer &renderer);
@@ -72,10 +80,6 @@ namespace grafyte
 		double m_now = 0.0f;
 		double m_lastFrame = 0.0f;
 		double m_deltaTime = 0.0f;
-
-		std::unordered_map<int, bool> m_keyDown;
-		std::unordered_map<int, bool> m_keyPressed;
-		std::unordered_map<int, bool> m_keyReleased;
 
 		glm::mat4 m_MVP{};
 	};

@@ -43,6 +43,9 @@ add_library(grafyte_core STATIC
         src/Text/TextRenderer.cpp
         utils/embedd/EmbeddedAsset.cpp
         src/Text/Text.h
+        src/Inputs/Keys.h
+        src/Inputs/InputManager.cpp
+        src/Inputs/InputManager.h
 )
 
 target_include_directories(grafyte_core PUBLIC

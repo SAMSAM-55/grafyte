@@ -1,5 +1,9 @@
 from grafyte.__converters import Vec2d, Color
 
+from __grafyte_internal import Key as _NativeKey
+
+class Key(_NativeKey): ...
+
 class Application:
     """
     The main application class that manages the window, rendering context, and input.
@@ -68,28 +72,67 @@ class Application:
         :param color: A Color object (RGB) representing the new background color.
         """
         ...
-    def is_key_down(self, key: str) -> bool:
+    @staticmethod
+    def is_key_down(key: Key) -> bool:
         """
         Checks if a specific key is currently being held down.
 
-        :param key: The character representation of the key (e.g., 'W', 'A', 'S', 'D').
+        :param key: The Key enum value.
         :return: True if the key is down, False otherwise.
         """
         ...
-    def was_key_pressed(self, key: str) -> bool:
+    @staticmethod
+    def was_key_pressed(key: Key) -> bool:
         """
         Checks if a specific key was pressed in the current frame.
 
-        :param key: The character representation of the key.
+        :param key: The Key enum value.
         :return: True if the key was just pressed, False otherwise.
         """
         ...
-    def was_key_released(self, key: str) -> bool:
+    @staticmethod
+    def was_key_released(key: Key) -> bool:
         """
         Checks if a specific key was released in the current frame.
 
-        :param key: The character representation of the key.
+        :param key: The Key enum value.
         :return: True if the key was just released, False otherwise.
+        """
+        ...
+    @staticmethod
+    def create_input_action(name: str, key: Key) -> None:
+        """
+        Creates a new input action for the application.
+
+        :param name: The name of the action.
+        :param key: The Key to bind to the action.
+        """
+        ...
+    @staticmethod
+    def is_action_down(action: str) -> bool:
+        """
+        Checks if a specific action is currently being held down.
+
+        :param action: The name of the action.
+        :return: True if the action is down, False otherwise.
+        """
+        ...
+    @staticmethod
+    def was_action_pressed(action: str) -> bool:
+        """
+        Checks if a specific action was pressed in the current frame.
+
+        :param action: The name of the action.
+        :return: True if the action was just pressed, False otherwise.
+        """
+        ...
+    @staticmethod
+    def was_action_released(action: str) -> bool:
+        """
+        Checks if a specific action was released in the current frame.
+
+        :param action: The name of the action.
+        :return: True if the action was just released, False otherwise.
         """
         ...
     def use_renderer(self, renderer: Renderer):
@@ -116,6 +159,8 @@ class Renderer:
         :param obj: The Object to add.
         """
         ...
+
+class InputManager: ...
 
 class Object:
     """

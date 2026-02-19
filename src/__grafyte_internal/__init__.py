@@ -15,9 +15,6 @@ if not _imported_from_grafyte():
 _major, _minor = sys.version_info[:2]
 _tag = f"{_major}{_minor}"
 
-print(_tag)
-print("hi")
-
 _name = {
     "310": "grafyte_py310",
     "311": "grafyte_py311",

@@ -25,19 +25,8 @@ namespace grafyte
     = default;
 
     void Application::on_key(GLFWwindow* window, const int key, int scancode, const int action, int mods) {
-        if (action == GLFW_PRESS) {
-            g_appInstance->m_keyDown[key] = true;
-            g_appInstance->m_keyPressed[key] = true;
-        }
-        if (action == GLFW_RELEASE) {
-            g_appInstance->m_keyReleased[key] = true;
-            g_appInstance->m_keyDown[key] = false;
-        }
-    }
-
-    static void key_callback(GLFWwindow* window, const int key, const int scancode, const int action, const int mods) {
-        if (Application::g_appInstance)
-            Application::on_key(window, key, scancode, action, mods);
+        // Forward to InputManager for centralized handling
+        InputManager::on_key(window, key, scancode, action, mods);
     }
 
     int Application::init(const int winWidth, const int winHeight) {
@@ -69,7 +58,8 @@ namespace grafyte
         glBlendEquation(GL_FUNC_ADD);
 
         g_appInstance = this;
-        glfwSetKeyCallback(m_window, key_callback);
+        InputManager::Init();
+        glfwSetKeyCallback(m_window, InputManager::on_key);
         m_textRenderer = std::make_unique<TextRenderer>(m_font, 32);
 
         return 0;
@@ -142,7 +132,6 @@ namespace grafyte
     }
 
     void Application::BeginFrame() {
-        g_appInstance->m_keyPressed.clear();
-        g_appInstance->m_keyReleased.clear();
+        InputManager::resetInputs();
     }
 }
