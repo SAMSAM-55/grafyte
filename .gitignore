@@ -5,7 +5,7 @@ tests
 **bin
 **bin-int
 **obj
-**build*
+engine/*/build*
 **cmake-build-*
 **vcpkg_installed
 

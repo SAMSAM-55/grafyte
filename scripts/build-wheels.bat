@@ -16,7 +16,7 @@ if errorlevel 1 exit /b 1
 
 %PY% -m delvewheel repair dist\grafyte-*.whl -w dist_repaired --add-path .
 
-for %%F in (dist_repaired\*.whl) do (
+for %%F in (dist_repaired\*win*.whl) do (
   echo Installing %%F
   %PY% -m pip install --force-reinstall "%%F"
   if errorlevel 1 exit /b 1

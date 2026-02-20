@@ -1,12 +1,11 @@
 from setuptools import setup, find_packages
-from wheel.bdist_wheel import bdist_wheel as _bdist_wheel
+from setuptools.command.bdist_wheel import bdist_wheel as _bdist_wheel
 from distutils.util import get_platform
 
 
 class bdist_wheel_custom(_bdist_wheel):
     def finalize_options(self):
         super().finalize_options()
-        # Force "platform" wheel (not pure-python)
         self.root_is_pure = False
 
     def get_tag(self):
@@ -18,7 +17,7 @@ class bdist_wheel_custom(_bdist_wheel):
             # On Windows this becomes e.g. "win_amd64"
             # On Linux this becomes e.g. "linux_x86_64"
 
-        return py, abi, plat
+        return "py3", "none", plat
 
 
 setup(

@@ -22,7 +22,7 @@
       "binaryDir": "${sourceDir}/build-linux/_base",
       "vendor": {
         "jetbrains.com/clion": {
-          "toolchain": "WSL"
+          "toolchain": "Docker - ManyLinux"
         }
       },
       "cacheVariables": {
@@ -32,9 +32,6 @@
         "PYBIND11_FINDPYTHON": "ON",
         "Python_FIND_REGISTRY": "NEVER",
         "Python_FIND_STRATEGY": "LOCATION"
-      },
-      "environment": {
-        "VCPKG_ROOT": "/home/sami/vcpkg"
       }
     },
 
@@ -91,7 +88,7 @@
       "binaryDir": "${sourceDir}/build-linux/py310",
       "cacheVariables": {
         "GRAFYTE_PY_TAG": "py310",
-        "Python_EXECUTABLE": "/usr/bin/python3.10"
+        "Python_EXECUTABLE": "/opt/python/cp310-cp310/bin/python"
       }
     },
     {
@@ -100,7 +97,7 @@
       "binaryDir": "${sourceDir}/build-linux/py311",
       "cacheVariables": {
         "GRAFYTE_PY_TAG": "py311",
-        "Python_EXECUTABLE": "/usr/bin/python3.11"
+        "Python_EXECUTABLE": "/opt/python/cp311-cp311/bin/python"
       }
     },
     {
@@ -109,7 +106,7 @@
       "binaryDir": "${sourceDir}/build-linux/py312",
       "cacheVariables": {
         "GRAFYTE_PY_TAG": "py312",
-        "Python_EXECUTABLE": "/usr/bin/python3.12"
+        "Python_EXECUTABLE": "/opt/python/cp312-cp312/bin/python"
       }
     },
     {
@@ -118,7 +115,7 @@
       "binaryDir": "${sourceDir}/build-linux/py313",
       "cacheVariables": {
         "GRAFYTE_PY_TAG": "py313",
-        "Python_EXECUTABLE": "/usr/bin/python3.13"
+        "Python_EXECUTABLE": "/opt/python/cp313-cp313/bin/python"
       }
     },
     {
@@ -127,7 +124,7 @@
       "binaryDir": "${sourceDir}/build-linux/py314",
       "cacheVariables": {
         "GRAFYTE_PY_TAG": "py314",
-        "Python_EXECUTABLE": "/usr/bin/python3.14"
+        "Python_EXECUTABLE": "/opt/python/cp314-cp314/bin/python"
       }
     }
   ],
