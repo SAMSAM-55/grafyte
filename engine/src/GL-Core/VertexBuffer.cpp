@@ -6,6 +6,7 @@
 namespace grafyte
 {
     VertexBuffer::VertexBuffer(const void* data, unsigned int size)
+        : m_RendererID(0)
     {
         glGenBuffers(1, &m_RendererID);
         glBindBuffer(GL_ARRAY_BUFFER, m_RendererID);
@@ -13,8 +14,13 @@ namespace grafyte
     }
 
     VertexBuffer::~VertexBuffer() {
-        if (glfwGetCurrentContext()) {
+        release();
+    }
+
+    void VertexBuffer::release() {
+        if (m_RendererID && glfwGetCurrentContext()) {
             glDeleteBuffers(1, &m_RendererID);
+            m_RendererID = 0;
         }
     }
 

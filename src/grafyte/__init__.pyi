@@ -1,6 +1,9 @@
 from grafyte.__converters import Vec2d, Color
 
 from __grafyte_internal import Key as _NativeKey
+from __grafyte_internal import Application as _NativeApplication
+from __grafyte_internal import Object as _NativeObject
+from __grafyte_internal import Scene as _NativeScene
 
 class Key(_NativeKey): ...
 
@@ -48,23 +51,23 @@ class Application:
         Renders all objects and text in the current frame.
         """
         ...
-    def add_text(self, text: str, scale: float, pos: Vec2d) -> int:
-        """
-        Adds text to be rendered in the application window.
+    # def add_text(self, text: str, scale: float, pos: Vec2d) -> int:
+    #     """
+    #     Adds text to be rendered in the application window.
 
-        :param text: The string of text to display.
-        :param scale: The scale/size of the text.
-        :param pos: A Vec2d representing the (x, y) position of the text.
-        :return: An integer ID for the added text, which can be used to remove it later.
-        """
-        ...
-    def remove_text(self, id: int):
-        """
-        Removes previously added text from the application.
+    #     :param text: The string of text to display.
+    #     :param scale: The scale/size of the text.
+    #     :param pos: A Vec2d representing the (x, y) position of the text.
+    #     :return: An integer ID for the added text, which can be used to remove it later.
+    #     """
+    #     ...
+    # def remove_text(self, id: int):
+    #     """
+    #     Removes previously added text from the application.
 
-        :param id: The ID of the text to remove (returned by add_text).
-        """
-        ...
+    #     :param id: The ID of the text to remove (returned by add_text).
+    #     """
+    #     ...
     def set_background_color(self, color: Color):
         """
         Sets the background (clear) color of the application window.
@@ -135,55 +138,30 @@ class Application:
         :return: True if the action was just released, False otherwise.
         """
         ...
-    def use_renderer(self, renderer: Renderer):
-        """
-        Sets the renderer to be used by the application.
 
-        :param renderer: The Renderer object to use.
-        """
-        ...
+    def make_new_scene(self) -> Scene: ...
 
-class Renderer:
-    """
-    Manages a collection of objects to be rendered.
-    """
-    def __init__(self):
-        """
-        Initializes a new Renderer.
-        """
-        ...
-    def add_object(self, obj: Object) -> None:
-        """
-        Adds an object to the renderer's list of objects to be drawn.
+class Scene:
+    __native: _NativeScene
 
-        :param obj: The Object to add.
-        """
-        ...
+    def __init__(self, native: _NativeScene): ...
 
-class InputManager: ...
+    def spawn_object(self,
+                     pos: Vec2d,
+                     size: Vec2d,
+                     layer: int = 0,
+                     has_texture: bool = False,
+                     shader_source_path: str = "") -> Object: ...
 
 class Object:
     """
     Represents a renderable 2D object in the engine.
     """
-    __has_texture: bool
 
-    def __init__(self,
-                 pos: Vec2d,
-                 size: Vec2d,
-                 layer: int = 0,
-                 has_texture: bool = False,
-                 shader_source_path: str = "", ):
-        """
-        Initializes a new renderable object.
+    __native: _NativeObject
 
-        :param pos: A Vec2d representing the initial position of the object.
-        :param size: A Vec2d representing the dimensions (width, height) of the object.
-        :param layer: The rendering layer (higher numbers are rendered on top). (default = 0)
-        :param has_texture: Boolean indicating if this object will use a texture. (default = False)
-        :param shader_source_path: Optional path to a custom shader. If empty, a default shader is used.
-        """
-        ...
+    def __init__(self, native: _NativeObject): ...
+
     def set_color(self, color: Color, a: float = 1) -> None:
         """
         Sets the uniform color of the object. Only applicable if the object doesn't have a texture.
@@ -206,10 +184,11 @@ class Object:
         :param pos: A Vec2d representing the new (x, y) position.
         """
         ...
-    def use_texture(self, path: str) -> None:
+    def use_texture(self, path: str, slot: int = 0) -> None:
         """
         Loads and applies a texture to the object.
 
+        :param slot: The slot to bind the texture to
         :param path: The file path to the texture.
         """
         ...

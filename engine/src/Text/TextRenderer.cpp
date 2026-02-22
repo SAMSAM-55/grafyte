@@ -4,6 +4,7 @@
 #include <iostream>
 
 #include <algorithm>
+#include <GLFW/glfw3.h>
 
 #include "embedd/EmbeddedAsset.h"
 
@@ -97,8 +98,13 @@ namespace grafyte
         FT_Done_FreeType(ft);
     }
 
-    TextRenderer::~TextRenderer()
-    = default;
+    TextRenderer::~TextRenderer() {
+        if (glfwGetCurrentContext()) {
+            glDeleteTextures(1, &font.textureID);
+            glDeleteBuffers(1, &vbo);
+            glDeleteVertexArrays(1, &vao);
+        }
+    }
 
     const Font& TextRenderer::GetFont()
     {

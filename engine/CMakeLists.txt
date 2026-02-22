@@ -42,10 +42,12 @@ add_library(grafyte_core STATIC
         src/GL-Core/VertexBuffer.cpp
         src/Text/TextRenderer.cpp
         utils/embedd/EmbeddedAsset.cpp
-        src/Text/Text.h
-        src/Inputs/Keys.h
         src/Inputs/InputManager.cpp
-        src/Inputs/InputManager.h
+        src/Collisions/CollisionManager.cpp
+        src/Scene/Scene.cpp
+        src/Scene/Managers/MeshManager.cpp
+        src/Scene/Managers/MaterialManager.cpp
+        src/World/World.cpp
 )
 
 target_include_directories(grafyte_core PUBLIC

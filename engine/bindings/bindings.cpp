@@ -73,52 +73,83 @@ PYBIND11_MODULE(GRAFYTE_PY_MODULE_NAME, m)
         .export_values();
 
     py::class_<grafyte::Object, std::shared_ptr<grafyte::Object>>(m, "Object")
-        .def(py::init([](const py::buffer& positions, const unsigned int vertexCount, const py::buffer &indices,
-                         const std::string &shaderSourcePath, const float &pos_x, const float &pos_y, const int &layer) {
+        .def("use_texture", &grafyte::Object::SetTexture, py::arg("texture_source_path"), py::arg("slot"))
+
+        .def("set_tint", [](const grafyte::Object& self, const float& r, const float& g, const float& b, const float& strength)
+        {
+            self.SetTint({r, g, b, strength});
+        }, py::arg("tint_r"), py::arg("tint_g"), py::arg("tint_b"), py::arg("strength"))
+        .def("set_color", [](const grafyte::Object& self, const float& r, const float& g, const float& b, const float& a)
+        {
+            self.SetColor({r, g, b, a});
+        }, py::arg("color_r"), py::arg("color_g"), py::arg("color_b"), py::arg("color_a"))
+
+        .def("move", [](const grafyte::Object& self, const float& offset_x, const float& offset_y)
+        {
+            self.Move({offset_x, offset_y});
+        }, py::arg("offset_x"), py::arg("offset_y"))
+        .def("move_to", [](const grafyte::Object& self, const float& pos_x, const float& pos_y)
+        {
+            self.MoveTo({pos_x, pos_y});
+        }, py::arg("pos_x"), py::arg("pos_y"));
+
+
+    py::class_<grafyte::Scene, std::shared_ptr<grafyte::Scene>>(m, "Scene")
+        .def("spawn_object", [](grafyte::Scene& self,
+                            const py::buffer& positions,
+                            unsigned int vertexCount,
+                            const py::buffer& indices,
+                            const std::string& shaderSourcePath,
+                            float x, float y,
+                            bool hasTexture,
+                            int zIndex) {
+            // --- preprocess buffers into MeshAsset ---
             const py::buffer_info pos_info = positions.request();
             const py::buffer_info idx_info = indices.request();
 
             if (pos_info.format != py::format_descriptor<float>::value)
-                throw std::runtime_error("Positions must be a float buffer");
-            if (idx_info.format != py::format_descriptor<unsigned int>::value)
-                throw std::runtime_error("Indices must be an unsigned int buffer");
+                throw std::runtime_error("Positions must be float32 buffer");
+            if (idx_info.format != py::format_descriptor<uint32_t>::value)
+                throw std::runtime_error("Indices must be uint32 buffer");
 
-            return new grafyte::Object(
-                pos_info.ptr,
-                static_cast<unsigned int>(pos_info.size * sizeof(float)),
-                vertexCount,
-                static_cast<const unsigned int*>(idx_info.ptr),
-                static_cast<unsigned int>(idx_info.size),
-                shaderSourcePath,
-                pos_x,
-                pos_y,
-                layer
-            );
-        }), py::arg("positions"), py::arg("vertex_count"), py::arg("indices"), py::arg("shader_source_path"),
-             py::arg("pos_x"), py::arg("pos_y"), py::arg("layer"))
-        .def("set_texture", &grafyte::Object::SetTexture, py::arg("texture_source_path"), py::arg("slot"))
-        .def("add_layout_slot", &grafyte::Object::AddLayoutSlot, py::arg("type"), py::arg("size"))
-        .def("add_buffer_to_vertex_array", &grafyte::Object::AddBufferToVertexArray)
-        .def("set_shader_uniform_1f", &grafyte::Object::SetShaderUniform1f, py::arg("name"), py::arg("value"))
-        .def("set_shader_uniform_4f", &grafyte::Object::SetShaderUniform4f, py::arg("name"), py::arg("float_x"),
-             py::arg("float_y"), py::arg("float_z"), py::arg("float_w"))
-        .def("set_shader_uniform_mat4f", [](grafyte::Object& self, const std::string& name, const py::buffer& matrix) {
-            const py::buffer_info info = matrix.request();
-            if (info.format != py::format_descriptor<float>::value)
-                throw std::runtime_error("Matrix must be a float buffer");
-            if (info.size != 16)
-                throw std::runtime_error("Matrix must have 16 elements");
+            grafyte::types::MeshAsset mesh;
+            mesh.vertexCount = vertexCount;
+            mesh.indices.assign(static_cast<uint32_t*>(idx_info.ptr),
+                                static_cast<uint32_t*>(idx_info.ptr) + idx_info.size);
 
-            self.SetShaderUniformMat4f(name, glm::make_mat4(static_cast<const float*>(info.ptr)));
-        }, py::arg("name"), py::arg("matrix"))
-        .def("_native_move", &grafyte::Object::Move, py::arg("offset_x"), py::arg("offset_y"))
-        .def("_native_move_to", &grafyte::Object::MoveTo, py::arg("pos_x"), py::arg("pos_y"));
+            if (hasTexture)
+            {
+                mesh.layoutSlots = {
+                    grafyte::types::LayoutSlot{grafyte::types::AttribType::Float, 2},
+                    grafyte::types::LayoutSlot{grafyte::types::AttribType::Float, 2}
+                };
+            } else
+            {
+                mesh.layoutSlots = {
+                    grafyte::types::LayoutSlot{grafyte::types::AttribType::Float, 2}
+                };
+            }
 
-    py::class_<grafyte::Renderer>(m, "Renderer")
-        .def(py::init<>())
-        .def("add_object", &grafyte::Renderer::AddObject, py::arg("obj"), "Add an object to the renderer")
-        .def("render", &grafyte::Renderer::Render, "Render all objects")
-        .def("clear", &grafyte::Renderer::Clear, "Clear the screen");
+            mesh.sizeBytes = pos_info.size * sizeof(float);
+            mesh.posOffsetBytes = 0;
+            mesh.bytes.resize(mesh.sizeBytes);
+            std::memcpy(mesh.bytes.data(), pos_info.ptr, mesh.sizeBytes);
+
+            grafyte::types::MaterialAsset mat;
+            mat.shaderSourcePath = shaderSourcePath;
+            mat.hasTexture = hasTexture;
+
+            if (hasTexture)
+            {
+                mat.textureSlot = 1;
+                mat.textureSourcePath = "@embed/Textures/Default";
+            }
+
+            grafyte::types::Vec2 pos{x, y};
+            return self.spawnObject(mesh, mat, pos, zIndex);
+        }, py::arg("positions"), py::arg("vertex_count"), py::arg("indices"),
+        py::arg("shader_source_path"), py::arg("pos_x"), py::arg("pos_y"), py::arg("has_texture"),
+        py::arg("z_index"));
 
     py::class_<grafyte::Application>(m, "Application")
         .def(py::init<const std::string&, const std::string&>(), py::arg("name"), py::arg("font"))
@@ -160,11 +191,10 @@ PYBIND11_MODULE(GRAFYTE_PY_MODULE_NAME, m)
             "Get the interval between last and current frame"
         )
 
-        // use_renderer()
+        // make_new_scene()
         .def(
-            "use_renderer",
-            &grafyte::Application::useRenderer,
-            py::arg("renderer"),
+            "make_new_scene",
+            &grafyte::Application::makeNewScene, py::return_value_policy::reference,
             "Sets the current renderer used by the application"
         )
 
@@ -175,6 +205,7 @@ PYBIND11_MODULE(GRAFYTE_PY_MODULE_NAME, m)
             "Render all objects using the internal renderer"
         )
 
+    /*
         // add_text() -> int
         .def(
             "_native_add_text",
@@ -193,7 +224,7 @@ PYBIND11_MODULE(GRAFYTE_PY_MODULE_NAME, m)
         py::arg("id"),
         "Removes the given text from the app"
         )
-
+    */
         // inputs
         .def_static(
             "is_key_down",

@@ -5,29 +5,18 @@
 #include <utility>
 
 #include <glm/ext/matrix_clip_space.hpp>
-#include <glm/ext/matrix_transform.hpp>
-
 
 namespace grafyte
 {
-    Application* Application::g_appInstance = nullptr;
+    Application* Application::s_appInstance = nullptr;
 
     Application::Application(std::string  name, std::string font)
-        : m_name(std::move(name)), m_window(nullptr), m_winWidth(0), m_winHeight(0), m_clearColor({0, 0, 0, 0}),
-          m_font(std::move(font)), m_texts({}) {
-        const glm::mat4 proj = glm::ortho(-100.0f, 100.0f, -100.0f, 100.0f, -1.0f, 1.0f);
-        constexpr glm::mat4 view = glm::translate(glm::mat4(1.0f), glm::vec3(0, 0, 0));
-        constexpr auto model = glm::mat4(1.0f);
-        this->m_MVP = proj * view * model;
+        : scene(nullptr), m_name(std::move(name)), m_window(nullptr), m_winWidth(0), m_winHeight(0),
+          m_clearColor({0, 0, 0, 0}), m_font(std::move(font)), m_texts({}) {
     }
 
     Application::~Application()
     = default;
-
-    void Application::on_key(GLFWwindow* window, const int key, int scancode, const int action, int mods) {
-        // Forward to InputManager for centralized handling
-        InputManager::on_key(window, key, scancode, action, mods);
-    }
 
     int Application::init(const int winWidth, const int winHeight) {
         if (!glfwInit())
@@ -57,7 +46,7 @@ namespace grafyte
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         glBlendEquation(GL_FUNC_ADD);
 
-        g_appInstance = this;
+        s_appInstance = this;
         InputManager::Init();
         glfwSetKeyCallback(m_window, InputManager::on_key);
         m_textRenderer = std::make_unique<TextRenderer>(m_font, 32);
@@ -66,6 +55,12 @@ namespace grafyte
 	}
 
     void Application::quit() {
+        ctx.meshes.clear();
+        ctx.materials.clear();
+
+        m_textRenderer.reset();
+        scene->clear();
+
         if (m_window) {
             glfwDestroyWindow(m_window);
             m_window = nullptr;
@@ -84,23 +79,19 @@ namespace grafyte
         m_deltaTime = m_now - m_lastFrame;
         m_lastFrame = m_now;
 
+        std::cout << "[Application](Render): Frame started. DeltaTime: " << m_deltaTime << std::endl;
+
         glClearColor(m_clearColor.x, m_clearColor.y, m_clearColor.z, m_clearColor.w);
         grafyte::Renderer::Clear();
 
         glfwGetFramebufferSize(m_window, &m_winWidth, &m_winHeight);
         glViewport(0, 0, m_winWidth, m_winHeight);
 
-        const double aspect = static_cast<double>(m_winWidth) / m_winHeight;
-        const float halfWorldWidth = 100.0f * aspect;
-
-        const glm::mat4 proj = glm::ortho(-halfWorldWidth, halfWorldWidth, -100.0f, 100.0f, -1.0f, 1.0f);
-        constexpr glm::mat4 view = glm::translate(glm::mat4(1.0f), glm::vec3(0, 0, 0));
-        constexpr auto model = glm::mat4(1.0f);
-
-        this->m_MVP = proj * view * model;
-
-        m_renderer.Render(m_MVP);
-        drawTexts();
+        // Render
+        computeProjection();
+        std::vector<types::DrawItem> items;
+        scene->buildRenderList(items);
+        ctx.renderer.Render(items, ctx.camera);
 
         /* Swap front and back buffers */
         glfwSwapBuffers(m_window);
@@ -108,8 +99,10 @@ namespace grafyte
         /* Poll for and process events */
         glfwPollEvents();
 
+        std::cout << "[Application](Render): Frame completed." << std::endl;
     }
 
+    /*
     void Application::drawTexts() const {
         for (const auto &[text, scale, posX, posY]: m_texts | std::views::values) {
             const float textWidth = m_textRenderer->MeasureTextWidth(text, scale);
@@ -122,16 +115,30 @@ namespace grafyte
                 m_MVP);
         }
     }
+    */
 
     void Application::setClearColor(const float r, const float g, const float b, const float a) {
-        m_clearColor = Color4(r, g, b, a);
+        m_clearColor = types::Color4(r, g, b, a);
 	}
 
-    void Application::useRenderer(const grafyte::Renderer &renderer) {
-        this->m_renderer = renderer;
+    Scene& Application::makeNewScene()
+    {
+        ctx.meshes.clear();
+        ctx.materials.clear();
+        if (scene)
+            scene->clear();
+        scene = std::make_unique<Scene>(&ctx);
+        return *scene;
     }
 
     void Application::BeginFrame() {
         InputManager::resetInputs();
+    }
+
+    void Application::computeProjection() {
+        const double aspect = static_cast<double>(m_winWidth) / m_winHeight;
+        const float halfWorldWidth = 100.0f * aspect;
+
+        ctx.camera.projection = glm::ortho(-halfWorldWidth, halfWorldWidth, -100.0f, 100.0f, -1.0f, 1.0f);
     }
 }

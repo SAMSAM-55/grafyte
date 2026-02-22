@@ -1,44 +1,71 @@
 #include "Renderer.h"
 
 #include <algorithm>
+#include <iostream>
+#include <glm/ext/matrix_transform.hpp>
+
 #include "glad/glad.h"
 
 namespace grafyte {
+    void Renderer::Draw(const types::DrawItem& item) const {
+        std::cout << "[Renderer](Draw): Drawing item for object ID: " << item.objectId << std::endl;
+        const types::Material *mat = m_materials.mat(item.material);
+        const types::MaterialAsset *matA= m_materials.asset(item.material);
+        const types::Mesh *mesh = m_meshes.mesh(item.mesh);
 
-    // Source - https://stackoverflow.com/a/72025044
-    // Posted by 463035818_is_not_an_ai
-    // Retrieved 2026-02-15, License - CC BY-SA 4.0
 
-    template <typename F>
-    void my_sort(std::vector<std::shared_ptr<Object>>& objects, F f) {
-        std::sort(objects.begin(), objects.end(),
-                  [f](const std::shared_ptr<Object> &a, const std::shared_ptr<Object> &b) {
-                      return f(a) < f(b);
-        });
-    }
+        mat->shader.Bind();
+        mesh->va.Bind();
+        mesh->ib.Bind();
 
-    void Renderer::Draw(const grafyte::ObjectRenderData& data) {
-        data.shader.Bind();
-        data.va.Bind();
-        data.ib.Bind();
-
-        if (data.hasTexture) {
-            glActiveTexture(GL_TEXTURE0 + data.textureSlot);
-            data.texture.Bind(data.textureSlot);
-            data.shader.SetUniform1i("u_Texture", data.textureSlot);
+        if (matA->hasTexture) {
+            std::cout << "[Renderer](Draw): Binding texture to slot: " << matA->textureSlot << std::endl;
+            glActiveTexture(GL_TEXTURE0 + matA->textureSlot);
+            mat->texture.Bind(matA->textureSlot);
+            mat->shader.SetUniform1i("u_Texture", matA->textureSlot);
         }
 
-        glDrawElements(GL_TRIANGLES, data.ib.GetCount(), GL_UNSIGNED_INT, nullptr);
+        std::cout << "[Renderer](Draw): glDrawElements. Count: " << mesh->ib.GetCount() << std::endl;
+        glDrawElements(GL_TRIANGLES, mesh->ib.GetCount(), GL_UNSIGNED_INT, nullptr);
     }
 
-    void Renderer::Render(const glm::mat4& MVP)
+    glm::mat4 Renderer::computeModel(const types::Transform &t) {
+        auto model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(t.pos.x, t.pos.y, 0.0f));
+        model = glm::rotate(model, glm::radians(t.rot), glm::vec3(0.0f, 0.0f, 1.0f));
+        model = glm::scale(model, glm::vec3(t.scale.x, t.scale.y, 1.0f));
+
+        return model;
+    }
+
+    void Renderer::Render(std::vector<types::DrawItem>& items, const Camera& camera) const
     {
-        my_sort(m_obj,[](const std::shared_ptr<Object>& obj) { return obj->GetRenderData().zIndex; });
+        std::cout << "[Renderer](Render): Starting render of " << items.size() << " items." << std::endl;
+        std::ranges::sort(items,
+                          [](const types::DrawItem& a, const types::DrawItem& b)
+                          {
+                              return a.zIndex < b.zIndex;
+                          });
 
-        for (const std::shared_ptr<Object>& obj : m_obj) {
-            obj->SetShaderUniformMat4f("u_MVP", MVP);
-            Draw(obj->GetRenderData());
+        for (const auto& it: items) {
+            std::cout << "[Renderer](Render): Processing item for object ID: " << it.objectId << " at zIndex: " << it.zIndex << std::endl;
+            const auto* mat = m_materials.mat(it.material);
+            if (!mat) throw std::runtime_error("No material found");
+
+            mat->shader.Bind();
+
+            const glm::mat4 model = computeModel(it.transform);
+            const glm::mat4 mvp = camera.projection * camera.view * model;
+            mat->shader.SetUniformMat4f("u_MVP", mvp);
+
+            Draw(it);
         }
+        std::cout << "[Renderer](Render): Render completed." << std::endl;
+    }
+
+    Renderer::Renderer(MeshManager &meshes, MaterialManager &materials)
+        : m_meshes(meshes), m_materials(materials)
+    {
     }
 
     void Renderer::Clear()

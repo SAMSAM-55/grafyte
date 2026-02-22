@@ -87,6 +87,12 @@ namespace grafyte
         glUseProgram(0);
     }
 
+    void Shader::release() const
+    {
+        Unbind();
+        glDeleteProgram(m_RendererID);
+    }
+
     void Shader::SetUniform1i(const std::string& name, int value) const
     {
         glUniform1i(GetUniformLocation(name), value);
