@@ -8,7 +8,7 @@
 
 namespace grafyte {
     void Renderer::Draw(const types::DrawItem& item) const {
-        std::cout << "[Renderer](Draw): Drawing item for object ID: " << item.objectId << std::endl;
+        // std::cout << "[Renderer](Draw): Drawing item for object ID: " << item.objectId << std::endl;
         const types::Material *mat = m_materials.mat(item.material);
         const types::MaterialAsset *matA= m_materials.asset(item.material);
         const types::Mesh *mesh = m_meshes.mesh(item.mesh);
@@ -19,14 +19,14 @@ namespace grafyte {
         mesh->ib.Bind();
 
         if (matA->hasTexture) {
-            std::cout << "[Renderer](Draw): Binding texture to slot: " << matA->textureSlot << std::endl;
+            // std::cout << "[Renderer](Draw): Binding texture to slot: " << matA->textureSlot << std::endl;
             glActiveTexture(GL_TEXTURE0 + matA->textureSlot);
             mat->texture.Bind(matA->textureSlot);
-            mat->shader.SetUniform1i("u_Texture", matA->textureSlot);
+            mat->shader.SetUniform1i("u_Texture", static_cast<GLint>(matA->textureSlot));
         }
 
-        std::cout << "[Renderer](Draw): glDrawElements. Count: " << mesh->ib.GetCount() << std::endl;
-        glDrawElements(GL_TRIANGLES, mesh->ib.GetCount(), GL_UNSIGNED_INT, nullptr);
+        // std::cout << "[Renderer](Draw): glDrawElements. Count: " << mesh->ib.GetCount() << std::endl;
+        glDrawElements(GL_TRIANGLES, static_cast<GLint>(mesh->ib.GetCount()), GL_UNSIGNED_INT, nullptr);
     }
 
     glm::mat4 Renderer::computeModel(const types::Transform &t) {
@@ -40,7 +40,7 @@ namespace grafyte {
 
     void Renderer::Render(std::vector<types::DrawItem>& items, const Camera& camera) const
     {
-        std::cout << "[Renderer](Render): Starting render of " << items.size() << " items." << std::endl;
+        // std::cout << "[Renderer](Render): Starting render of " << items.size() << " items." << std::endl;
         std::ranges::sort(items,
                           [](const types::DrawItem& a, const types::DrawItem& b)
                           {
@@ -48,7 +48,7 @@ namespace grafyte {
                           });
 
         for (const auto& it: items) {
-            std::cout << "[Renderer](Render): Processing item for object ID: " << it.objectId << " at zIndex: " << it.zIndex << std::endl;
+            // std::cout << "[Renderer](Render): Processing item for object ID: " << it.objectId << " at zIndex: " << it.zIndex << std::endl;
             const auto* mat = m_materials.mat(it.material);
             if (!mat) throw std::runtime_error("No material found");
 
@@ -60,7 +60,7 @@ namespace grafyte {
 
             Draw(it);
         }
-        std::cout << "[Renderer](Render): Render completed." << std::endl;
+        // std::cout << "[Renderer](Render): Render completed." << std::endl;
     }
 
     Renderer::Renderer(MeshManager &meshes, MaterialManager &materials)

@@ -1,17 +1,21 @@
-from grafyte.__converters import Vec2d, Color
+from typing import overload, Union
+
+from .__converters import Vec2f, Color, Vec2Like
 
 from __grafyte_internal import Key as _NativeKey
+from __grafyte_internal import Vec2 as _NativeVec2
 from __grafyte_internal import Application as _NativeApplication
 from __grafyte_internal import Object as _NativeObject
 from __grafyte_internal import Scene as _NativeScene
 
 class Key(_NativeKey): ...
+class Vec2(_NativeVec2): ...
 
 class Application:
     """
     The main application class that manages the window, rendering context, and input.
     """
-    def __init__(self, name: str, window_dimensions: Vec2d):
+    def __init__(self, name: str, window_dimensions: Vec2Like):
         """
         Initializes the application window and rendering context.
 
@@ -147,8 +151,8 @@ class Scene:
     def __init__(self, native: _NativeScene): ...
 
     def spawn_object(self,
-                     pos: Vec2d,
-                     size: Vec2d,
+                     pos: Vec2Like,
+                     size: Vec2Like,
                      layer: int = 0,
                      has_texture: bool = False,
                      shader_source_path: str = "") -> Object: ...
@@ -160,6 +164,21 @@ class Object:
 
     __native: _NativeObject
 
+    @property
+    def pos(self) -> Vec2:
+        """The current position of the object."""
+        ...
+
+    @property
+    def rot(self) -> float:
+        """The current rotation of the object."""
+        ...
+
+    @property
+    def scale(self) -> Vec2:
+        """The current scale of the object."""
+        ...
+
     def __init__(self, native: _NativeObject): ...
 
     def set_color(self, color: Color, a: float = 1) -> None:
@@ -170,20 +189,29 @@ class Object:
         :param a: The alpha chanel for the color. (default = 1)
         """
         ...
-    def move(self, offset: Vec2d) -> None:
+    def move(self, offset: Vec2Like) -> None:
         """
         Moves the object by a given offset from its current position.
 
         :param offset: A Vec2d representing the (dx, dy) to move the object.
         """
         ...
-    def move_to(self, pos: Vec2d) -> None:
+    def move_to(self, pos: Vec2Like) -> None:
         """
         Moves the object to a specific absolute position.
 
         :param pos: A Vec2d representing the new (x, y) position.
         """
         ...
+    def rotate(self,angle: float) -> None: ...
+    def set_rotation(self,angle: float) -> None: ...
+
+    @overload
+    def set_scale(self, scale: Vec2Like) -> None: ...
+
+    @overload
+    def set_scale(self, scale: float) -> None: ...
+
     def use_texture(self, path: str, slot: int = 0) -> None:
         """
         Loads and applies a texture to the object.

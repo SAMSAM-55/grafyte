@@ -25,8 +25,6 @@ namespace grafyte
 		const types::Material* mat = m_scene->materials().mat(h);
 		mat->shader.Bind();
 		mat->shader.SetUniform4f("u_Tint", t.x, t.y, t.z, t.w);
-
-		// m_scene->materials().upload(h);
 	}
 
 	void Object::SetColor(const types::Color4& c) const
@@ -35,8 +33,6 @@ namespace grafyte
 		const types::Material* mat = m_scene->materials().mat(h);
 		mat->shader.Bind();
 		mat->shader.SetUniform4f("u_Color", c.x, c.y, c.z, c.w);
-
-		// m_scene->materials().upload(h);
 	}
 
 	void Object::Move(const types::Vec2 offset) const {
@@ -47,4 +43,38 @@ namespace grafyte
 		m_scene->transform(m_id).pos = pos;
 	}
 
+	void Object::Rotate(const float angle) const
+	{
+		m_scene->transform(m_id).rot += angle;
+	}
+
+	void Object::SetRotation(const float angle) const
+	{
+		m_scene->transform(m_id).rot = angle;
+	}
+
+	void Object::SetScale(const float scale) const
+	{
+		m_scene->transform(m_id).scale = {scale, scale};
+	}
+
+	void Object::SetScale(const types::Vec2 scale) const
+	{
+		m_scene->transform(m_id).scale = scale;
+	}
+
+	types::Vec2 Object::GetScale() const
+	{
+		return m_scene->transform(m_id).scale;
+	}
+
+	types::Vec2 Object::GetPosition() const
+	{
+		return m_scene->transform(m_id).pos;
+	}
+
+	float Object::GetRotation() const
+	{
+		return m_scene->transform(m_id).rot;
+	}
 }

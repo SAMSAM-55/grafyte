@@ -25,6 +25,20 @@ PYBIND11_MODULE(GRAFYTE_PY_MODULE_NAME, m)
 {
     m.doc() = "Python bindings for the Grafyte engine";
 
+    // Expose Vec2 as a Python type that can be built from a tuple
+    py::class_<grafyte::types::Vec2>(m, "Vec2")
+        .def(py::init<float, float>(), py::arg("x") = 0.0f, py::arg("y") = 0.0f)
+        .def(py::init([](py::sequence seq)
+        {
+            if (py::len(seq) != 2) throw std::runtime_error("Vec2 must have exactly two elements");
+            return grafyte::types::Vec2{seq[0].cast<float>(), seq[1].cast<float>()};
+        }))
+        .def_readonly("x", &grafyte::types::Vec2::x)
+        .def_readonly("y", &grafyte::types::Vec2::y);
+
+    py::implicitly_convertible<py::tuple, grafyte::types::Vec2>();
+    py::implicitly_convertible<py::list, grafyte::types::Vec2>();
+
     // Expose grafyte::inputs::Key as a Python enum
     py::enum_<grafyte::inputs::Key>(m, "Key")
         .value("Space", grafyte::inputs::Key::Space)
@@ -73,6 +87,10 @@ PYBIND11_MODULE(GRAFYTE_PY_MODULE_NAME, m)
         .export_values();
 
     py::class_<grafyte::Object, std::shared_ptr<grafyte::Object>>(m, "Object")
+        .def_property_readonly("scale", &grafyte::Object::GetScale)
+        .def_property_readonly("pos", &grafyte::Object::GetPosition)
+        .def_property_readonly("rot", &grafyte::Object::GetRotation)
+
         .def("use_texture", &grafyte::Object::SetTexture, py::arg("texture_source_path"), py::arg("slot"))
 
         .def("set_tint", [](const grafyte::Object& self, const float& r, const float& g, const float& b, const float& strength)
@@ -91,7 +109,11 @@ PYBIND11_MODULE(GRAFYTE_PY_MODULE_NAME, m)
         .def("move_to", [](const grafyte::Object& self, const float& pos_x, const float& pos_y)
         {
             self.MoveTo({pos_x, pos_y});
-        }, py::arg("pos_x"), py::arg("pos_y"));
+        }, py::arg("pos_x"), py::arg("pos_y"))
+        .def("rotate", &grafyte::Object::Rotate, py::arg("angle"))
+        .def("set_rotation", &grafyte::Object::SetRotation, py::arg("angle"))
+        .def("set_scale", py::overload_cast<float>(&grafyte::Object::SetScale, py::const_), py::arg("scale"))
+        .def("set_scale", py::overload_cast<grafyte::types::Vec2>(&grafyte::Object::SetScale, py::const_), py::arg("scale"));
 
 
     py::class_<grafyte::Scene, std::shared_ptr<grafyte::Scene>>(m, "Scene")

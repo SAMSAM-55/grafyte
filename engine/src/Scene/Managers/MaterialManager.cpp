@@ -32,14 +32,14 @@ namespace grafyte {
     }
 
     void MaterialManager::upload(const types::MaterialHandle &h) {
-        std::cout << "[MaterialManager](Upload): Uploading material for ID: " << h.id << std::endl;
+        // std::cout << "[MaterialManager](Upload): Uploading material for ID: " << h.id << std::endl;
         types::MaterialAsset* a = asset(h);
-        std::cout << "[MaterialManager](Upload): Shader path: " << a->shaderSourcePath << std::endl;
+        // std::cout << "[MaterialManager](Upload): Shader path: " << a->shaderSourcePath << std::endl;
         auto shader = Shader(a->shaderSourcePath);
         auto tex = Texture();
 
         if (a->hasTexture) {
-            std::cout << "[MaterialManager](Upload): Material has texture. Path: " << a->textureSourcePath << " Slot: " << a->textureSlot << std::endl;
+            // std::cout << "[MaterialManager](Upload): Material has texture. Path: " << a->textureSourcePath << " Slot: " << a->textureSlot << std::endl;
             if (a->textureSourcePath.empty()) {
                 a->textureSourcePath = "@embed/Textures/No";
             }
@@ -52,7 +52,7 @@ namespace grafyte {
         }
 
         m_mats.insert_or_assign(h, types::Material{std::move(shader), std::move(tex)});
-        std::cout << "[MaterialManager](Upload): Material uploaded successfully for ID: " << h.id << std::endl;
+        // std::cout << "[MaterialManager](Upload): Material uploaded successfully for ID: " << h.id << std::endl;
     }
 
     void MaterialManager::clear()

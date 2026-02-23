@@ -79,7 +79,7 @@ namespace grafyte
         m_deltaTime = m_now - m_lastFrame;
         m_lastFrame = m_now;
 
-        std::cout << "[Application](Render): Frame started. DeltaTime: " << m_deltaTime << std::endl;
+        // std::cout << "[Application](Render): Frame started. DeltaTime: " << m_deltaTime << std::endl;
 
         glClearColor(m_clearColor.x, m_clearColor.y, m_clearColor.z, m_clearColor.w);
         grafyte::Renderer::Clear();
@@ -99,7 +99,7 @@ namespace grafyte
         /* Poll for and process events */
         glfwPollEvents();
 
-        std::cout << "[Application](Render): Frame completed." << std::endl;
+        // std::cout << "[Application](Render): Frame completed." << std::endl;
     }
 
     /*

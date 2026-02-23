@@ -1,22 +1,51 @@
 from array import array
+from typing import Union
 
 from .__converters import *
 
 from __grafyte_internal import Application as _NativeApplication
 from __grafyte_internal import Object as _NativeObject
 from __grafyte_internal import Scene as _NativeScene
-from __grafyte_internal import Key
-
+from __grafyte_internal import Key, Vec2
 
 class Object:
     def __init__(self, native_object: _NativeObject):
         self.__native = native_object
 
-    def move(self, offset: Vec2d):
+    @property
+    def pos(self):
+        return self.__native.pos
+
+    @property
+    def rot(self):
+        return self.__native.rot
+
+    @property
+    def scale(self):
+        return self.__native.scale
+
+    def move(self, offset: Vec2Like):
+        offset = ensure_vec2f("Object.move(offset=...)", offset)
         self.__native.move(*offset)
 
-    def move_to(self, pos: Vec2d):
+    def move_to(self, pos: Vec2Like):
+        pos = ensure_vec2f("Object.move_to(pos=...)", pos)
         self.__native.move_to(*pos)
+
+    def rotate(self, angle: float):
+        self.__native.rotate(angle)
+
+    def set_rotation(self, angle: float):
+        self.__native.set_rotation(angle)
+
+    @overload
+    def set_scale(self, scale: Vec2Like) -> None: ...
+
+    @overload
+    def set_scale(self, scale: float) -> None: ...
+
+    def set_scale(self, scale: Union[Vec2Like, float]) -> None:
+        self.__native.set_scale(scale)
 
     def use_texture(self, texture_source_path: str, slot: int):
         self.__native.use_texture(texture_source_path, slot)
@@ -33,13 +62,13 @@ class Scene:
         self.__native = native_scene
 
     def spawn_object(self,
-                     pos: Vec2d,
-                     size: Vec2d,
+                     pos: Vec2Like,
+                     size: Vec2Like,
                      layer: int = 0,
                      has_texture: bool = False,
                      shader_source_path: str = "") -> Object:
-        pos = ensure_vec2d("Object(pos=...)", pos)
-        size = ensure_vec2d("Object(size=...)", size)
+        pos = ensure_vec2f("Object(pos=...)", pos)
+        size = ensure_vec2f("Object(size=...)", size)
 
         positions = array("f", [
             -size[0], -size[1], 0, 0,
@@ -74,11 +103,9 @@ class Application(_NativeApplication):
         native_scene = super().make_new_scene()
         return Scene(native_scene)
 
-    def __init__(self, name: str, window_dimensions: Vec2d):
-        ensure_vec2d("Application(window_dimensions=...)", window_dimensions)
-
+    def __init__(self, name: str, window_dimensions: Vec2Like):
         super().__init__(name, "@embed/Fonts/Base")
-
+        window_dimensions = ensure_vec2i("Application(window_dimensions=...)", window_dimensions)
         super().init(*window_dimensions)
 
     def set_background_color(self, color: Color):

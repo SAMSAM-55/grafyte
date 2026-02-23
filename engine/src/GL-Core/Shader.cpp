@@ -50,9 +50,9 @@ namespace grafyte
             glGetShaderiv(id, GL_INFO_LOG_LENGTH, &length);
             const auto message = static_cast<char *>(alloca(length * sizeof(char)));
             glGetShaderInfoLog(id, length, &length, message);
-            std::cout << "[OpenGL Shader Compilation]" << (type == GL_VERTEX_SHADER ? "Vertex" : "Fragment")
-                      << "shader compilation failed! Error :" << std::endl;
-            std::cout << message << std::endl;
+            // std::cout << "[OpenGL Shader Compilation]" << (type == GL_VERTEX_SHADER ? "Vertex" : "Fragment")
+            //           << "shader compilation failed! Error :" << std::endl;
+            // std::cout << message << std::endl;
             glDeleteShader(id);
             return 0;
         }

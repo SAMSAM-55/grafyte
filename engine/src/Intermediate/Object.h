@@ -40,6 +40,15 @@ namespace grafyte
 		/* Actual object functions */
 		void Move(types::Vec2 offset) const;
 		void MoveTo(types::Vec2 pos) const;
+		void Rotate(float angle) const;
+		void SetRotation(float angle) const;
+		void SetScale(float scale) const;
+		void SetScale(types::Vec2 scale) const;
+
+		/* Getters */
+		types::Vec2 GetScale() const;
+		types::Vec2 GetPosition() const;
+		float GetRotation() const;
 
 	private:
 		Scene* m_scene = nullptr;
