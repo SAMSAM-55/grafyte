@@ -9,6 +9,7 @@
 #include "GL-Core/VertexBufferLayout.h"
 #include "GL-Core/Shader.h"
 #include "GL-Core/Texture.h"
+#include "Scene/Managers/Shapes.h"
 
 namespace grafyte 
 {
@@ -45,10 +46,19 @@ namespace grafyte
 		void SetScale(float scale) const;
 		void SetScale(types::Vec2 scale) const;
 
+		void AddCollisionBox(collision::AABB& b) const;
+		// void AddCollisionCircle(collision::Circle& c) const;
+		void EnableAutoCollides() const;
+
 		/* Getters */
+		types::ObjectId GetId() const {return m_id;};
 		types::Vec2 GetScale() const;
 		types::Vec2 GetPosition() const;
 		float GetRotation() const;
+
+		/* Collisions */
+		[[nodiscard]] bool CollidesWith(const Object& other) const;
+		[[nodiscard]] bool IsColliding() const;
 
 	private:
 		Scene* m_scene = nullptr;

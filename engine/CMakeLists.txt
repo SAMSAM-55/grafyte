@@ -43,7 +43,7 @@ add_library(grafyte_core STATIC
         src/Text/TextRenderer.cpp
         utils/embedd/EmbeddedAsset.cpp
         src/Inputs/InputManager.cpp
-        src/Collisions/CollisionManager.cpp
+        src/Scene/Managers/CollisionManager.cpp
         src/Scene/Scene.cpp
         src/Scene/Managers/MeshManager.cpp
         src/Scene/Managers/MaterialManager.cpp

@@ -4,11 +4,13 @@
 #include "Intermediate/Renderer.h"
 #include "../Scene/Managers/MaterialManager.h"
 #include "../Scene/Managers/MeshManager.h"
+#include "Scene/Managers/CollisionManager.h"
 
 namespace grafyte {
     struct WorldContext {
         MeshManager meshes;
         MaterialManager materials;
+        CollisionManager collisions;
         Renderer renderer;
         Camera camera;
 

@@ -29,6 +29,9 @@ namespace grafyte {
         [[nodiscard]] MaterialManager& materials() {return m_ctx->materials;};
         [[nodiscard]] const MaterialManager& materials() const {return m_ctx->materials;};
 
+        [[nodiscard]] CollisionManager& collisions() {return m_ctx->collisions;};
+        [[nodiscard]] const CollisionManager& collisions() const {return m_ctx->collisions;};
+
         void setTransform(const types::ObjectId& id, const types::Transform& t) {m_transforms[id] = t;};
         void setRenderable(const types::ObjectId& id, const types::RenderComponent& rc) {m_renderables[id] = rc;};
 

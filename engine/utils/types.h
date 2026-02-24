@@ -22,7 +22,29 @@ namespace grafyte::types {
             y += other.y;
             return *this;
         }
+
+        Vec2 operator-(const Vec2& other) const {
+            return {x - other.x, y - other.y};
+        };
+
+        Vec2& operator-=(const Vec2& other) {
+            x -= other.x;
+            y -= other.y;
+            return *this;
+        };
+
+        Vec2 operator*(const float& a) const {
+            return {x * a, y * a};
+        };
+
+        Vec2 operator/(const float& a) const {
+            return {x / a, y / a};
+        };
     };
+
+    inline Vec2 operator*(const float& a, const Vec2& v) {
+        return {v.x * a, v.y * a};
+    }
 
     struct Transform {
         Vec2 pos{0.0f, 0.0f};

@@ -102,6 +102,19 @@ PYBIND11_MODULE(GRAFYTE_PY_MODULE_NAME, m)
             self.SetColor({r, g, b, a});
         }, py::arg("color_r"), py::arg("color_g"), py::arg("color_b"), py::arg("color_a"))
 
+        .def("add_collision_box", [](const grafyte::Object& self, const float& pos_x, const float& pos_y,
+                                     const float& size_x, const float& size_y)
+        {
+            auto box = grafyte::collision::AABB{{pos_x, pos_y}, size_x, size_y};
+            self.AddCollisionBox(box);
+        }, py::arg("size_x"), py::arg("size_y"), py::arg("scale_x"), py::arg("scale_y"))
+        .def("collides_with", [](const grafyte::Object& self, const grafyte::Object& other)
+        {
+            return self.CollidesWith(other);
+        }, py::arg("other"))
+        .def("is_colliding", &grafyte::Object::IsColliding)
+        .def("enable_auto_collides", &grafyte::Object::EnableAutoCollides)
+
         .def("move", [](const grafyte::Object& self, const float& offset_x, const float& offset_y)
         {
             self.Move({offset_x, offset_y});

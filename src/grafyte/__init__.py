@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from array import array
 from typing import Union
 
@@ -23,6 +25,20 @@ class Object:
     @property
     def scale(self):
         return self.__native.scale
+
+    def add_collision_box(self, pos: Vec2Like, size: Vec2Like):
+        pos = ensure_vec2f("Object.add_collision_box(pos=...", pos)
+        size = ensure_vec2f("Object.add_collision_box(size=...", size)
+        self.__native.add_collision_box(*pos, *size)
+
+    def collides_with(self, other: Object) -> bool:
+        return self.__native.collides_with(other.__native)
+
+    def is_colliding(self) -> bool:
+        return self.__native.is_colliding()
+
+    def enable_auto_collides(self):
+        self.__native.enable_auto_collides()
 
     def move(self, offset: Vec2Like):
         offset = ensure_vec2f("Object.move(offset=...)", offset)
