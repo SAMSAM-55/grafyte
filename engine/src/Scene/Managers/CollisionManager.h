@@ -5,7 +5,7 @@
 #include "Shapes.h"
 
 namespace grafyte {
-    constexpr float EPSILON = 0.0f;
+    constexpr float EPSILON = 1e-8f;
 
     class Scene;
 
@@ -22,15 +22,15 @@ namespace grafyte {
             return std::ranges::find(m_autoCollides, objId) != m_autoCollides.end();
         }
 
-        bool ObjectsCollides(const types::ObjectId& A, const types::ObjectId& B, Scene& scene);
-        bool IsColliding(const types::ObjectId& A, Scene& scene);
+        collision::Hit ObjectsCollides(const types::ObjectId& A, const types::ObjectId& B, Scene& scene);
+        collision::Hit IsColliding(const types::ObjectId& A, Scene& scene);
         types::Vec2 PushBackOnMove(const types::ObjectId& objId, const types::Vec2& v, Scene& scene);
     private:
         static float clampf(const float v, const float lo, const float hi) {
             return (v < lo) ? lo : (v > hi) ? hi : v;
         }
 
-        static bool Intersects(const collision::AABB& a, const collision::AABB& b);
+        static collision::Hit Intersects(const collision::AABB& a, const collision::AABB& b);
         // static bool Intersects(const collision::AABB& a, const collision::Circle& b);
         // static bool Intersects(const collision::Circle& a, const collision::AABB& b) {return Intersects(b, a);};
         // static bool Intersects(const collision::Circle& a, const collision::Circle& b);

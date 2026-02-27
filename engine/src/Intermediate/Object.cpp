@@ -100,11 +100,11 @@ namespace grafyte
 
 	bool Object::CollidesWith(const Object& other) const
 	{
-		return m_scene->collisions().ObjectsCollides(m_id, other.GetId(), *m_scene);
+		return static_cast<bool>(m_scene->collisions().ObjectsCollides(m_id, other.GetId(), *m_scene));
 	}
 
 	bool Object::IsColliding() const
 	{
-		return m_scene->collisions().IsColliding(m_id, *m_scene);
+		return static_cast<bool>(m_scene->collisions().IsColliding(m_id, *m_scene));
 	}
 }

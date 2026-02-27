@@ -8,7 +8,7 @@ from .__converters import *
 from __grafyte_internal import Application as _NativeApplication
 from __grafyte_internal import Object as _NativeObject
 from __grafyte_internal import Scene as _NativeScene
-from __grafyte_internal import Key, Vec2
+from __grafyte_internal import Key, InputTrigger, Vec2, Direction, Hit
 
 class Object:
     def __init__(self, native_object: _NativeObject):

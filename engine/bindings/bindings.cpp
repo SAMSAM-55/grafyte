@@ -12,6 +12,9 @@
 
 #include "Inputs/InputManager.h"
 
+#include "Scene/Scene.h"
+#include "Scene/Managers/CollisionManager.h"
+
 namespace py = pybind11;
 
 #ifndef GRAFYTE_PY_MODULE_NAME
@@ -86,6 +89,31 @@ PYBIND11_MODULE(GRAFYTE_PY_MODULE_NAME, m)
         .value("RightShift", grafyte::inputs::Key::RightShift)
         .export_values();
 
+    py::enum_<grafyte::collision::Direction>(m, "Direction")
+        .value("Top", grafyte::collision::Direction::Top)
+        .value("Bottom", grafyte::collision::Direction::Bottom)
+        .value("Right", grafyte::collision::Direction::Right)
+        .value("Left", grafyte::collision::Direction::Left)
+        .export_values();
+
+    py::class_<grafyte::collision::AABB>(m, "AABB")
+        .def_readonly("pos", &grafyte::collision::AABB::pos)
+        .def_readonly("width", &grafyte::collision::AABB::width)
+        .def_readonly("height", &grafyte::collision::AABB::height);
+
+    py::class_<grafyte::collision::Hit>(m, "Hit")
+        .def_readonly("A", &grafyte::collision::Hit::A)
+        .def_readonly("B", &grafyte::collision::Hit::B)
+        .def_readonly("collision", &grafyte::collision::Hit::collision)
+        .def_readonly("direction", &grafyte::collision::Hit::direction)
+        .def("__bool__", [](const grafyte::collision::Hit& self) { return self.collision; });
+
+    py::enum_<grafyte::InputTrigger>(m, "InputTrigger")
+        .value("Press", grafyte::Press)
+        .value("Hold", grafyte::Hold)
+        .value("Release", grafyte::Release)
+        .export_values();
+
     py::class_<grafyte::Object, std::shared_ptr<grafyte::Object>>(m, "Object")
         .def_property_readonly("scale", &grafyte::Object::GetScale)
         .def_property_readonly("pos", &grafyte::Object::GetPosition)
@@ -110,9 +138,12 @@ PYBIND11_MODULE(GRAFYTE_PY_MODULE_NAME, m)
         }, py::arg("size_x"), py::arg("size_y"), py::arg("scale_x"), py::arg("scale_y"))
         .def("collides_with", [](const grafyte::Object& self, const grafyte::Object& other)
         {
-            return self.CollidesWith(other);
+            return self.GetScene()->collisions().ObjectsCollides(self.GetId(), other.GetId(), *self.GetScene());
         }, py::arg("other"))
-        .def("is_colliding", &grafyte::Object::IsColliding)
+        .def("is_colliding", [](const grafyte::Object& self)
+        {
+            return self.GetScene()->collisions().IsColliding(self.GetId(), *self.GetScene());
+        })
         .def("enable_auto_collides", &grafyte::Object::EnableAutoCollides)
 
         .def("move", [](const grafyte::Object& self, const float& offset_x, const float& offset_y)
@@ -285,23 +316,12 @@ PYBIND11_MODULE(GRAFYTE_PY_MODULE_NAME, m)
             &grafyte::Application::createInputAction,
             py::arg("name"),
             py::arg("key"),
+            py::arg("trigger"),
             "Creates a new input action for the current application"
         )
         .def_static(
-            "is_action_down",
-            &grafyte::Application::isActionDown,
-            py::arg("action"),
-            "Return current input state (placeholder for now)"
-        )
-        .def_static(
-            "was_action_pressed",
-            &grafyte::Application::wasActionPressed,
-            py::arg("action"),
-            "Return current input state (placeholder for now)"
-        )
-        .def_static(
-            "was_action_released",
-            &grafyte::Application::wasActionReleased,
+            "is_action_active",
+            &grafyte::Application::isActionActive,
             py::arg("action"),
             "Return current input state (placeholder for now)"
         )

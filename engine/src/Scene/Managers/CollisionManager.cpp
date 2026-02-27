@@ -5,7 +5,7 @@
 #include <iostream>
 #include <ranges>
 
-bool grafyte::CollisionManager::ObjectsCollides(const types::ObjectId& A, const types::ObjectId& B, Scene& scene) {
+grafyte::collision::Hit grafyte::CollisionManager::ObjectsCollides(const types::ObjectId& A, const types::ObjectId& B, Scene& scene) {
     if (!(m_collisionBounds.contains(A) && m_collisionBounds.contains(B))) {
         throw std::runtime_error("[Collision Manager] Cannot check for collision between the two objects, at least one "
                                  "has no collision bounds");
@@ -23,30 +23,33 @@ bool grafyte::CollisionManager::ObjectsCollides(const types::ObjectId& A, const 
         for (const auto& b: BColliders)
         {
             const auto bWorld = collision::AABB{b.pos + bPos, b.width, b.height};
-            if (Intersects(aWorld, bWorld)) return true;
+            if (const auto hit = Intersects(aWorld, bWorld)) return hit;
         }
     }
 
-    return false;
+    return collision::Hit{collision::AABB{}, collision::AABB{}, false, collision::Top};
 }
 
-bool grafyte::CollisionManager::IsColliding(const types::ObjectId& A, Scene& scene)
+grafyte::collision::Hit grafyte::CollisionManager::IsColliding(const types::ObjectId& A, Scene& scene)
 {
-    if (std::ranges::find(m_colliding, A) != m_colliding.end()) return true;
+    if (std::ranges::find(m_colliding, A) != m_colliding.end()) {
+        // This is a bit problematic as we don't know who we collided with from m_colliding.
+        // For now, let's keep it simple or re-check.
+    }
 
     for (const auto& B : m_collisionBounds | std::views::keys)
     {
         if (B == A) continue;
 
-        if (ObjectsCollides(A, B, scene))
+        if (const auto hit = ObjectsCollides(A, B, scene))
         {
             m_colliding.push_back(A);
             m_colliding.push_back(B);
-            return true;
+            return hit;
         }
     }
 
-    return false;
+    return collision::Hit{collision::AABB{}, collision::AABB{}, false, collision::Top};
 }
 
 grafyte::types::Vec2 grafyte::CollisionManager::PushBackOnMove(const types::ObjectId& objId, const types::Vec2& v, Scene& scene)
@@ -122,10 +125,27 @@ grafyte::types::Vec2 grafyte::CollisionManager::PushBackOnMove(const types::Obje
     return result;
 }
 
-bool grafyte::CollisionManager::Intersects(const collision::AABB& a, const collision::AABB& b) {
-    return
-        std::abs(a.pos.x - b.pos.x) <= (a.width  + b.width) &&
-        std::abs(a.pos.y - b.pos.y) <= (a.height + b.height);
+grafyte::collision::Hit grafyte::CollisionManager::Intersects(const collision::AABB& a, const collision::AABB& b) {
+    const float dx = a.pos.x - b.pos.x;
+    const float dy = a.pos.y - b.pos.y;
+    const float combinedWidth = a.width + b.width;
+    const float combinedHeight = a.height + b.height;
+
+    if (std::abs(dx) <= combinedWidth && std::abs(dy) <= combinedHeight) {
+        const float overlapX = combinedWidth - std::abs(dx);
+        const float overlapY = combinedHeight - std::abs(dy);
+
+        collision::Direction dir;
+        if (overlapX < overlapY) {
+            dir = (dx > 0) ? collision::Right : collision::Left;
+        } else {
+            dir = (dy > 0) ? collision::Bottom : collision::Top;
+        }
+
+        return {a, b, true, dir};
+    }
+
+    return {a, b, false, collision::Top};
 }
 
 // bool grafyte::CollisionManager::Intersects(const collision::AABB &a, const collision::Circle &b) {

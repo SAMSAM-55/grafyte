@@ -33,6 +33,8 @@ namespace grafyte::collision {
         AABB B;
         bool collision;
         Direction direction;
+
+        explicit operator bool() const { return collision; }
     };
 
     // struct Circle: Shape {

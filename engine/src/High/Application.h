@@ -43,12 +43,10 @@ namespace grafyte
 		static bool isKeyDown(const Key& key) {return InputManager::isKeyDown(key);};
 		static bool wasKeyPressed(const Key& key) {return InputManager::wasKeyPressed(key);};
 		static bool wasKeyReleased(const Key& key) {return InputManager::wasKeyReleased(key);};
-		
-		static bool isActionDown(const std::string& name) {return InputManager::isActionDown(name);};
-		static bool wasActionPressed(const std::string& name) {return InputManager::wasActionPressed(name);};
-		static bool wasActionReleased(const std::string& name) {return InputManager::wasActionReleased(name);};
-		static void createInputAction(const std::string &name, const Key &key) {
-			InputManager::createAction(name, key);
+
+		static bool isActionActive(const std::string& name) {return InputManager::isActionActive(name);};
+		static void createInputAction(const std::string &name, const Key &key, const InputTrigger& trigger) {
+			InputManager::createAction(name, key, trigger);
 		}
 		
 		void setClearColor(float r, float g, float b, float a);

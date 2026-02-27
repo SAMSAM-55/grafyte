@@ -52,6 +52,7 @@ namespace grafyte
 
 		/* Getters */
 		types::ObjectId GetId() const {return m_id;};
+		Scene* GetScene() const {return m_scene;};
 		types::Vec2 GetScale() const;
 		types::Vec2 GetPosition() const;
 		float GetRotation() const;

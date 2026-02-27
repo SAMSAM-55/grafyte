@@ -3,13 +3,21 @@ from typing import overload, Union
 from .__converters import Vec2f, Color, Vec2Like
 
 from __grafyte_internal import Key as _NativeKey
+from __grafyte_internal import InputTrigger as _NativeInputTrigger
 from __grafyte_internal import Vec2 as _NativeVec2
 from __grafyte_internal import Application as _NativeApplication
 from __grafyte_internal import Object as _NativeObject
 from __grafyte_internal import Scene as _NativeScene
+from __grafyte_internal import Direction as _NativeDirection
+from __grafyte_internal import AABB as _NativeAABB
+from __grafyte_internal import Hit as _NativeHit
 
 class Key(_NativeKey): ...
+class InputTrigger(_NativeInputTrigger): ...
 class Vec2(_NativeVec2): ...
+class Direction(_NativeDirection): ...
+class AABB(_NativeAABB): ...
+class Hit(_NativeHit): ...
 
 class Application:
     """
@@ -107,39 +115,22 @@ class Application:
         """
         ...
     @staticmethod
-    def create_input_action(name: str, key: Key) -> None:
+    def create_input_action(name: str, key: Key, trigger: InputTrigger) -> None:
         """
         Creates a new input action for the application.
 
+        :param trigger:
         :param name: The name of the action.
         :param key: The Key to bind to the action.
         """
         ...
     @staticmethod
-    def is_action_down(action: str) -> bool:
+    def is_action_active(action: str) -> bool:
         """
         Checks if a specific action is currently being held down.
 
         :param action: The name of the action.
         :return: True if the action is down, False otherwise.
-        """
-        ...
-    @staticmethod
-    def was_action_pressed(action: str) -> bool:
-        """
-        Checks if a specific action was pressed in the current frame.
-
-        :param action: The name of the action.
-        :return: True if the action was just pressed, False otherwise.
-        """
-        ...
-    @staticmethod
-    def was_action_released(action: str) -> bool:
-        """
-        Checks if a specific action was released in the current frame.
-
-        :param action: The name of the action.
-        :return: True if the action was just released, False otherwise.
         """
         ...
 
@@ -191,8 +182,8 @@ class Object:
         ...
 
     def add_collision_box(self, pos: Vec2Like, size: Vec2Like): ...
-    def collides_with(self, other: Object) -> bool: ...
-    def is_colliding(self) -> bool: ...
+    def collides_with(self, other: Object) -> Hit: ...
+    def is_colliding(self) -> Hit: ...
     def enable_auto_collides(self): ...
 
     def move(self, offset: Vec2Like) -> None:
