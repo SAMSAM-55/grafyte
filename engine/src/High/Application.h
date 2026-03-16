@@ -7,7 +7,6 @@
 #include "Inputs/InputManager.h"
 #include "Scene/Scene.h"
 #include "Text/TextRenderer.h"
-#include "Text/Text.h"
 #include "World/World.h"
 
 namespace grafyte
@@ -15,8 +14,6 @@ namespace grafyte
 	class Application
 	{
 	public:
-
-
 		explicit Application(std::string  name, std::string font);
 		~Application();
 
@@ -28,17 +25,6 @@ namespace grafyte
 		[[nodiscard]] double getDeltaTime() const {return m_deltaTime;}
 
 		void render();
-		// void drawTexts() const;
-
-		// int addText(const std::string &text, const float &scale, const float &pos_x, const float &pos_y) {
-		// 	const int id = m_nextTextId++;
-		// 	m_texts.emplace(id, Text{text, scale, pos_x, pos_y});
-		// 	return id;
-		// }
-
-		// void removeText(const int& id) {
-		// 	m_texts.erase(id);
-		// }
 
 		static bool isKeyDown(const Key& key) {return InputManager::isKeyDown(key);};
 		static bool wasKeyPressed(const Key& key) {return InputManager::wasKeyPressed(key);};
@@ -61,14 +47,13 @@ namespace grafyte
 		void computeProjection();
 
 		const std::string m_name;
+		std::unique_ptr<TextRenderer> m_textRenderer;
 
 		GLFWwindow* m_window;
 		int m_winWidth, m_winHeight;
 		types::Color4 m_clearColor;
 
 		std::string m_font;
-		std::unique_ptr<TextRenderer> m_textRenderer;
-		std::unordered_map<int, Text> m_texts;
 		int m_nextTextId = 0;
 
 		double m_now = 0.0f;

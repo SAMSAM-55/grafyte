@@ -8,6 +8,7 @@ from .__converters import *
 from __grafyte_internal import Application as _NativeApplication
 from __grafyte_internal import Object as _NativeObject
 from __grafyte_internal import Scene as _NativeScene
+from __grafyte_internal import TextObject as _NativeTextObject
 from __grafyte_internal import Key, InputTrigger, Vec2, Direction, Hit
 
 class Object:
@@ -73,6 +74,12 @@ class Object:
         color = ensure_color_normalize("Object.set_color(color=...", color)
         self.__native.set_color(*color, a)
 
+class TextObject:
+    def __init__(self, native_object: _NativeTextObject):
+        self.__native = native_object
+    def set_text(self, text: str):
+        self.__native.set_text(text)
+
 class Scene:
     def __init__(self, native_scene: _NativeScene):
         self.__native = native_scene
@@ -114,6 +121,12 @@ class Scene:
         native_obj = self.__native.spawn_object(positions, 4, indices, shader_source, *pos, has_texture, layer)
         return Object(native_obj)
 
+    def spawn_text_object(self, pos: Vec2Like, text: str, scale: float = 12) -> TextObject:
+        pos = ensure_vec2f("Scene.spawn_text_object(pos=...)", pos)
+
+        native_obj = self.__native.spawn_text_object(*pos, text, scale)
+        return TextObject(native_obj)
+
 class Application(_NativeApplication):
     def make_new_scene(self) -> Scene:
         native_scene = super().make_new_scene()
@@ -128,6 +141,7 @@ class Application(_NativeApplication):
         r, g, b = ensure_color("Application.set_background_color(color=...)", color)
         super().set_clear_color(r / 255, g / 255, b / 255, 1)
 
-    # def add_text(self, text, scale, pos: Vec2d) -> int:
-    #     pos = ensure_vec2d("Application.draw_text(pos=...)", pos)
-    #     return super()._native_add_text(text, scale, *pos)
+    def add_text(self, text, scale, pos: Vec2Like) -> int:
+        pos = ensure_vec2f("Application.draw_text(pos=...)", pos)
+        return super()._native_add_text(*pos, text, scale)
+

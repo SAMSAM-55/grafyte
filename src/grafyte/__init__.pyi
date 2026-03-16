@@ -7,6 +7,7 @@ from __grafyte_internal import InputTrigger as _NativeInputTrigger
 from __grafyte_internal import Vec2 as _NativeVec2
 from __grafyte_internal import Application as _NativeApplication
 from __grafyte_internal import Object as _NativeObject
+from __grafyte_internal import TextObject as _NativeTextObject
 from __grafyte_internal import Scene as _NativeScene
 from __grafyte_internal import Direction as _NativeDirection
 from __grafyte_internal import AABB as _NativeAABB
@@ -63,23 +64,24 @@ class Application:
         Renders all objects and text in the current frame.
         """
         ...
-    # def add_text(self, text: str, scale: float, pos: Vec2d) -> int:
-    #     """
-    #     Adds text to be rendered in the application window.
+    def add_text(self, text: str, scale: float, pos: Vec2Like) -> int:
+        """
+        Adds text to be rendered in the application window.
 
-    #     :param text: The string of text to display.
-    #     :param scale: The scale/size of the text.
-    #     :param pos: A Vec2d representing the (x, y) position of the text.
-    #     :return: An integer ID for the added text, which can be used to remove it later.
-    #     """
-    #     ...
-    # def remove_text(self, id: int):
-    #     """
-    #     Removes previously added text from the application.
+        :param text: The string of text to display.
+        :param scale: The scale/size of the text.
+        :param pos: A Vec2d representing the (x, y) position of the text.
+        :return: An integer ID for the added text, which can be used to remove it later.
+        """
+        ...
+    def set_text(self, id: int, text: str): ...
+    def remove_text(self, id: int):
+        """
+        Removes previously added text from the application.
 
-    #     :param id: The ID of the text to remove (returned by add_text).
-    #     """
-    #     ...
+        :param id: The ID of the text to remove (returned by add_text).
+        """
+        ...
     def set_background_color(self, color: Color):
         """
         Sets the background (clear) color of the application window.
@@ -147,6 +149,15 @@ class Scene:
                      layer: int = 0,
                      has_texture: bool = False,
                      shader_source_path: str = "") -> Object: ...
+
+    def spawn_text_object(self, pos: Vec2Like, text: str, scale: float = 12) -> TextObject: ...
+
+class TextObject:
+    __native: _NativeTextObject
+
+    def __init__(self, native: _NativeTextObject): ...
+
+def set_text(self, text: str): ...
 
 class Object:
     """

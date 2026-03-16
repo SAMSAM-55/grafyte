@@ -1,5 +1,6 @@
 #pragma once
 #include <cstdint>
+#include <string>
 
 namespace grafyte::types {
 
@@ -80,6 +81,12 @@ namespace grafyte::types {
         MeshHandle mesh;
         MaterialHandle material;
         int zIndex = 0;
+    };
+
+    struct TextData
+    {
+        std::string text;
+        Transform transform;
     };
 
 }

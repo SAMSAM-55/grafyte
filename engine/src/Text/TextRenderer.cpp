@@ -5,8 +5,10 @@
 
 #include <algorithm>
 #include <GLFW/glfw3.h>
+#include <glm/ext/matrix_clip_space.hpp>
 
 #include "embedd/EmbeddedAsset.h"
+#include "High/Application.h"
 
 namespace grafyte
 {
@@ -26,6 +28,7 @@ namespace grafyte
 
         font.atlasWidth = 1024;
         font.atlasHeight = 256;
+        font.bakedRes = pixelSize;
         std::vector<unsigned char> pixels(font.atlasWidth * font.atlasHeight, 0);
 
         int xOffset = 0;
@@ -48,16 +51,16 @@ namespace grafyte
 
             for (int y = 0; y < g->bitmap.rows; y++) {
                 for (int x = 0; x < g->bitmap.width; x++) {
-                    pixels[(yOffset + y) * font.atlasWidth + (xOffset + x)] =
+                    pixels[(yOffset + PAD + y) * font.atlasWidth + (xOffset + PAD + x)] =
                         g->bitmap.buffer[y * g->bitmap.pitch + x];
                 }
             }
 
             Glyph glyph;
-            glyph.u0 = xOffset / static_cast<float>(font.atlasWidth);
-            glyph.v0 = (yOffset + g->bitmap.rows) / static_cast<float>(font.atlasHeight);
-            glyph.u1 = (xOffset + g->bitmap.width) / static_cast<float>(font.atlasWidth);
-            glyph.v1 = yOffset / static_cast<float>(font.atlasHeight);
+            glyph.u0 = (xOffset + PAD) / static_cast<float>(font.atlasWidth);
+            glyph.v0 = (yOffset + PAD + g->bitmap.rows) / static_cast<float>(font.atlasHeight);
+            glyph.u1 = (xOffset + PAD + g->bitmap.width) / static_cast<float>(font.atlasWidth);
+            glyph.v1 = (yOffset + PAD) / static_cast<float>(font.atlasHeight);
 
             glyph.width = g->bitmap.width;
             glyph.height = g->bitmap.rows;
@@ -67,8 +70,8 @@ namespace grafyte
 
             font.glyphs[c] = glyph;
 
-            xOffset += g->bitmap.width;
-            maxRowHeight = std::max(maxRowHeight, static_cast<int>(g->bitmap.rows));
+            xOffset += g->bitmap.width + PAD*2;
+            maxRowHeight = std::max(maxRowHeight, static_cast<int>(g->bitmap.rows) + PAD*2);
         }
 
         // Upload atlas
@@ -82,6 +85,9 @@ namespace grafyte
 
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
         // Setup VAO/VBO for quads
         glGenVertexArrays(1, &vao);
@@ -115,7 +121,20 @@ namespace grafyte
         float x, float y,
         float scale,
         const glm::vec4& color,
-        const glm::mat4& mvp) const {
+        const types::Vec2& windowDimensions) const {
+
+        // std::cout << "[TextRenderer](DrawText): Drawing text: '" << text << "' at (" << x << ", " << y <<
+        //    ") with scale " << scale << std::endl;
+
+        const float finalScale = Font::TextScaleFromPt(scale, m_dpi.x, font.bakedRes);
+
+        const glm::mat4 uiProj = glm::ortho(
+        0.0f, windowDimensions.x,
+        0.0f, windowDimensions.y
+        );
+        constexpr auto uiView = glm::mat4(1.0f);
+        const glm::mat4 mvp = uiProj * uiView;
+
         shader.Bind();
         shader.SetUniform4f("u_TextColor", color.r, color.g, color.b, color.a);
         shader.SetUniformMat4f("u_MVP", mvp);
@@ -132,11 +151,11 @@ namespace grafyte
 
             const Glyph& g = font.glyphs.at(c);
 
-            float xpos = x + g.bearingX * scale;
-            float ypos = y - (g.height - g.bearingY) * scale;
+            float xpos = x + g.bearingX * finalScale;
+            float ypos = y - (g.height - g.bearingY) * finalScale;
 
-            float w = g.width * scale;
-            float h = g.height * scale;
+            float w = g.width * finalScale;
+            float h = g.height * finalScale;
 
             float vertices[] = {
 
@@ -152,7 +171,75 @@ namespace grafyte
             glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices);
             glDrawArrays(GL_TRIANGLES, 0, 6);
 
-            x += g.advance * scale; // Move cursor
+            x += g.advance * finalScale; // Move cursor
+        }
+    }
+
+    void TextRenderer::DrawTextObject(const std::string& text, float x, float y, float scale, const glm::vec4& color,
+                                      Camera* camera
+    ) const {
+
+        // std::cout << "[TextRenderer](DrawText): Drawing text: '" << text << "' at (" << x << ", " << y <<
+        //    ") with scale " << scale << std::endl;
+
+        const float finalScale = Font::TextScaleFromPt(scale, m_dpi.x, font.bakedRes);
+
+        const glm::mat4 mvp = camera->projection * camera->view;
+
+        shader.Bind();
+        shader.SetUniform4f("u_TextColor", color.r, color.g, color.b, color.a);
+        shader.SetUniformMat4f("u_MVP", mvp);
+
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, font.textureID);
+        shader.SetUniform1i("u_TextTexture", 0);
+
+        glBindVertexArray(vao);
+        glBindBuffer(GL_ARRAY_BUFFER, vbo);
+
+        for (char c : text) {
+            if (!font.glyphs.count(c)) continue;
+
+            const Glyph& g = font.glyphs.at(c);
+
+            float xpos = x + g.bearingX * finalScale;
+            float ypos = y - (g.height - g.bearingY) * finalScale;
+
+            float w = g.width * finalScale;
+            float h = g.height * finalScale;
+
+            float vertices[] = {
+
+                xpos,     ypos + h, g.u0, g.v1,
+                xpos + w, ypos,     g.u1, g.v0,
+                xpos + w, ypos + h, g.u1, g.v1,
+
+                xpos,     ypos + h, g.u0, g.v1,
+                xpos,     ypos,     g.u0, g.v0,
+                xpos + w, ypos,     g.u1, g.v0,
+            };
+
+            glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices);
+            glDrawArrays(GL_TRIANGLES, 0, 6);
+
+            x += g.advance * finalScale; // Move cursor
+        }
+    }
+
+    void TextRenderer::Render(const std::vector<types::TextData>& renderList, Camera* camera) const
+    {
+        for (const auto& text: renderList)
+        {
+            const float finalScale = Font::TextScaleFromPt(text.transform.scale.x, m_dpi.x, font.bakedRes);
+            const float width = MeasureTextWidth(text.text, finalScale);
+            DrawTextObject(
+                text.text,
+                text.transform.pos.x,
+                text.transform.pos.y,
+                finalScale,
+                glm::vec4(1.0f),
+                camera
+            );
         }
     }
 
@@ -179,6 +266,7 @@ namespace grafyte
 
     float TextRenderer::MeasureTextWidth(const std::string& text, float scale) const
     {
+        // std::cout << "[TextRenderer](MeasureTextWidth): Measuring width for: '" << text << "' with scale " << scale << std::endl;
         float width = 0.0f;
 
         for (char c : text) {
@@ -186,7 +274,7 @@ namespace grafyte
                 continue;
 
             const Glyph& g = font.glyphs.at(c);
-            width += g.advance * scale;
+            width += g.advance * Font::TextScaleFromPt(scale, m_dpi.x, font.bakedRes);
         }
 
         return width;

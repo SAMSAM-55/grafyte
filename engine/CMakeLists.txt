@@ -48,6 +48,8 @@ add_library(grafyte_core STATIC
         src/Scene/Managers/MeshManager.cpp
         src/Scene/Managers/MaterialManager.cpp
         src/World/World.cpp
+        src/Scene/Text/TextObject.h
+        src/Scene/Text/TextObject.cpp
 )
 
 target_include_directories(grafyte_core PUBLIC

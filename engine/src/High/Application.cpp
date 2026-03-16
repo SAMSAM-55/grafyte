@@ -1,7 +1,6 @@
 #include "Application.h"
 
 #include <iostream>
-#include <ranges>
 #include <utility>
 
 #include <glm/ext/matrix_clip_space.hpp>
@@ -11,8 +10,10 @@ namespace grafyte
     Application* Application::s_appInstance = nullptr;
 
     Application::Application(std::string  name, std::string font)
-        : scene(nullptr), m_name(std::move(name)), m_window(nullptr), m_winWidth(0), m_winHeight(0),
-          m_clearColor({0, 0, 0, 0}), m_font(std::move(font)), m_texts({}) {
+        : scene(nullptr), m_name(std::move(name)), m_textRenderer(nullptr),
+          m_window(nullptr), m_winWidth(0), m_winHeight(0), m_clearColor({0, 0, 0, 0}),
+          m_font(std::move(font))
+    {
     }
 
     Application::~Application()
@@ -30,7 +31,6 @@ namespace grafyte
         m_winWidth = winWidth;
 
         m_window = glfwCreateWindow(winWidth, winHeight, m_name.c_str(), nullptr, nullptr);
-        glfwSwapInterval(1);
         if (!m_window)
         {
             glfwTerminate();
@@ -48,8 +48,9 @@ namespace grafyte
 
         s_appInstance = this;
         InputManager::Init();
-        glfwSetKeyCallback(m_window, InputManager::on_key);
         m_textRenderer = std::make_unique<TextRenderer>(m_font, 32);
+        glfwSetKeyCallback(m_window, InputManager::on_key);
+        glfwSwapInterval(1);
 
         return 0;
 	}
@@ -58,7 +59,6 @@ namespace grafyte
         ctx.meshes.clear();
         ctx.materials.clear();
 
-        m_textRenderer.reset();
         scene->clear();
 
         if (m_window) {
@@ -90,7 +90,10 @@ namespace grafyte
         // Render
         computeProjection();
         std::vector<types::DrawItem> items;
+        std::vector<types::TextData> texts;
         scene->buildRenderList(items);
+        scene->GetTextRenderList(texts);
+        m_textRenderer->Render(texts, &ctx.camera);
         ctx.renderer.Render(items, ctx.camera);
 
         /* Swap front and back buffers */
@@ -101,21 +104,6 @@ namespace grafyte
 
         // std::cout << "[Application](Render): Frame completed." << std::endl;
     }
-
-    /*
-    void Application::drawTexts() const {
-        for (const auto &[text, scale, posX, posY]: m_texts | std::views::values) {
-            const float textWidth = m_textRenderer->MeasureTextWidth(text, scale);
-            const float posXFinal = posX - textWidth / 2;
-
-            m_textRenderer->DrawText(text,
-                posXFinal, posY+scale,
-                scale,
-                glm::vec4(0.0f, 0.0f, 0.0f, 1.0f),
-                m_MVP);
-        }
-    }
-    */
 
     void Application::setClearColor(const float r, const float g, const float b, const float a) {
         m_clearColor = types::Color4(r, g, b, a);

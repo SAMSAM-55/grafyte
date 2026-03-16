@@ -215,7 +215,17 @@ PYBIND11_MODULE(GRAFYTE_PY_MODULE_NAME, m)
             return self.spawnObject(mesh, mat, pos, zIndex);
         }, py::arg("positions"), py::arg("vertex_count"), py::arg("indices"),
         py::arg("shader_source_path"), py::arg("pos_x"), py::arg("pos_y"), py::arg("has_texture"),
-        py::arg("z_index"));
+        py::arg("z_index"))
+        .def("spawn_text_object", [](grafyte::Scene& self,
+            const float x,  const float y,
+            const std::string& text,
+            const float scale)
+        {
+            self.spawnTextObject({x, y}, text, scale);
+        }, py::arg("pos_x"), py::arg("pos_y"), py::arg("text"), py::arg("scale"));
+
+    py::class_<grafyte::TextObject>(m, "TextObject")
+        .def("set_text", &grafyte::TextObject::SetText, py::arg("text"));
 
     py::class_<grafyte::Application>(m, "Application")
         .def(py::init<const std::string&, const std::string&>(), py::arg("name"), py::arg("font"))
@@ -271,44 +281,24 @@ PYBIND11_MODULE(GRAFYTE_PY_MODULE_NAME, m)
             "Render all objects using the internal renderer"
         )
 
-    /*
-        // add_text() -> int
-        .def(
-            "_native_add_text",
-            &grafyte::Application::addText,
-            py::arg("text"),
-            py::arg("scale"),
-            py::arg("pos_x"),
-            py::arg("pos_y"),
-            "Adds the given text to the app"
-        )
-
-        // remove_text()
-        .def(
-        "remove_text",
-        &grafyte::Application::removeText,
-        py::arg("id"),
-        "Removes the given text from the app"
-        )
-    */
         // inputs
         .def_static(
             "is_key_down",
             &grafyte::Application::isKeyDown,
             py::arg("key"),
-            "Return current input state (placeholder for now)"
+            "Return current input state"
         )
         .def_static(
             "was_key_pressed",
             &grafyte::Application::wasKeyPressed,
             py::arg("key"),
-            "Return current input state (placeholder for now)"
+            "Return current input state"
         )
         .def_static(
             "was_key_released",
             &grafyte::Application::wasKeyReleased,
             py::arg("key"),
-            "Return current input state (placeholder for now)"
+            "Return current input state"
         )
 
         .def_static(
@@ -323,7 +313,7 @@ PYBIND11_MODULE(GRAFYTE_PY_MODULE_NAME, m)
             "is_action_active",
             &grafyte::Application::isActionActive,
             py::arg("action"),
-            "Return current input state (placeholder for now)"
+            "Return current input state"
         )
 
         // setClearColor()

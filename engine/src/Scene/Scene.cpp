@@ -1,5 +1,6 @@
 #include "Scene.h"
 #include <iostream>
+#include <ranges>
 
 namespace grafyte {
     Scene::Scene(WorldContext *ctx)
@@ -41,6 +42,15 @@ namespace grafyte {
 
     }
 
+    std::shared_ptr<TextObject> Scene::spawnTextObject(const types::Vec2& pos, const std::string& text, const float& size)
+    {
+        const types::ObjectId id = allocateTextId();
+        m_texts.insert_or_assign(id, types::TextData{text, {pos, 0.0f, size, size}});
+
+        m_textObjects.insert_or_assign(id, std::make_shared<TextObject>(this, id));
+        return m_textObjects[id];
+    }
+
     void Scene::buildRenderList(std::vector<types::DrawItem> &out) const {
         // std::cout << "[Scene](BuildRenderList): this= " << this << std::endl;
 
@@ -70,10 +80,18 @@ namespace grafyte {
         // std::cout << "[Scene](BuildRenderList): Build completed. Final list size: " << out.size() << std::endl;
     }
 
+    void Scene::GetTextRenderList(std::vector<types::TextData>& out) const
+    {
+        out.clear();
+        out.reserve(m_texts.size());
+        for (const auto& it : m_texts | std::views::values) out.push_back(it);
+    }
+
     void Scene::clear()
     {
         m_renderables.clear();
         m_transforms.clear();
         m_objects.clear();
+        m_textObjects.clear();
     }
 }
