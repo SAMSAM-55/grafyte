@@ -87,6 +87,7 @@ namespace grafyte::types {
     {
         std::string text;
         Transform transform;
+        Color4 color;
     };
 
 }

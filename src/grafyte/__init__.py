@@ -80,6 +80,13 @@ class TextObject:
     def set_text(self, text: str):
         self.__native.set_text(text)
 
+    def set_scale(self, scale: float):
+        self.__native.set_scale(scale)
+
+    def set_color(self, color: Color, a: float = 1):
+        color = ensure_color_normalize("TextObject.set_color(color=...)", color)
+        self.__native.set_color(*color, a)
+
 class Scene:
     def __init__(self, native_scene: _NativeScene):
         self.__native = native_scene

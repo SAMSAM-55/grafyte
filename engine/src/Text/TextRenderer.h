@@ -31,8 +31,8 @@ namespace grafyte
 		void DrawText(const std::string& text, float x, float y, float scale,
 		              const glm::vec4& color, const types::Vec2& windowDimensions) const;
 
-		void DrawTextObject(const std::string& text, float x, float y, float scale,
-					  const glm::vec4& color, Camera* camera) const;
+		void DrawTextObject(const std::string &text, float x, float y, float scale,
+		                    const types::Color4 &color, Camera *camera) const;
 
 		void Render(const std::vector<types::TextData>& renderList, Camera* camera) const;
 	private:

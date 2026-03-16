@@ -45,7 +45,7 @@ namespace grafyte {
     std::shared_ptr<TextObject> Scene::spawnTextObject(const types::Vec2& pos, const std::string& text, const float& size)
     {
         const types::ObjectId id = allocateTextId();
-        m_texts.insert_or_assign(id, types::TextData{text, {pos, 0.0f, size, size}});
+        m_texts.insert_or_assign(id, types::TextData{text, {pos, 0.0f, size, size}, {0.0f, 0.0f, 0.0f, 1.0f}});
 
         m_textObjects.insert_or_assign(id, std::make_shared<TextObject>(this, id));
         return m_textObjects[id];

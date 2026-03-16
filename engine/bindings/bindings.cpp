@@ -221,11 +221,16 @@ PYBIND11_MODULE(GRAFYTE_PY_MODULE_NAME, m)
             const std::string& text,
             const float scale)
         {
-            self.spawnTextObject({x, y}, text, scale);
+            return self.spawnTextObject({x, y}, text, scale);
         }, py::arg("pos_x"), py::arg("pos_y"), py::arg("text"), py::arg("scale"));
 
     py::class_<grafyte::TextObject>(m, "TextObject")
-        .def("set_text", &grafyte::TextObject::SetText, py::arg("text"));
+        .def("set_text", &grafyte::TextObject::SetText, py::arg("text"))
+        .def("set_scale", &grafyte::TextObject::SetScale, py::arg("scale"))
+        .def("set_color", [](const grafyte::TextObject& self, const float& r, const float& g, const float& b, const float& a)
+        {
+            self.SetColor({r, g, b, a});
+        }, py::arg("color_r"), py::arg("color_g"), py::arg("color_b"), py::arg("color_a"));
 
     py::class_<grafyte::Application>(m, "Application")
         .def(py::init<const std::string&, const std::string&>(), py::arg("name"), py::arg("font"))

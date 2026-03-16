@@ -49,6 +49,7 @@ namespace grafyte
         s_appInstance = this;
         InputManager::Init();
         m_textRenderer = std::make_unique<TextRenderer>(m_font, 32);
+        m_textRenderer->SetDpi({96.0f, 96.0f});
         glfwSetKeyCallback(m_window, InputManager::on_key);
         glfwSwapInterval(1);
 
@@ -93,8 +94,14 @@ namespace grafyte
         std::vector<types::TextData> texts;
         scene->buildRenderList(items);
         scene->GetTextRenderList(texts);
-        m_textRenderer->Render(texts, &ctx.camera);
+
+        if (!texts.empty()) {
+            std::cout << "[Application](render): texts.size() = " << texts.size() << std::endl;
+            std::cout << "[Application](render): winDim=(" << m_winWidth << ", " << m_winHeight << ")" << std::endl;
+        }
+
         ctx.renderer.Render(items, ctx.camera);
+        m_textRenderer->Render(texts, &ctx.camera);
 
         /* Swap front and back buffers */
         glfwSwapBuffers(m_window);

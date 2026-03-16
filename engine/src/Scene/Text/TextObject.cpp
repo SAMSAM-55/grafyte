@@ -21,6 +21,10 @@ namespace grafyte
         m_scene->text(m_id).transform.scale = {scale, scale};
     }
 
+    void TextObject::SetColor(const types::Color4 &color) const {
+        m_scene->text(m_id).color = color;
+    }
+
     void TextObject::Remove() const
     {
         m_scene->RemoveText(m_id);

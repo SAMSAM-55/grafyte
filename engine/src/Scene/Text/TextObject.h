@@ -13,6 +13,7 @@ namespace grafyte {
 
         void SetText(const std::string& text) const;
         void SetScale(const float& scale) const;
+        void SetColor(const types::Color4& color) const;
         void Remove() const;
 
     private:

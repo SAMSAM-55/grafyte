@@ -9,6 +9,7 @@
 
 #include "embedd/EmbeddedAsset.h"
 #include "High/Application.h"
+#include "High/Application.h"
 
 namespace grafyte
 {
@@ -175,19 +176,20 @@ namespace grafyte
         }
     }
 
-    void TextRenderer::DrawTextObject(const std::string& text, float x, float y, float scale, const glm::vec4& color,
-                                      Camera* camera
+    void TextRenderer::DrawTextObject(const ::std::string &text, float x, float y, float scale, const types::Color4 & color,
+                                      Camera *camera
     ) const {
 
         // std::cout << "[TextRenderer](DrawText): Drawing text: '" << text << "' at (" << x << ", " << y <<
         //    ") with scale " << scale << std::endl;
 
-        const float finalScale = Font::TextScaleFromPt(scale, m_dpi.x, font.bakedRes);
-
         const glm::mat4 mvp = camera->projection * camera->view;
 
+        std::cout << "[TextRenderer](DrawTextObject): text='" << text << "' pos=(" << x << ", " << y << ") scale=" << scale << std::endl;
+        std::cout << "[TextRenderer](DrawTextObject): camera projection[0][0]=" << camera->projection[0][0] << " [1][1]=" << camera->projection[1][1] << std::endl;
+
         shader.Bind();
-        shader.SetUniform4f("u_TextColor", color.r, color.g, color.b, color.a);
+        shader.SetUniform4f("u_TextColor", color.x, color.y, color.z, color.w);
         shader.SetUniformMat4f("u_MVP", mvp);
 
         glActiveTexture(GL_TEXTURE0);
@@ -202,11 +204,11 @@ namespace grafyte
 
             const Glyph& g = font.glyphs.at(c);
 
-            float xpos = x + g.bearingX * finalScale;
-            float ypos = y - (g.height - g.bearingY) * finalScale;
+            float xpos = x + g.bearingX * scale;
+            float ypos = y - (g.height - g.bearingY) * scale;
 
-            float w = g.width * finalScale;
-            float h = g.height * finalScale;
+            float w = g.width * scale;
+            float h = g.height * scale;
 
             float vertices[] = {
 
@@ -219,25 +221,34 @@ namespace grafyte
                 xpos + w, ypos,     g.u1, g.v0,
             };
 
+            if (c == text[0]) {
+                 std::cout << "[TextRenderer](DrawTextObject): Char='" << c << "' xpos=" << xpos << " ypos=" << ypos << " w=" << w << " h=" << h << std::endl;
+                 std::cout << "[TextRenderer](DrawTextObject): First vertex: (" << vertices[0] << ", " << vertices[1] << ")" << std::endl;
+            }
+
             glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices);
             glDrawArrays(GL_TRIANGLES, 0, 6);
 
-            x += g.advance * finalScale; // Move cursor
+            x += g.advance * scale; // Move cursor
         }
     }
 
     void TextRenderer::Render(const std::vector<types::TextData>& renderList, Camera* camera) const
     {
+        if (!renderList.empty()) {
+            std::cout << "[TextRenderer](Render): Rendering " << renderList.size() << " text objects." << std::endl;
+        }
         for (const auto& text: renderList)
         {
             const float finalScale = Font::TextScaleFromPt(text.transform.scale.x, m_dpi.x, font.bakedRes);
             const float width = MeasureTextWidth(text.text, finalScale);
+            std::cout << "[TextRenderer](Render): Object '" << text.text << "' pos=(" << text.transform.pos.x << ", " << text.transform.pos.y << ") finalScale=" << finalScale << std::endl;
             DrawTextObject(
                 text.text,
                 text.transform.pos.x,
                 text.transform.pos.y,
                 finalScale,
-                glm::vec4(1.0f),
+                text.color,
                 camera
             );
         }
