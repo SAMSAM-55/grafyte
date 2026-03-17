@@ -52,7 +52,7 @@ cmake ..
 cmake --build .
 ```
 
-## 🎮 Quick Start
+## Quick Start
 
 Here's a minimal example to get you started:
 
