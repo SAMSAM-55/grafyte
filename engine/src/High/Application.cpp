@@ -95,10 +95,10 @@ namespace grafyte
         scene->buildRenderList(items);
         scene->GetTextRenderList(texts);
 
-        if (!texts.empty()) {
-            std::cout << "[Application](render): texts.size() = " << texts.size() << std::endl;
-            std::cout << "[Application](render): winDim=(" << m_winWidth << ", " << m_winHeight << ")" << std::endl;
-        }
+        // if (!texts.empty()) {
+        //     std::cout << "[Application](render): texts.size() = " << texts.size() << std::endl;
+        //     std::cout << "[Application](render): winDim=(" << m_winWidth << ", " << m_winHeight << ")" << std::endl;
+        // }
 
         ctx.renderer.Render(items, ctx.camera);
         m_textRenderer->Render(texts, &ctx.camera);

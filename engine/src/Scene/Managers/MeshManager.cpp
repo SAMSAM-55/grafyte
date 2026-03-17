@@ -25,9 +25,9 @@ namespace grafyte {
     }
 
     void MeshManager::upload(const types::MeshHandle &h) {
-        std::cout << "[MeshManager](Upload): Uploading mesh for ID: " << h.id << std::endl;
+        // std::cout << "[MeshManager](Upload): Uploading mesh for ID: " << h.id << std::endl;
         const types::MeshAsset* a = asset(h);
-        std::cout << "[MeshManager](Upload): Mesh size: " << a->bytes.size() << " bytes. Indices count: " << a->indices.size() << std::endl;
+        // std::cout << "[MeshManager](Upload): Mesh size: " << a->bytes.size() << " bytes. Indices count: " << a->indices.size() << std::endl;
         auto vb = VertexBuffer(a->bytes.data(), a->bytes.size());
         auto va = VertexArray();
         auto ib = IndexBuffer(a->indices.data(), a->indices.size());
@@ -44,7 +44,7 @@ namespace grafyte {
         va.AddBuffer(vb, layout);
 
         m_meshes.insert_or_assign(h, types::Mesh{std::move(va), std::move(ib), std::move(vb), std::move(layout)});
-        std::cout << "[MeshManager](Upload): Mesh uploaded successfully for ID: " << h.id << std::endl;
+        // std::cout << "[MeshManager](Upload): Mesh uploaded successfully for ID: " << h.id << std::endl;
     }
 
     void MeshManager::clear()
