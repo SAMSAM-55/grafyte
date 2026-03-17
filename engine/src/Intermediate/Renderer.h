@@ -1,19 +1,22 @@
 #pragma once
 
-#include "Object.h"
-#include <memory>
+#include "Scene/Managers/MaterialManager.h"
+#include "Scene/Managers/MeshManager.h"
+#include "World/Camera.h"
 
 namespace grafyte {
     class Renderer
     {
-    private:
-        std::vector<std::shared_ptr<Object>> m_obj;
-
-        static void Draw(const grafyte::ObjectRenderData& data);
     public:
-        inline void AddObject(const std::shared_ptr<Object>& obj) { m_obj.push_back(obj); }
+        Renderer(MeshManager& meshes, MaterialManager& materials);
 
-        void Render(const glm::mat4& MVP);
-        static void Clear() ;
+        void Render(std::vector<types::DrawItem>& items, const Camera& camera) const;
+        static void Clear();
+
+    private:
+        void Draw(const types::DrawItem& item) const;
+        static glm::mat4 computeModel(const types::Transform& t);
+        MeshManager& m_meshes;
+        MaterialManager& m_materials;
     };
 }

@@ -12,6 +12,9 @@
 
 #include "Inputs/InputManager.h"
 
+#include "Scene/Scene.h"
+#include "Scene/Managers/CollisionManager.h"
+
 namespace py = pybind11;
 
 #ifndef GRAFYTE_PY_MODULE_NAME
@@ -24,6 +27,20 @@ namespace py = pybind11;
 PYBIND11_MODULE(GRAFYTE_PY_MODULE_NAME, m)
 {
     m.doc() = "Python bindings for the Grafyte engine";
+
+    // Expose Vec2 as a Python type that can be built from a tuple
+    py::class_<grafyte::types::Vec2>(m, "Vec2")
+        .def(py::init<float, float>(), py::arg("x") = 0.0f, py::arg("y") = 0.0f)
+        .def(py::init([](py::sequence seq)
+        {
+            if (py::len(seq) != 2) throw std::runtime_error("Vec2 must have exactly two elements");
+            return grafyte::types::Vec2{seq[0].cast<float>(), seq[1].cast<float>()};
+        }))
+        .def_readonly("x", &grafyte::types::Vec2::x)
+        .def_readonly("y", &grafyte::types::Vec2::y);
+
+    py::implicitly_convertible<py::tuple, grafyte::types::Vec2>();
+    py::implicitly_convertible<py::list, grafyte::types::Vec2>();
 
     // Expose grafyte::inputs::Key as a Python enum
     py::enum_<grafyte::inputs::Key>(m, "Key")
@@ -72,53 +89,148 @@ PYBIND11_MODULE(GRAFYTE_PY_MODULE_NAME, m)
         .value("RightShift", grafyte::inputs::Key::RightShift)
         .export_values();
 
+    py::enum_<grafyte::collision::Direction>(m, "Direction")
+        .value("Top", grafyte::collision::Direction::Top)
+        .value("Bottom", grafyte::collision::Direction::Bottom)
+        .value("Right", grafyte::collision::Direction::Right)
+        .value("Left", grafyte::collision::Direction::Left)
+        .export_values();
+
+    py::class_<grafyte::collision::AABB>(m, "AABB")
+        .def_readonly("pos", &grafyte::collision::AABB::pos)
+        .def_readonly("width", &grafyte::collision::AABB::width)
+        .def_readonly("height", &grafyte::collision::AABB::height);
+
+    py::class_<grafyte::collision::Hit>(m, "Hit")
+        .def_readonly("A", &grafyte::collision::Hit::A)
+        .def_readonly("B", &grafyte::collision::Hit::B)
+        .def_readonly("collision", &grafyte::collision::Hit::collision)
+        .def_readonly("direction", &grafyte::collision::Hit::direction)
+        .def("__bool__", [](const grafyte::collision::Hit& self) { return self.collision; });
+
+    py::enum_<grafyte::InputTrigger>(m, "InputTrigger")
+        .value("Press", grafyte::Press)
+        .value("Hold", grafyte::Hold)
+        .value("Release", grafyte::Release)
+        .export_values();
+
     py::class_<grafyte::Object, std::shared_ptr<grafyte::Object>>(m, "Object")
-        .def(py::init([](const py::buffer& positions, const unsigned int vertexCount, const py::buffer &indices,
-                         const std::string &shaderSourcePath, const float &pos_x, const float &pos_y, const int &layer) {
+        .def_property_readonly("scale", &grafyte::Object::GetScale)
+        .def_property_readonly("pos", &grafyte::Object::GetPosition)
+        .def_property_readonly("rot", &grafyte::Object::GetRotation)
+
+        .def("use_texture", &grafyte::Object::SetTexture, py::arg("texture_source_path"), py::arg("slot"))
+
+        .def("set_tint", [](const grafyte::Object& self, const float& r, const float& g, const float& b, const float& strength)
+        {
+            self.SetTint({r, g, b, strength});
+        }, py::arg("tint_r"), py::arg("tint_g"), py::arg("tint_b"), py::arg("strength"))
+        .def("set_color", [](const grafyte::Object& self, const float& r, const float& g, const float& b, const float& a)
+        {
+            self.SetColor({r, g, b, a});
+        }, py::arg("color_r"), py::arg("color_g"), py::arg("color_b"), py::arg("color_a"))
+
+        .def("add_collision_box", [](const grafyte::Object& self, const float& pos_x, const float& pos_y,
+                                     const float& size_x, const float& size_y)
+        {
+            auto box = grafyte::collision::AABB{{pos_x, pos_y}, size_x, size_y};
+            self.AddCollisionBox(box);
+        }, py::arg("size_x"), py::arg("size_y"), py::arg("scale_x"), py::arg("scale_y"))
+        .def("collides_with", [](const grafyte::Object& self, const grafyte::Object& other)
+        {
+            return self.GetScene()->collisions().ObjectsCollides(self.GetId(), other.GetId(), *self.GetScene());
+        }, py::arg("other"))
+        .def("is_colliding", [](const grafyte::Object& self)
+        {
+            return self.GetScene()->collisions().IsColliding(self.GetId(), *self.GetScene());
+        })
+        .def("enable_auto_collides", &grafyte::Object::EnableAutoCollides)
+
+        .def("move", [](const grafyte::Object& self, const float& offset_x, const float& offset_y)
+        {
+            self.Move({offset_x, offset_y});
+        }, py::arg("offset_x"), py::arg("offset_y"))
+        .def("move_to", [](const grafyte::Object& self, const float& pos_x, const float& pos_y)
+        {
+            self.MoveTo({pos_x, pos_y});
+        }, py::arg("pos_x"), py::arg("pos_y"))
+        .def("rotate", &grafyte::Object::Rotate, py::arg("angle"))
+        .def("set_rotation", &grafyte::Object::SetRotation, py::arg("angle"))
+        .def("set_scale", py::overload_cast<float>(&grafyte::Object::SetScale, py::const_), py::arg("scale"))
+        .def("set_scale", py::overload_cast<grafyte::types::Vec2>(&grafyte::Object::SetScale, py::const_), py::arg("scale"));
+
+
+    py::class_<grafyte::Scene, std::shared_ptr<grafyte::Scene>>(m, "Scene")
+        .def("spawn_object", [](grafyte::Scene& self,
+                            const py::buffer& positions,
+                            unsigned int vertexCount,
+                            const py::buffer& indices,
+                            const std::string& shaderSourcePath,
+                            float x, float y,
+                            bool hasTexture,
+                            int zIndex) {
+            // --- preprocess buffers into MeshAsset ---
             const py::buffer_info pos_info = positions.request();
             const py::buffer_info idx_info = indices.request();
 
             if (pos_info.format != py::format_descriptor<float>::value)
-                throw std::runtime_error("Positions must be a float buffer");
-            if (idx_info.format != py::format_descriptor<unsigned int>::value)
-                throw std::runtime_error("Indices must be an unsigned int buffer");
+                throw std::runtime_error("Positions must be float32 buffer");
+            if (idx_info.format != py::format_descriptor<uint32_t>::value)
+                throw std::runtime_error("Indices must be uint32 buffer");
 
-            return new grafyte::Object(
-                pos_info.ptr,
-                static_cast<unsigned int>(pos_info.size * sizeof(float)),
-                vertexCount,
-                static_cast<const unsigned int*>(idx_info.ptr),
-                static_cast<unsigned int>(idx_info.size),
-                shaderSourcePath,
-                pos_x,
-                pos_y,
-                layer
-            );
-        }), py::arg("positions"), py::arg("vertex_count"), py::arg("indices"), py::arg("shader_source_path"),
-             py::arg("pos_x"), py::arg("pos_y"), py::arg("layer"))
-        .def("set_texture", &grafyte::Object::SetTexture, py::arg("texture_source_path"), py::arg("slot"))
-        .def("add_layout_slot", &grafyte::Object::AddLayoutSlot, py::arg("type"), py::arg("size"))
-        .def("add_buffer_to_vertex_array", &grafyte::Object::AddBufferToVertexArray)
-        .def("set_shader_uniform_1f", &grafyte::Object::SetShaderUniform1f, py::arg("name"), py::arg("value"))
-        .def("set_shader_uniform_4f", &grafyte::Object::SetShaderUniform4f, py::arg("name"), py::arg("float_x"),
-             py::arg("float_y"), py::arg("float_z"), py::arg("float_w"))
-        .def("set_shader_uniform_mat4f", [](grafyte::Object& self, const std::string& name, const py::buffer& matrix) {
-            const py::buffer_info info = matrix.request();
-            if (info.format != py::format_descriptor<float>::value)
-                throw std::runtime_error("Matrix must be a float buffer");
-            if (info.size != 16)
-                throw std::runtime_error("Matrix must have 16 elements");
+            grafyte::types::MeshAsset mesh;
+            mesh.vertexCount = vertexCount;
+            mesh.indices.assign(static_cast<uint32_t*>(idx_info.ptr),
+                                static_cast<uint32_t*>(idx_info.ptr) + idx_info.size);
 
-            self.SetShaderUniformMat4f(name, glm::make_mat4(static_cast<const float*>(info.ptr)));
-        }, py::arg("name"), py::arg("matrix"))
-        .def("_native_move", &grafyte::Object::Move, py::arg("offset_x"), py::arg("offset_y"))
-        .def("_native_move_to", &grafyte::Object::MoveTo, py::arg("pos_x"), py::arg("pos_y"));
+            if (hasTexture)
+            {
+                mesh.layoutSlots = {
+                    grafyte::types::LayoutSlot{grafyte::types::AttribType::Float, 2},
+                    grafyte::types::LayoutSlot{grafyte::types::AttribType::Float, 2}
+                };
+            } else
+            {
+                mesh.layoutSlots = {
+                    grafyte::types::LayoutSlot{grafyte::types::AttribType::Float, 2}
+                };
+            }
 
-    py::class_<grafyte::Renderer>(m, "Renderer")
-        .def(py::init<>())
-        .def("add_object", &grafyte::Renderer::AddObject, py::arg("obj"), "Add an object to the renderer")
-        .def("render", &grafyte::Renderer::Render, "Render all objects")
-        .def("clear", &grafyte::Renderer::Clear, "Clear the screen");
+            mesh.sizeBytes = pos_info.size * sizeof(float);
+            mesh.posOffsetBytes = 0;
+            mesh.bytes.resize(mesh.sizeBytes);
+            std::memcpy(mesh.bytes.data(), pos_info.ptr, mesh.sizeBytes);
+
+            grafyte::types::MaterialAsset mat;
+            mat.shaderSourcePath = shaderSourcePath;
+            mat.hasTexture = hasTexture;
+
+            if (hasTexture)
+            {
+                mat.textureSlot = 1;
+                mat.textureSourcePath = "@embed/Textures/Default";
+            }
+
+            grafyte::types::Vec2 pos{x, y};
+            return self.spawnObject(mesh, mat, pos, zIndex);
+        }, py::arg("positions"), py::arg("vertex_count"), py::arg("indices"),
+        py::arg("shader_source_path"), py::arg("pos_x"), py::arg("pos_y"), py::arg("has_texture"),
+        py::arg("z_index"))
+        .def("spawn_text_object", [](grafyte::Scene& self,
+            const float x,  const float y,
+            const std::string& text,
+            const float scale)
+        {
+            return self.spawnTextObject({x, y}, text, scale);
+        }, py::arg("pos_x"), py::arg("pos_y"), py::arg("text"), py::arg("scale"));
+
+    py::class_<grafyte::TextObject>(m, "TextObject")
+        .def("set_text", &grafyte::TextObject::SetText, py::arg("text"))
+        .def("set_scale", &grafyte::TextObject::SetScale, py::arg("scale"))
+        .def("set_color", [](const grafyte::TextObject& self, const float& r, const float& g, const float& b, const float& a)
+        {
+            self.SetColor({r, g, b, a});
+        }, py::arg("color_r"), py::arg("color_g"), py::arg("color_b"), py::arg("color_a"));
 
     py::class_<grafyte::Application>(m, "Application")
         .def(py::init<const std::string&, const std::string&>(), py::arg("name"), py::arg("font"))
@@ -160,11 +272,10 @@ PYBIND11_MODULE(GRAFYTE_PY_MODULE_NAME, m)
             "Get the interval between last and current frame"
         )
 
-        // use_renderer()
+        // make_new_scene()
         .def(
-            "use_renderer",
-            &grafyte::Application::useRenderer,
-            py::arg("renderer"),
+            "make_new_scene",
+            &grafyte::Application::makeNewScene, py::return_value_policy::reference,
             "Sets the current renderer used by the application"
         )
 
@@ -175,43 +286,24 @@ PYBIND11_MODULE(GRAFYTE_PY_MODULE_NAME, m)
             "Render all objects using the internal renderer"
         )
 
-        // add_text() -> int
-        .def(
-            "_native_add_text",
-            &grafyte::Application::addText,
-            py::arg("text"),
-            py::arg("scale"),
-            py::arg("pos_x"),
-            py::arg("pos_y"),
-            "Adds the given text to the app"
-        )
-
-        // remove_text()
-        .def(
-        "remove_text",
-        &grafyte::Application::removeText,
-        py::arg("id"),
-        "Removes the given text from the app"
-        )
-
         // inputs
         .def_static(
             "is_key_down",
             &grafyte::Application::isKeyDown,
             py::arg("key"),
-            "Return current input state (placeholder for now)"
+            "Return current input state"
         )
         .def_static(
             "was_key_pressed",
             &grafyte::Application::wasKeyPressed,
             py::arg("key"),
-            "Return current input state (placeholder for now)"
+            "Return current input state"
         )
         .def_static(
             "was_key_released",
             &grafyte::Application::wasKeyReleased,
             py::arg("key"),
-            "Return current input state (placeholder for now)"
+            "Return current input state"
         )
 
         .def_static(
@@ -219,25 +311,14 @@ PYBIND11_MODULE(GRAFYTE_PY_MODULE_NAME, m)
             &grafyte::Application::createInputAction,
             py::arg("name"),
             py::arg("key"),
+            py::arg("trigger"),
             "Creates a new input action for the current application"
         )
         .def_static(
-            "is_action_down",
-            &grafyte::Application::isActionDown,
+            "is_action_active",
+            &grafyte::Application::isActionActive,
             py::arg("action"),
-            "Return current input state (placeholder for now)"
-        )
-        .def_static(
-            "was_action_pressed",
-            &grafyte::Application::wasActionPressed,
-            py::arg("action"),
-            "Return current input state (placeholder for now)"
-        )
-        .def_static(
-            "was_action_released",
-            &grafyte::Application::wasActionReleased,
-            py::arg("action"),
-            "Return current input state (placeholder for now)"
+            "Return current input state"
         )
 
         // setClearColor()

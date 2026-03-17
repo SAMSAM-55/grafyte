@@ -1,133 +1,110 @@
 #include "Object.h"
-
-#include <cstring>
-#include <iostream>
-#include <GLFW/glfw3.h>
+#include "Scene/Scene.h"
 
 namespace grafyte 
 {
-	Object::Object(const void *positions, const unsigned int positionsSize, const unsigned int vertexCount,
-	               const unsigned int *indices, const unsigned int indicesCount, const std::string &shaderSourcePath,
-	               const float pos_x, const float pos_y, const int layer)
-		: m_vertexCount(vertexCount), m_pos{pos_x, pos_y},
-		  m_renderData(ObjectRenderData{
-			  IndexBuffer(indices, indicesCount), VertexArray(), VertexBuffer(positions, positionsSize),
-			  VertexBufferLayout(), Shader(shaderSourcePath), Texture(), false, 0, layer
-		  })
+	Object::Object(const types::ObjectId& id, Scene* scene)
+		: m_scene(scene), m_id(id)
 	{
-
-		m_bytes.resize(positionsSize);
-		m_bytesRel.resize(positionsSize);
-		std::memcpy(m_bytesRel.data(), positions, positionsSize);
-		std::memcpy(m_bytes.data(), m_bytesRel.data(), positionsSize);
 	}
 
-	Object::~Object() {
-		if (!glfwGetCurrentContext()) {
-			return;
-		}
+	Object::~Object() = default;
 
-		m_renderData.va.Unbind();
-		m_renderData.ib.Unbind();
-		m_renderData.vb.Unbind();
-		m_renderData.shader.Unbind();
-		m_renderData.texture.Unbind();
+	void Object::SetTexture(const std::string& textureSourcePath, const unsigned int slot) const {
+		const types::MaterialHandle h = m_scene->renderable(m_id).mat;
+		types::MaterialAsset* mat = m_scene->mat(h);
+		mat->textureSlot = slot;
+		mat->textureSourcePath = textureSourcePath;
+
+		m_scene->materials().upload(h);
 	}
 
-	void Object::SetTexture(const std::string& textureSourcePath, unsigned int slot) {
-		m_renderData.shader.Bind();
-		m_renderData.texture.Set(textureSourcePath);
-		m_renderData.texture.Bind(slot);
-		m_renderData.shader.SetUniform1i("u_Texture", slot);
-		m_renderData.hasTexture = true;
-		m_renderData.textureSlot = slot;
+	void Object::SetTint(const types::Color4& t) const
+	{
+		const types::MaterialHandle h = m_scene->renderable(m_id).mat;
+		const types::Material* mat = m_scene->materials().mat(h);
+		mat->shader.Bind();
+		mat->shader.SetUniform4f("u_Tint", t.x, t.y, t.z, t.w);
 	}
 
-	void Object::AddLayoutSlot(const std::string &type, const unsigned int size) {
-		if (type == "float")
-			m_renderData.layout.Push<float>(size);
-		else if (type == "unsigned int")
-			m_renderData.layout.Push<unsigned int>(size);
-		else if (type == "unsigned char")
-			m_renderData.layout.Push<unsigned char>(size);
-		else
-			DEBUG_BREAK();
+	void Object::SetColor(const types::Color4& c) const
+	{
+		const types::MaterialHandle h = m_scene->renderable(m_id).mat;
+		const types::Material* mat = m_scene->materials().mat(h);
+		mat->shader.Bind();
+		mat->shader.SetUniform4f("u_Color", c.x, c.y, c.z, c.w);
 	}
 
-	void Object::AddBufferToVertexArray() {
-		m_renderData.va.Bind();
-		m_renderData.va.AddBuffer(m_renderData.vb, m_renderData.layout);
-
-		m_strideBytes = m_renderData.layout.GetStride();
-
-		m_posOffsetBytes = 0;
-		bool found = false;
-		for (const auto& e : m_renderData.layout.GetElements()) {
-			if (e.type == GL_FLOAT && e.count >= 2) { m_posOffsetBytes = e.offset; found = true; break; }
-		}
-		if (!found) throw std::runtime_error("No float2 position attribute in layout");
-
-		m_finalized = true;
-
-		UpdatePosition();
+	void Object::Move(const types::Vec2 offset) const {
+		m_scene->transform(m_id).pos += offset;
+		if (m_scene->collisions().AutoCollides(m_id))
+			m_scene->transform(m_id).pos += m_scene->collisions().PushBackOnMove(m_id, offset, *m_scene);
 	}
 
-	void Object::SetShaderUniform1f(const std::string& name, const float value) const {
-		m_renderData.shader.Bind();
-		m_renderData.shader.SetUniform1f(name, value);
+	void Object::MoveTo(const types::Vec2 pos) const {
+		const types::Vec2 offset = pos - m_scene->transform(m_id).pos;
+		m_scene->transform(m_id).pos = pos;
+		if (m_scene->collisions().AutoCollides(m_id))
+			m_scene->transform(m_id).pos += m_scene->collisions().PushBackOnMove(m_id, offset, *m_scene);
 	}
 
-	void Object::SetShaderUniform4f(const std::string& name, const float x, const float y, const float z, const float w) const {
-		m_renderData.shader.Bind();
-		m_renderData.shader.SetUniform4f(name, x, y, z, w);
+	void Object::Rotate(const float angle) const
+	{
+		m_scene->transform(m_id).rot += angle;
 	}
 
-	void Object::SetShaderUniformMat4f(const std::string& name, const glm::mat4& matrix) const {
-		m_renderData.shader.Bind();
-		m_renderData.shader.SetUniformMat4f(name, matrix);
+	void Object::SetRotation(const float angle) const
+	{
+		m_scene->transform(m_id).rot = angle;
 	}
 
-	void Object::Move(const float offsetX, const float offsetY) {
-		EnsureReady();
-		m_pos[0] += offsetX;
-		m_pos[1] += offsetY;
-
-		UpdatePosition();
+	void Object::SetScale(const float scale) const
+	{
+		m_scene->transform(m_id).scale = {scale, scale};
 	}
 
-	void Object::MoveTo(const float posX, const float posY) {
-		EnsureReady();
-		m_pos[0] = posX;
-		m_pos[1] = posY;
-
-		UpdatePosition();
+	void Object::SetScale(const types::Vec2 scale) const
+	{
+		m_scene->transform(m_id).scale = scale;
 	}
 
-
-	void Object::UpdatePosition() {
-		EnsureReady();
-
-		for (unsigned i = 0; i < m_vertexCount; ++i) {
-			const auto* src = reinterpret_cast<const float*>(m_bytesRel.data() + i*m_strideBytes + m_posOffsetBytes);
-			auto* dst = reinterpret_cast<float*>(m_bytes.data() + i*m_strideBytes + m_posOffsetBytes);
-			dst[0] = src[0] + m_pos[0];
-			dst[1] = src[1] + m_pos[1];
-		}
-
-
-		UpdateVertexBuffer();
+	void Object::AddCollisionBox(collision::AABB& b) const
+	{
+		m_scene->collisions().AddCollisionBox(m_id, b);
 	}
 
-	void Object::EnsureReady() const {
-		if (m_strideBytes == 0)
-			throw std::runtime_error("Invalid stride.");
-		if (!m_finalized)
-			throw std::runtime_error("Object not finalized. Call AddBufferToVertexArray() first.");
+	// void Object::AddCollisionCircle(collision::Circle& c) const
+	// {
+	// 	m_scene->collisions().AddCollisionCircle(m_id, c);
+	// }
+
+	void Object::EnableAutoCollides() const
+	{
+		m_scene->collisions().EnableAutoCollides(m_id);
 	}
 
-	void Object::UpdateVertexBuffer() const {
-		m_renderData.vb.Bind();
-		glBufferData(GL_ARRAY_BUFFER, m_bytes.size(), m_bytes.data(), GL_DYNAMIC_DRAW);
+	types::Vec2 Object::GetScale() const
+	{
+		return m_scene->transform(m_id).scale;
 	}
 
+	types::Vec2 Object::GetPosition() const
+	{
+		return m_scene->transform(m_id).pos;
+	}
+
+	float Object::GetRotation() const
+	{
+		return m_scene->transform(m_id).rot;
+	}
+
+	bool Object::CollidesWith(const Object& other) const
+	{
+		return static_cast<bool>(m_scene->collisions().ObjectsCollides(m_id, other.GetId(), *m_scene));
+	}
+
+	bool Object::IsColliding() const
+	{
+		return static_cast<bool>(m_scene->collisions().IsColliding(m_id, *m_scene));
+	}
 }

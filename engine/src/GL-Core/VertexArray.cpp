@@ -16,8 +16,13 @@ namespace grafyte
 
 	VertexArray::~VertexArray()
 	{
-		if (glfwGetCurrentContext()) {
+		release();
+	}
+
+	void VertexArray::release() {
+		if (m_RendererID && glfwGetCurrentContext()) {
 			GLCall(glDeleteVertexArrays(1, &m_RendererID));
+			m_RendererID = 0;
 		}
 	}
 
