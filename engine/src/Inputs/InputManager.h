@@ -9,6 +9,20 @@
 
 namespace grafyte {
     using inputs::Key;
+
+    enum InputTrigger
+    {
+        Press,
+        Hold,
+        Release
+    };
+
+    struct InputAction
+    {
+        Key key;
+        InputTrigger trigger;
+    };
+
     class InputManager {
     public:
         static void Init();
@@ -22,8 +36,8 @@ namespace grafyte {
             m_keyReleased.clear();
         }
 
-        static void createAction(const std::string &name, const Key &key) {
-            m_inputActions[name] = key;
+        static void createAction(const std::string &name, const Key &key, const InputTrigger& trigger) {
+            m_inputActions[name] = InputAction{key, trigger};
         }
 
         static bool isKeyDown(const Key& key) {
@@ -38,20 +52,7 @@ namespace grafyte {
             return m_keyReleased[key];
         }
 
-        static bool isActionDown(const std::string &name) {
-            ensureActionExists(name);
-            return m_actionDown[name];
-        }
-
-        static bool wasActionPressed(const std::string &name) {
-            ensureActionExists(name);
-            return m_actionPressed[name];
-        }
-
-        static bool wasActionReleased(const std::string &name) {
-            ensureActionExists(name);
-            return m_actionReleased[name];
-        }
+        static bool isActionActive(const std::string &name);
 
     private:
         static inline const std::unordered_map<inputs::Key, char> m_logicalKeys = {
@@ -97,7 +98,7 @@ namespace grafyte {
 
         static inline std::unordered_map<Key, int> m_keyToGLFW;
         static inline std::unordered_map<int, Key> m_glfwToKey;
-        static inline std::unordered_map<std::string, Key> m_inputActions;
+        static inline std::unordered_map<std::string, InputAction> m_inputActions;
         static void ensureActionExists(const std::string& name) {
             if (!m_inputActions.contains(name)) throw std::runtime_error("Input action: " + name + " does not exist.");
         };

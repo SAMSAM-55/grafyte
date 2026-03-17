@@ -13,5 +13,6 @@ namespace grafyte::embedded {
     extern const EmbeddedAsset textureShader;
     extern const EmbeddedAsset textShader;
     extern const EmbeddedAsset baseFont;
+    extern const EmbeddedAsset noTexture;
 
 } // namespace grafyte::embedded

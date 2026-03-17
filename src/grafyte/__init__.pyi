@@ -1,14 +1,30 @@
-from grafyte.__converters import Vec2d, Color
+from typing import overload, Union
+
+from .__converters import Vec2f, Color, Vec2Like
 
 from __grafyte_internal import Key as _NativeKey
+from __grafyte_internal import InputTrigger as _NativeInputTrigger
+from __grafyte_internal import Vec2 as _NativeVec2
+from __grafyte_internal import Application as _NativeApplication
+from __grafyte_internal import Object as _NativeObject
+from __grafyte_internal import TextObject as _NativeTextObject
+from __grafyte_internal import Scene as _NativeScene
+from __grafyte_internal import Direction as _NativeDirection
+from __grafyte_internal import AABB as _NativeAABB
+from __grafyte_internal import Hit as _NativeHit
 
 class Key(_NativeKey): ...
+class InputTrigger(_NativeInputTrigger): ...
+class Vec2(_NativeVec2): ...
+class Direction(_NativeDirection): ...
+class AABB(_NativeAABB): ...
+class Hit(_NativeHit): ...
 
 class Application:
     """
     The main application class that manages the window, rendering context, and input.
     """
-    def __init__(self, name: str, window_dimensions: Vec2d):
+    def __init__(self, name: str, window_dimensions: Vec2Like):
         """
         Initializes the application window and rendering context.
 
@@ -48,7 +64,7 @@ class Application:
         Renders all objects and text in the current frame.
         """
         ...
-    def add_text(self, text: str, scale: float, pos: Vec2d) -> int:
+    def add_text(self, text: str, scale: float, pos: Vec2Like) -> int:
         """
         Adds text to be rendered in the application window.
 
@@ -58,6 +74,7 @@ class Application:
         :return: An integer ID for the added text, which can be used to remove it later.
         """
         ...
+    def set_text(self, id: int, text: str): ...
     def remove_text(self, id: int):
         """
         Removes previously added text from the application.
@@ -100,16 +117,17 @@ class Application:
         """
         ...
     @staticmethod
-    def create_input_action(name: str, key: Key) -> None:
+    def create_input_action(name: str, key: Key, trigger: InputTrigger) -> None:
         """
         Creates a new input action for the application.
 
+        :param trigger:
         :param name: The name of the action.
         :param key: The Key to bind to the action.
         """
         ...
     @staticmethod
-    def is_action_down(action: str) -> bool:
+    def is_action_active(action: str) -> bool:
         """
         Checks if a specific action is currently being held down.
 
@@ -117,73 +135,58 @@ class Application:
         :return: True if the action is down, False otherwise.
         """
         ...
-    @staticmethod
-    def was_action_pressed(action: str) -> bool:
-        """
-        Checks if a specific action was pressed in the current frame.
 
-        :param action: The name of the action.
-        :return: True if the action was just pressed, False otherwise.
-        """
-        ...
-    @staticmethod
-    def was_action_released(action: str) -> bool:
-        """
-        Checks if a specific action was released in the current frame.
+    def make_new_scene(self) -> Scene: ...
 
-        :param action: The name of the action.
-        :return: True if the action was just released, False otherwise.
-        """
-        ...
-    def use_renderer(self, renderer: Renderer):
-        """
-        Sets the renderer to be used by the application.
+class Scene:
+    __native: _NativeScene
 
-        :param renderer: The Renderer object to use.
-        """
-        ...
+    def __init__(self, native: _NativeScene): ...
 
-class Renderer:
-    """
-    Manages a collection of objects to be rendered.
-    """
-    def __init__(self):
-        """
-        Initializes a new Renderer.
-        """
-        ...
-    def add_object(self, obj: Object) -> None:
-        """
-        Adds an object to the renderer's list of objects to be drawn.
+    def spawn_object(self,
+                     pos: Vec2Like,
+                     size: Vec2Like,
+                     layer: int = 0,
+                     has_texture: bool = False,
+                     shader_source_path: str = "") -> Object: ...
 
-        :param obj: The Object to add.
-        """
-        ...
+    def spawn_text_object(self, pos: Vec2Like, text: str, scale: float = 12) -> TextObject: ...
 
-class InputManager: ...
+class TextObject:
+    __native: _NativeTextObject
+
+    def __init__(self, native: _NativeTextObject): ...
+
+    def set_text(self, text: str) -> None: ...
+    def set_scale(self, scale: float) -> None: ...
+    def set_color(self, color: Color, a: float = 1) -> None: ...
+
+def set_text(self, text: str): ...
 
 class Object:
     """
     Represents a renderable 2D object in the engine.
     """
-    __has_texture: bool
 
-    def __init__(self,
-                 pos: Vec2d,
-                 size: Vec2d,
-                 layer: int = 0,
-                 has_texture: bool = False,
-                 shader_source_path: str = "", ):
-        """
-        Initializes a new renderable object.
+    __native: _NativeObject
 
-        :param pos: A Vec2d representing the initial position of the object.
-        :param size: A Vec2d representing the dimensions (width, height) of the object.
-        :param layer: The rendering layer (higher numbers are rendered on top). (default = 0)
-        :param has_texture: Boolean indicating if this object will use a texture. (default = False)
-        :param shader_source_path: Optional path to a custom shader. If empty, a default shader is used.
-        """
+    @property
+    def pos(self) -> Vec2:
+        """The current position of the object."""
         ...
+
+    @property
+    def rot(self) -> float:
+        """The current rotation of the object."""
+        ...
+
+    @property
+    def scale(self) -> Vec2:
+        """The current scale of the object."""
+        ...
+
+    def __init__(self, native: _NativeObject): ...
+
     def set_color(self, color: Color, a: float = 1) -> None:
         """
         Sets the uniform color of the object. Only applicable if the object doesn't have a texture.
@@ -192,24 +195,40 @@ class Object:
         :param a: The alpha chanel for the color. (default = 1)
         """
         ...
-    def move(self, offset: Vec2d) -> None:
+
+    def add_collision_box(self, pos: Vec2Like, size: Vec2Like): ...
+    def collides_with(self, other: Object) -> Hit: ...
+    def is_colliding(self) -> Hit: ...
+    def enable_auto_collides(self): ...
+
+    def move(self, offset: Vec2Like) -> None:
         """
         Moves the object by a given offset from its current position.
 
         :param offset: A Vec2d representing the (dx, dy) to move the object.
         """
         ...
-    def move_to(self, pos: Vec2d) -> None:
+    def move_to(self, pos: Vec2Like) -> None:
         """
         Moves the object to a specific absolute position.
 
         :param pos: A Vec2d representing the new (x, y) position.
         """
         ...
-    def use_texture(self, path: str) -> None:
+    def rotate(self,angle: float) -> None: ...
+    def set_rotation(self,angle: float) -> None: ...
+
+    @overload
+    def set_scale(self, scale: Vec2Like) -> None: ...
+
+    @overload
+    def set_scale(self, scale: float) -> None: ...
+
+    def use_texture(self, path: str, slot: int = 0) -> None:
         """
         Loads and applies a texture to the object.
 
+        :param slot: The slot to bind the texture to
         :param path: The file path to the texture.
         """
         ...

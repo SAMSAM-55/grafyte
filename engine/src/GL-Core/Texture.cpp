@@ -6,23 +6,17 @@
 #include "stb_image/stb_image.h"
 #include "macros.hpp"
 
-namespace grafyte
-{
-	Texture::Texture()
-		: m_RendererID(0), m_FilePath(""), m_LocalBuffer(nullptr), m_Width(0), m_Height(0), m_BPP(0)
-	{
-	}
+#include "embedd/EmbeddedAsset.h"
 
+namespace grafyte {
 	Texture::~Texture()
 	{
-		if (glfwGetCurrentContext()) {
-			GLCall(glDeleteTextures(1, &m_RendererID));
-		}
+		release();
 	}
 
 	void Texture::Set(const std::string& path) {
 		stbi_set_flip_vertically_on_load(1);
-		m_LocalBuffer = stbi_load(path.c_str(), &m_Width, &m_Height, &m_BPP, 4);
+		loadDataToBuffer(path, m_LocalBuffer);
 
 		GLCall(glGenTextures(1, &m_RendererID));
 		GLCall(glBindTexture(GL_TEXTURE_2D, m_RendererID));
@@ -48,5 +42,25 @@ namespace grafyte
 	void Texture::Unbind()
 	{
 		GLCall(glBindTexture(GL_TEXTURE_2D, 0));
+	}
+
+	void Texture::loadDataToBuffer(const std::string& idOrPath, unsigned char*& buffer)
+	{
+		if (idOrPath == "@embed/Textures/Default"
+			|| idOrPath == "@embed/Textures/No")
+		{
+			buffer = stbi_load_from_memory(embedded::noTexture.data, embedded::noTexture.size, &m_Width, &m_Height,
+				&m_BPP, 4);
+			return;
+		}
+
+		buffer = stbi_load(idOrPath.c_str(), &m_Width, &m_Height, &m_BPP, 4);
+	}
+
+	void Texture::release() {
+		if (glfwGetCurrentContext()) {
+			Unbind();
+			GLCall(glDeleteTextures(1, &m_RendererID));
+		}
 	}
 }

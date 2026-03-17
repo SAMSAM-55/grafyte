@@ -15,11 +15,39 @@ namespace grafyte
 	class Shader
 	{
 	public:
+		Shader(Shader const&) = delete;
+		Shader& operator=(Shader const&) = delete;
+
+		Shader(Shader&& other) noexcept
+		: m_FilePath(std::move(other.m_FilePath)), m_RendererID(other.m_RendererID),
+		  m_UniformLocationCache(std::move(other.m_UniformLocationCache))
+		{
+			other.m_RendererID = 0;
+			other.m_UniformLocationCache = std::unordered_map<std::string, int>();
+			other.m_FilePath = "";
+		};
+		Shader& operator=(Shader&& other) noexcept
+		{
+			if (this != &other) return *this;
+
+			release();
+
+			m_FilePath = std::move(other.m_FilePath);
+			m_RendererID = other.m_RendererID;
+			m_UniformLocationCache = std::move(other.m_UniformLocationCache);
+
+			other.m_RendererID = 0;
+			other.m_UniformLocationCache = std::unordered_map<std::string, int>();
+			other.m_FilePath = "";
+			return *this;
+		}
+
 		explicit Shader(const std::string& filepath);
 		~Shader();
 
 		void Bind() const;
-		static void Unbind() ;
+		static void Unbind();
+		void release() const;
 
 		// Set uniforms
 		void SetUniform1i(const std::string& name, int value) const;

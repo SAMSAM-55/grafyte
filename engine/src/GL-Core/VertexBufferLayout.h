@@ -17,9 +17,9 @@ namespace grafyte
 		{
 			switch (type)
 			{
-			case GL_FLOAT:			return 4;
-			case GL_UNSIGNED_INT:  return 4;
-			case GL_UNSIGNED_BYTE: return 1;
+				case GL_FLOAT:			return 4;
+				case GL_UNSIGNED_INT:  return 4;
+				case GL_UNSIGNED_BYTE: return 1;
 				default: DEBUG_BREAK(); return 0;
 			}
 		}
@@ -27,9 +27,6 @@ namespace grafyte
 
 	class VertexBufferLayout
 	{
-	private:
-		std::vector<VertexBufferElement> m_Elements;
-		unsigned int m_Stride;
 	public:
 		VertexBufferLayout()
 			: m_Stride(0) {
@@ -41,8 +38,12 @@ namespace grafyte
 			static_assert(sizeof(T) == 0);
 		}
 
-		inline const std::vector<VertexBufferElement>& GetElements() const { return m_Elements; }
-		inline unsigned int GetStride() const { return m_Stride; }
+		[[nodiscard]] const std::vector<VertexBufferElement>& GetElements() const { return m_Elements; }
+		[[nodiscard]] unsigned int GetStride() const { return m_Stride; }
+
+	private:
+		std::vector<VertexBufferElement> m_Elements;
+		unsigned int m_Stride;
 	};
 
 	template<>
