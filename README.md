@@ -84,6 +84,11 @@ while not app.should_close():
 app.quit()
 ```
 
+### Demo
+
+Here is another exemple of a game made using only grafyte:
+![grafyte demo](docs/grafyte_demo.gif)
+
 ## API Overview
 
 ### `Application`
