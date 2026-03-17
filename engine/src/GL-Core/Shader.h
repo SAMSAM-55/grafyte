@@ -28,7 +28,7 @@ namespace grafyte
 		};
 		Shader& operator=(Shader&& other) noexcept
 		{
-			if (this != &other) return *this;
+			if (this == &other) return *this;
 
 			release();
 

@@ -10,8 +10,9 @@ namespace grafyte {
         m_glfwToKey.clear();
         for (int glfwKey = GLFW_KEY_SPACE; glfwKey <= GLFW_KEY_LAST; glfwKey++) {
             const int scancode = glfwGetKeyScancode(glfwKey);
-            const char* name = glfwGetKeyName(glfwKey, scancode);
+            if (scancode == -1) continue;
 
+            const char* name = glfwGetKeyName(glfwKey, scancode);
             if (!name) continue;
             if (const size_t nameLen = std::strlen(name); nameLen != 1) continue;
 

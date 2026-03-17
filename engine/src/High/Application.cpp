@@ -23,6 +23,10 @@ namespace grafyte
         if (!glfwInit())
             return -1;
 
+        glfwSetErrorCallback([](int error, const char* description) {
+            fprintf(stderr, "GLFW Error (%d): %s\n", error, description);
+        });
+
         glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
         glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
         glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
@@ -57,15 +61,17 @@ namespace grafyte
 	}
 
     void Application::quit() {
+        if (!m_window) return;
+
+        // Clear scenes and managers while context is definitely alive
+        if (scene) scene->clear();
         ctx.meshes.clear();
         ctx.materials.clear();
 
-        scene->clear();
+        m_textRenderer.reset(); // Specifically destroy the unique_ptr here
 
-        if (m_window) {
-            glfwDestroyWindow(m_window);
-            m_window = nullptr;
-        }
+        glfwDestroyWindow(m_window);
+        m_window = nullptr;
         glfwTerminate();
     }
 
