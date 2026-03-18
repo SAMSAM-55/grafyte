@@ -96,9 +96,9 @@ namespace grafyte
 
         // Render
         computeProjection();
-        std::vector<types::DrawItem> items;
         std::vector<types::TextData> texts;
-        scene->buildRenderList(items);
+        const auto& transforms = scene->GetTransforms();
+        const auto& items = scene->buildRenderList();
         scene->GetTextRenderList(texts);
 
         // if (!texts.empty()) {
@@ -106,7 +106,7 @@ namespace grafyte
         //     std::cout << "[Application](render): winDim=(" << m_winWidth << ", " << m_winHeight << ")" << std::endl;
         // }
 
-        ctx.renderer.Render(items, ctx.camera);
+        ctx.renderer.Render(items, transforms, ctx.camera);
         m_textRenderer->Render(texts, &ctx.camera);
 
         /* Swap front and back buffers */

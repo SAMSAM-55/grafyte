@@ -1,4 +1,6 @@
 #include "Scene.h"
+
+#include <algorithm>
 #include <iostream>
 #include <ranges>
 
@@ -38,8 +40,8 @@ namespace grafyte {
         //           << "rot=" << t.rot << ", "
         //           << "scale=(" << t.scale.x << ", " << t.scale.y << ")" << std::endl;
 
+        itemsDirty = true;
         return m_objects[id];
-
     }
 
     std::shared_ptr<TextObject> Scene::spawnTextObject(const types::Vec2& pos, const std::string& text, const float& size)
@@ -51,33 +53,28 @@ namespace grafyte {
         return m_textObjects[id];
     }
 
-    void Scene::buildRenderList(std::vector<types::DrawItem> &out) const {
-        // std::cout << "[Scene](BuildRenderList): this= " << this << std::endl;
+    const std::vector<types::DrawItem>& Scene::buildRenderList()
+    {
+        if (itemsDirty) {
+            m_items.clear();
+            m_items.reserve(m_renderables.size());
 
-        out.clear();
-        out.reserve(m_renderables.size());
-
-        // std::cout << "[Scene](BuildRenderList): Starting build. Renderables size: " << m_renderables.size() << std::endl;
-
-        for (const auto&[id, rc]: m_renderables) {
-            auto itT = m_transforms.find(id);
-
-            if (itT == m_transforms.end()) {
-                // std::cout << "[Scene](BuildRenderList): No transform for object ID: " << id << ". Skipping." << std::endl;
-                continue;
+            for (const auto& [id, rc] : m_renderables) {
+                m_items.push_back(types::DrawItem{
+                    .objectId = id,
+                    .mesh = rc.mesh,
+                    .material = rc.mat,
+                    .zIndex = rc.zIndex
+                });
             }
-
-            // std::cout << "[Scene](BuildRenderList): Adding object ID: " << id << " with zIndex: " << rc.zIndex << std::endl;
-
-            out.push_back(types::DrawItem{
-                .objectId = id,
-                .transform = itT->second,
-                .mesh = rc.mesh,
-                .material = rc.mat,
-                .zIndex = rc.zIndex
+            std::ranges::sort(m_items, [](const types::DrawItem& a, const types::DrawItem& b)
+            {
+                return a.zIndex < b.zIndex;
             });
+            itemsDirty = false;
         }
-        // std::cout << "[Scene](BuildRenderList): Build completed. Final list size: " << out.size() << std::endl;
+
+       return m_items;
     }
 
     void Scene::GetTextRenderList(std::vector<types::TextData>& out) const
