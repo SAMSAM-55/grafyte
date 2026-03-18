@@ -38,13 +38,16 @@ namespace grafyte {
         void setTransform(const types::ObjectId& id, const types::Transform& t) {m_transforms[id] = t;};
         void setRenderable(const types::ObjectId& id, const types::RenderComponent& rc) {m_renderables[id] = rc;};
 
+        const auto& GetTransforms() {return m_transforms;};
+
         // void destroyObject(types::ObjectId id);
         void RemoveText(const types::ObjectId id) {m_texts.erase(id);};
 
-        void buildRenderList(std::vector<types::DrawItem>& out) const;
+        const std::vector<types::DrawItem>& buildRenderList();
         void GetTextRenderList(std::vector<types::TextData>& out) const;
         void clear();
 
+        bool itemsDirty = false;
     private:
         types::ObjectId m_nextId = 1;
         types::ObjectId m_nextTextId = 1;
@@ -57,6 +60,8 @@ namespace grafyte {
         std::unordered_map<types::ObjectId, types::TextData> m_texts;
 
         WorldContext* m_ctx;
+
+        std::vector<types::DrawItem> m_items;
     };
 
 }

@@ -10,7 +10,9 @@ namespace grafyte {
     public:
         Renderer(MeshManager& meshes, MaterialManager& materials);
 
-        void Render(std::vector<types::DrawItem>& items, const Camera& camera) const;
+        void Render(const std::vector<types::DrawItem>& items,
+                    const std::unordered_map<types::ObjectId, types::Transform> &transforms,
+                    const Camera &camera) const;
         static void Clear();
 
     private:

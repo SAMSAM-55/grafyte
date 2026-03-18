@@ -77,7 +77,6 @@ namespace grafyte::types {
 
     struct DrawItem {
         ObjectId objectId = 0;
-        Transform transform;
         MeshHandle mesh;
         MaterialHandle material;
         int zIndex = 0;

@@ -9,6 +9,7 @@ from __grafyte_internal import Application as _NativeApplication
 from __grafyte_internal import Object as _NativeObject
 from __grafyte_internal import Scene as _NativeScene
 from __grafyte_internal import TextObject as _NativeTextObject
+from __grafyte_internal import InputManager as _NativeInputManager
 from __grafyte_internal import Key, InputTrigger, Vec2, Direction, Hit
 
 class Object:
@@ -134,7 +135,24 @@ class Scene:
         native_obj = self.__native.spawn_text_object(*pos, text, scale)
         return TextObject(native_obj)
 
+class InputManager(_NativeInputManager):
+    @staticmethod
+    def is_key_down(key: Key) -> bool: return _NativeInputManager.is_key_down(key);
+    @staticmethod
+    def was_key_pressed(key: Key) -> bool: return _NativeInputManager.was_key_pressed(key)
+    @staticmethod
+    def was_key_released(key: Key) -> bool: return _NativeInputManager.was_key_released(key)
+    @staticmethod
+    def create_action(name: str, key: Key, trigger: InputTrigger) -> None:
+        _NativeInputManager.create_action(name, key, trigger)
+    @staticmethod
+    def is_action_active(action: str) -> bool: return _NativeInputManager.is_action_active(action)
+
 class Application(_NativeApplication):
+    @property
+    def input(self) -> type[InputManager]:
+        return InputManager
+
     def make_new_scene(self) -> Scene:
         native_scene = super().make_new_scene()
         return Scene(native_scene)

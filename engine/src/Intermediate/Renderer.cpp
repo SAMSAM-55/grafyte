@@ -7,6 +7,11 @@
 #include "glad/glad.h"
 
 namespace grafyte {
+    Renderer::Renderer(MeshManager &meshes, MaterialManager &materials)
+        : m_meshes(meshes), m_materials(materials)
+    {
+    }
+
     void Renderer::Draw(const types::DrawItem& item) const {
         // std::cout << "[Renderer](Draw): Drawing item for object ID: " << item.objectId << std::endl;
         const types::Material *mat = m_materials.mat(item.material);
@@ -38,15 +43,10 @@ namespace grafyte {
         return model;
     }
 
-    void Renderer::Render(std::vector<types::DrawItem>& items, const Camera& camera) const
-    {
+    void Renderer::Render(const std::vector<types::DrawItem>& items,
+                          const std::unordered_map<types::ObjectId, types::Transform> &transforms,
+                          const Camera &camera) const {
         // std::cout << "[Renderer](Render): Starting render of " << items.size() << " items." << std::endl;
-        std::ranges::sort(items,
-                          [](const types::DrawItem& a, const types::DrawItem& b)
-                          {
-                              return a.zIndex < b.zIndex;
-                          });
-
         for (const auto& it: items) {
             // std::cout << "[Renderer](Render): Processing item for object ID: " << it.objectId << " at zIndex: " << it.zIndex << std::endl;
             const auto* mat = m_materials.mat(it.material);
@@ -54,7 +54,7 @@ namespace grafyte {
 
             mat->shader.Bind();
 
-            const glm::mat4 model = computeModel(it.transform);
+            const glm::mat4 model = computeModel(transforms.at(it.objectId));
             const glm::mat4 mvp = camera.projection * camera.view * model;
             mat->shader.SetUniformMat4f("u_MVP", mvp);
 
@@ -63,14 +63,8 @@ namespace grafyte {
         // std::cout << "[Renderer](Render): Render completed." << std::endl;
     }
 
-    Renderer::Renderer(MeshManager &meshes, MaterialManager &materials)
-        : m_meshes(meshes), m_materials(materials)
-    {
-    }
-
     void Renderer::Clear()
     {
         glClear(GL_COLOR_BUFFER_BIT);
     }
-
 }

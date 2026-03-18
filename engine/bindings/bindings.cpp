@@ -232,7 +232,47 @@ PYBIND11_MODULE(GRAFYTE_PY_MODULE_NAME, m)
             self.SetColor({r, g, b, a});
         }, py::arg("color_r"), py::arg("color_g"), py::arg("color_b"), py::arg("color_a"));
 
+    py::class_<grafyte::InputManager>(m, "InputManager")
+    // inputs
+    .def_static(
+        "is_key_down",
+        &grafyte::InputManager::isKeyDown,
+        py::arg("key"),
+        "Return current input state"
+    )
+    .def_static(
+        "was_key_pressed",
+        &grafyte::InputManager::wasKeyPressed,
+        py::arg("key"),
+        "Return current input state"
+    )
+    .def_static(
+        "was_key_released",
+        &grafyte::InputManager::wasKeyReleased,
+        py::arg("key"),
+        "Return current input state"
+    )
+
+    .def_static(
+        "create_action",
+        &grafyte::InputManager::createAction,
+        py::arg("name"),
+        py::arg("key"),
+        py::arg("trigger"),
+        "Creates a new input action for the current application"
+    )
+    .def_static(
+        "is_action_active",
+        &grafyte::InputManager::isActionActive,
+        py::arg("action"),
+        "Return current input state"
+    );
+
     py::class_<grafyte::Application>(m, "Application")
+        .def_property_readonly_static("input", [](const py::object& self) {
+            return py::cast<grafyte::InputManager*>(nullptr);
+        })
+
         .def(py::init<const std::string&, const std::string&>(), py::arg("name"), py::arg("font"))
 
         // init(winWidth, winHeight) -> int
