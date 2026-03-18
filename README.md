@@ -14,6 +14,14 @@ Grafyte is a lightweight and simple 2D game engine written in C++ with OpenGL an
 
 ## Installation
 
+To install grafyte , simply run the following command in your terminal:
+
+```bash
+python -m pip install grafyte
+```
+
+## Building from Source
+
 ### Prerequisites
 
 - Python 3.10+
@@ -24,7 +32,7 @@ Grafyte is a lightweight and simple 2D game engine written in C++ with OpenGL an
 >[!NOTE]
 > When applicable please make sure to test your code on both windows and linux as well as on Python 3.10 **to** 3.14 if possible.
 
-### Building from Source
+### Build
 
 To set up the development environment and build Grafyte:
 
@@ -43,7 +51,7 @@ source .venv/bin/activate
 pip install .
 ```
 
-Alternatively, you can build the project using CMake for development:
+Finally, you can build the python extension using CMake:
 
 ```bash
 mkdir build
