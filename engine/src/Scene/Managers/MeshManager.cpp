@@ -6,6 +6,17 @@
 #include <iostream>
 
 namespace grafyte {
+    void MeshManager::init() {
+        m_unitQuad = {m_nextBuiltinId};
+
+        const types::MeshAsset qAsset = {
+
+        };
+    }
+
+    types::MeshHandle MeshManager::resolve(const types::DrawItem &item) {
+    }
+
     types::MeshHandle MeshManager::createAsset(const types::MeshAsset &asset, const types::ObjectId& id) {
         const types::MeshHandle h = {id};
         m_assets[h] = std::make_unique<types::MeshAsset>(asset);

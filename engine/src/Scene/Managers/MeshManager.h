@@ -42,6 +42,9 @@ namespace grafyte {
     public:
         MeshManager() = default;
         ~MeshManager() = default;
+        void init();
+
+        types::MeshHandle resolve(const types::DrawItem& item);
 
         types::MeshHandle createAsset(const types::MeshAsset& asset, const types::ObjectId& id);
         types::MeshAsset* asset(const types::MeshHandle& h);
@@ -52,5 +55,12 @@ namespace grafyte {
     private:
         std::unordered_map<types::MeshHandle, types::Mesh> m_meshes;
         std::unordered_map<types::MeshHandle, std::unique_ptr<types::MeshAsset>> m_assets;
+
+        types::MeshHandle m_unitQuad = {0};
+        types::MeshHandle m_unitTriangle = {0};
+        types::ObjectId m_nextBuiltinId = 1;
+
+        [[nodiscard]] types::MeshHandle getUnitQuad() const {return m_unitQuad;};
+        [[nodiscard]] types::MeshHandle getUnitTriangle() const {return m_unitTriangle;};
     };
 }
