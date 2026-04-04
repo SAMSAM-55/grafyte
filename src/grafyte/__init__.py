@@ -101,23 +101,6 @@ class Scene:
         pos = ensure_vec2f("Object(pos=...)", pos)
         size = ensure_vec2f("Object(size=...)", size)
 
-        positions = array("f", [
-            -size[0], -size[1], 0, 0,
-            size[0], -size[1], 1, 0,
-            size[0], size[1], 1, 1,
-            -size[0], size[1], 0, 1
-        ]) if has_texture else array("f", [
-            -size[0], -size[1],
-            size[0], -size[1],
-            size[0], size[1],
-            -size[0], size[1],
-        ])
-
-        indices = array("I", [
-            0, 1, 2,
-            2, 3, 0
-        ])
-
         if shader_source_path == "":
             if has_texture:
                 shader_source = "@embed/Shaders/Texture"
@@ -126,7 +109,7 @@ class Scene:
         else:
             shader_source = shader_source_path
 
-        native_obj = self.__native.spawn_object(positions, 4, indices, shader_source, *pos, has_texture, layer)
+        native_obj = self.__native.spawn_object(*size, shader_source, *pos, has_texture, layer)
         return Object(native_obj)
 
     def spawn_text_object(self, pos: Vec2Like, text: str, scale: float = 12) -> TextObject:

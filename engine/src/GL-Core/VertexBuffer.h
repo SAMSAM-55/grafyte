@@ -1,5 +1,7 @@
 #pragma once
 
+#include "glad/glad.h"
+
 namespace grafyte
 {
 	class VertexBuffer
@@ -8,7 +10,7 @@ namespace grafyte
 		unsigned int m_RendererID;
 
 	public:
-		VertexBuffer(const void* data, unsigned int size);
+		VertexBuffer(const void* data, unsigned int size, unsigned int usage = GL_STATIC_DRAW);
 		~VertexBuffer();
 
 		VertexBuffer(const VertexBuffer&) = delete;
@@ -26,6 +28,8 @@ namespace grafyte
 			}
 			return *this;
 		}
+
+		void UpdateData(const void* data, unsigned int size);
 
 		void Bind() const;
 		void Unbind() const;

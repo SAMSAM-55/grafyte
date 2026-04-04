@@ -5,7 +5,19 @@
 #include <stdexcept>
 
 namespace grafyte {
+    MaterialManager::MaterialManager() {
+        std::cout << "[MaterialManager] ctor" << std::endl;
+        m_textures.insert_or_assign(m_defaultTextureHandle, std::make_unique<Texture>());
+        std::cout << "[MaterialManager] ctor OK !" << std::endl;
+    }
+
+    void MaterialManager::init() {
+        m_textures[m_defaultTextureHandle]->Set("@embed/Textures/No");
+    }
+
     types::MaterialHandle MaterialManager::createAsset(const types::MaterialAsset &asset, const types::ObjectId& id) {
+
+
         const types::MaterialHandle h = {id};
         m_assets[h] = std::make_unique<types::MaterialAsset>(asset);
         return h;
@@ -37,7 +49,7 @@ namespace grafyte {
         {
             throw std::runtime_error(
             std::format(
-                "[Material Manager] Invalid MaterialHandle provided ({}).",
+                "[Material Manager] Invalid TextureHandle provided ({}).",
                 h.id
                 )
                 );
@@ -51,7 +63,7 @@ namespace grafyte {
         {
             throw std::runtime_error(
             std::format(
-                "[Material Manager] Invalid MaterialHandle provided ({}).",
+                "[Material Manager] Invalid ShaderHandle provided ({}).",
                 h.id
                 )
                 );
@@ -60,27 +72,38 @@ namespace grafyte {
     }
 
     void MaterialManager::upload(const types::MaterialHandle &h) {
-        // std::cout << "[MaterialManager](Upload): Uploading material for ID: " << h.id << std::endl;
         types::MaterialAsset* a = asset(h);
-        // std::cout << "[MaterialManager](Upload): Shader path: " << a->shaderSourcePath << std::endl;
 
+        types::ShaderHandle sh;
+        if (!m_shaderHandles.contains(a->shaderSourcePath))
+        {
+            sh = {m_nextShaderId++};
+            m_shaders.insert_or_assign(sh, std::make_unique<Shader>(a->shaderSourcePath));
+            m_shaderHandles.insert_or_assign(a->shaderSourcePath, sh);
+        }
+        else
+        {
+            sh = m_shaderHandles[a->shaderSourcePath];
+        }
 
-        const types::ShaderHandle sh = {h.id};
-        m_shaders.insert_or_assign(sh, std::make_unique<Shader>(a->shaderSourcePath));
-
-        const types::TextureHandle th = {a->textureSourcePath.empty() ? -1 : h.id};
+        types::TextureHandle th = m_defaultTextureHandle;
         if (a->hasTexture) {
-            // std::cout << "[MaterialManager](Upload): Material has texture. Path: " << a->textureSourcePath << " Slot: " << a->textureSlot << std::endl;
-            if (a->textureSourcePath.empty()) {
-                a->textureSourcePath = "@embed/Textures/No";
+            if (m_textureHandles.contains(a->textureSourcePath)) {
+                th = m_textureHandles[a->textureSourcePath];
             }
+            else {
+                if (a->textureSourcePath.empty()) {
+                    a->textureSourcePath = "@embed/Textures/No";
+                }
 
-            m_textures.insert_or_assign(th, std::make_unique<Texture>());
-            m_textures[th]->Set(a->textureSourcePath);
+                th = {m_nextTextureId++};
+                m_textures.insert_or_assign(th, std::make_unique<Texture>());
+                m_textures[th]->Set(a->textureSourcePath);
+                m_textureHandles.insert_or_assign(a->textureSourcePath, th);
+            }
         }
 
         m_mats.insert_or_assign(h, types::Material{sh, th});
-        // std::cout << "[MaterialManager](Upload): Material uploaded successfully for ID: " << h.id << std::endl;
     }
 
     void MaterialManager::clear()
@@ -88,6 +111,14 @@ namespace grafyte {
         m_assets.clear();
         m_mats.clear();
         m_textures.clear();
+        m_textureHandles.clear();
         m_shaders.clear();
+        m_shaderHandles.clear();
+
+        m_nextTextureId = 1;
+        m_nextShaderId = 1;
+
+        m_textures.insert_or_assign(m_defaultTextureHandle, std::make_unique<Texture>());
+        m_textures[m_defaultTextureHandle]->Set("@embed/Textures/No");
     }
 }

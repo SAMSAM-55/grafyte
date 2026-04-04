@@ -5,12 +5,12 @@
 
 namespace grafyte
 {
-    VertexBuffer::VertexBuffer(const void* data, unsigned int size)
+    VertexBuffer::VertexBuffer(const void* data, unsigned int size, unsigned int usage)
         : m_RendererID(0)
     {
         glGenBuffers(1, &m_RendererID);
         glBindBuffer(GL_ARRAY_BUFFER, m_RendererID);
-        glBufferData(GL_ARRAY_BUFFER, size, data, GL_STATIC_DRAW);
+        glBufferData(GL_ARRAY_BUFFER, size, data, usage);
     }
 
     VertexBuffer::~VertexBuffer() {
@@ -22,6 +22,12 @@ namespace grafyte
             glDeleteBuffers(1, &m_RendererID);
             m_RendererID = 0;
         }
+    }
+
+    void VertexBuffer::UpdateData(const void* data, unsigned int size) {
+        glBindBuffer(GL_ARRAY_BUFFER, m_RendererID);
+        glBufferData(GL_ARRAY_BUFFER, size, nullptr, GL_DYNAMIC_DRAW);
+        glBufferData(GL_ARRAY_BUFFER, size, data, GL_DYNAMIC_DRAW);
     }
 
     void VertexBuffer::Bind() const

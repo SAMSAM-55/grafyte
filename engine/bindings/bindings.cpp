@@ -15,6 +15,28 @@
 #include "Scene/Scene.h"
 #include "Scene/Managers/CollisionManager.h"
 
+#include <windows.h>
+#include <dbghelp.h>
+#pragma comment(lib, "dbghelp.lib")
+
+// In your bindings.cpp, before the module definition:
+static LONG WINAPI crashHandler(EXCEPTION_POINTERS* ex) {
+    void* stack[62];
+    USHORT frames = CaptureStackBackTrace(0, 62, stack, nullptr);
+    SYMBOL_INFO* symbol = (SYMBOL_INFO*)calloc(sizeof(SYMBOL_INFO) + 256, 1);
+    symbol->MaxNameLen = 255;
+    symbol->SizeOfStruct = sizeof(SYMBOL_INFO);
+    SymInitialize(GetCurrentProcess(), nullptr, TRUE);
+
+    fprintf(stderr, "\n=== CRASH (code 0x%lX) ===\n", ex->ExceptionRecord->ExceptionCode);
+    for (USHORT i = 0; i < frames; i++) {
+        SymFromAddr(GetCurrentProcess(), (DWORD64)stack[i], 0, symbol);
+        fprintf(stderr, "  #%d %s (0x%llX)\n", i, symbol->Name, symbol->Address);
+    }
+    free(symbol);
+    return EXCEPTION_EXECUTE_HANDLER;
+}
+
 namespace py = pybind11;
 
 #ifndef GRAFYTE_PY_MODULE_NAME
@@ -26,6 +48,7 @@ namespace py = pybind11;
 
 PYBIND11_MODULE(GRAFYTE_PY_MODULE_NAME, m)
 {
+    SetUnhandledExceptionFilter(crashHandler);
     m.doc() = "Python bindings for the Grafyte engine";
 
     // Expose Vec2 as a Python type that can be built from a tuple
@@ -162,44 +185,25 @@ PYBIND11_MODULE(GRAFYTE_PY_MODULE_NAME, m)
 
     py::class_<grafyte::Scene, std::shared_ptr<grafyte::Scene>>(m, "Scene")
         .def("spawn_object", [](grafyte::Scene& self,
-                            const py::buffer& positions,
-                            unsigned int vertexCount,
-                            const py::buffer& indices,
+                            const float sx, const float sy,
                             const std::string& shaderSourcePath,
-                            float x, float y,
-                            bool hasTexture,
-                            int zIndex) {
-            // --- preprocess buffers into MeshAsset ---
-            const py::buffer_info pos_info = positions.request();
-            const py::buffer_info idx_info = indices.request();
-
-            if (pos_info.format != py::format_descriptor<float>::value)
-                throw std::runtime_error("Positions must be float32 buffer");
-            if (idx_info.format != py::format_descriptor<uint32_t>::value)
-                throw std::runtime_error("Indices must be uint32 buffer");
-
+                            const float x, const float y,
+                            const bool hasTexture,
+                            const int zIndex) {
             grafyte::types::MeshAsset mesh;
-            mesh.vertexCount = vertexCount;
-            mesh.indices.assign(static_cast<uint32_t*>(idx_info.ptr),
-                                static_cast<uint32_t*>(idx_info.ptr) + idx_info.size);
 
-            if (hasTexture)
-            {
-                mesh.layoutSlots = {
-                    grafyte::types::LayoutSlot{grafyte::types::AttribType::Float, 2},
-                    grafyte::types::LayoutSlot{grafyte::types::AttribType::Float, 2}
-                };
-            } else
-            {
-                mesh.layoutSlots = {
-                    grafyte::types::LayoutSlot{grafyte::types::AttribType::Float, 2}
-                };
-            }
+            mesh.layoutSlots = {
+                grafyte::types::LayoutSlot{grafyte::types::AttribType::Float, 2}, // pos
+                grafyte::types::LayoutSlot{grafyte::types::AttribType::Float, 2}, // uv
+                grafyte::types::LayoutSlot{grafyte::types::AttribType::Float, 4}, // color
+            };
 
-            mesh.sizeBytes = pos_info.size * sizeof(float);
-            mesh.posOffsetBytes = 0;
-            mesh.bytes.resize(mesh.sizeBytes);
-            std::memcpy(mesh.bytes.data(), pos_info.ptr, mesh.sizeBytes);
+            mesh.geo = grafyte::types::QUAD;
+            mesh.scale = {sx, sy};
+            mesh.indices = {
+                0, 1, 2,
+                2, 3, 0
+            };
 
             grafyte::types::MaterialAsset mat;
             mat.shaderSourcePath = shaderSourcePath;
@@ -211,11 +215,10 @@ PYBIND11_MODULE(GRAFYTE_PY_MODULE_NAME, m)
                 mat.textureSourcePath = "@embed/Textures/Default";
             }
 
-            grafyte::types::Vec2 pos{x, y};
-            return self.spawnObject(mesh, mat, pos, zIndex);
-        }, py::arg("positions"), py::arg("vertex_count"), py::arg("indices"),
-        py::arg("shader_source_path"), py::arg("pos_x"), py::arg("pos_y"), py::arg("has_texture"),
-        py::arg("z_index"))
+            const grafyte::types::Vec2 pos{x, y};
+            return self.spawnObject(mesh, mat, pos, zIndex, grafyte::types::QUAD);
+        }, py::arg("scale_x"), py::arg("scale_y"), py::arg("shader_source_path"), py::arg("pos_x"),
+        py::arg("pos_y"), py::arg("has_texture"), py::arg("z_index"))
         .def("spawn_text_object", [](grafyte::Scene& self,
             const float x,  const float y,
             const std::string& text,
@@ -270,10 +273,11 @@ PYBIND11_MODULE(GRAFYTE_PY_MODULE_NAME, m)
 
     py::class_<grafyte::Application>(m, "Application")
         .def_property_readonly_static("input", [](const py::object& self) {
-            return py::cast<grafyte::InputManager*>(nullptr);
+            return (grafyte::InputManager*)nullptr;
         })
 
         .def(py::init<const std::string&, const std::string&>(), py::arg("name"), py::arg("font"))
+        .def(py::init<const std::string&>(), py::arg("name"))
 
         // init(winWidth, winHeight) -> int
         .def(

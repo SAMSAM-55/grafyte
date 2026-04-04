@@ -18,10 +18,12 @@ namespace grafyte {
         types::ObjectId allocateId() {return m_nextId++;};
         types::ObjectId allocateTextId() {return m_nextTextId++;};
         std::shared_ptr<Object> spawnObject(const types::MeshAsset& mesh, const types::MaterialAsset& mat,
-                                            const types::Vec2& pos, const int& zIndex);
+                                            const types::Vec2& pos, const int& zIndex,
+                                            types::PrimitiveGeometry geo);
         std::shared_ptr<TextObject> spawnTextObject(const types::Vec2& pos, const std::string& text, const float& size);
 
         types::Transform& transform(const types::ObjectId& id) {return m_transforms[id];};
+        types::Color4& color(const types::ObjectId& id) {return m_colors[id];};
         types::TextData& text(const types::ObjectId& textId) {return m_texts[textId];};
         types::RenderComponent& renderable(const types::ObjectId& id) {return m_renderables[id];};
 
@@ -38,12 +40,16 @@ namespace grafyte {
         void setTransform(const types::ObjectId& id, const types::Transform& t) {m_transforms[id] = t;};
         void setRenderable(const types::ObjectId& id, const types::RenderComponent& rc) {m_renderables[id] = rc;};
 
-        const auto& GetTransforms() {return m_transforms;};
+        auto& GetTransforms() {return m_transforms;};
+        auto& GetColors() {return m_colors;};
 
         // void destroyObject(types::ObjectId id);
         void RemoveText(const types::ObjectId id) {m_texts.erase(id);};
 
         const std::vector<types::DrawItem>& buildRenderList();
+
+        std::vector<types::BatchGroup> getBatchedRenderList();
+
         void GetTextRenderList(std::vector<types::TextData>& out) const;
         void clear();
 
@@ -56,6 +62,7 @@ namespace grafyte {
         std::unordered_map<types::ObjectId, std::shared_ptr<TextObject>> m_textObjects;
 
         std::unordered_map<types::ObjectId, types::Transform> m_transforms;
+        std::unordered_map<types::ObjectId, types::Color4> m_colors;
         std::unordered_map<types::ObjectId, types::RenderComponent> m_renderables;
         std::unordered_map<types::ObjectId, types::TextData> m_texts;
 

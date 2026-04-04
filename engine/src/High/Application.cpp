@@ -16,12 +16,19 @@ namespace grafyte
     {
     }
 
+    Application::Application(std::string name)
+        : Application(std::move(name), "res/fonts/Inter_Medium.ttf")
+    {
+    }
+
     Application::~Application()
     = default;
 
     int Application::init(const int winWidth, const int winHeight) {
-        if (!glfwInit())
+        std::cout << "[init] glfwInit" << std::endl;
+        if (!glfwInit()) {
             return -1;
+        }
 
         glfwSetErrorCallback([](int error, const char* description) {
             fprintf(stderr, "GLFW Error (%d): %s\n", error, description);
@@ -34,6 +41,7 @@ namespace grafyte
         m_winHeight = winHeight;
         m_winWidth = winWidth;
 
+        std::cout << "[init] createWindow" << std::endl;
         m_window = glfwCreateWindow(winWidth, winHeight, m_name.c_str(), nullptr, nullptr);
         if (!m_window)
         {
@@ -43,8 +51,10 @@ namespace grafyte
 
         glfwMakeContextCurrent(m_window);
 
-        if (!gladLoadGLLoader(reinterpret_cast<GLADloadproc>(glfwGetProcAddress)))
+        std::cout << "[init] gladLoad" << std::endl;
+        if (!gladLoadGLLoader(reinterpret_cast<GLADloadproc>(glfwGetProcAddress))) {
             throw std::runtime_error("Could not load glad.");
+        }
 
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -52,11 +62,16 @@ namespace grafyte
 
         s_appInstance = this;
         InputManager::Init();
+        ctx = std::make_unique<WorldContext>();
+        ctx->init();
+        std::cout << "[init] TextRenderer" << std::endl;
         m_textRenderer = std::make_unique<TextRenderer>(m_font, 32);
+        std::cout << "[init] SetDpi" << std::endl;
         m_textRenderer->SetDpi({96.0f, 96.0f});
         glfwSetKeyCallback(m_window, InputManager::on_key);
         glfwSwapInterval(1);
 
+        std::cout << "[init] done" << std::endl;
         return 0;
 	}
 
@@ -65,8 +80,9 @@ namespace grafyte
 
         // Clear scenes and managers while context is definitely alive
         if (scene) scene->clear();
-        ctx.meshes.clear();
-        ctx.materials.clear();
+        ctx->meshes.clear();
+        ctx->materials.clear();
+        ctx.reset();
 
         m_textRenderer.reset(); // Specifically destroy the unique_ptr here
 
@@ -97,8 +113,9 @@ namespace grafyte
         // Render
         computeProjection();
         std::vector<types::TextData> texts;
-        const auto& transforms = scene->GetTransforms();
-        const auto& items = scene->buildRenderList();
+        auto& transforms = scene->GetTransforms();
+        auto& colors = scene->GetColors();
+        const auto& items = scene->getBatchedRenderList();
         scene->GetTextRenderList(texts);
 
         // if (!texts.empty()) {
@@ -106,8 +123,8 @@ namespace grafyte
         //     std::cout << "[Application](render): winDim=(" << m_winWidth << ", " << m_winHeight << ")" << std::endl;
         // }
 
-        ctx.renderer.Render(items, transforms, ctx.camera);
-        m_textRenderer->Render(texts, &ctx.camera);
+        ctx->renderer.Render(items, transforms, colors, ctx->camera);
+        m_textRenderer->Render(texts, &ctx->camera);
 
         /* Swap front and back buffers */
         glfwSwapBuffers(m_window);
@@ -122,13 +139,22 @@ namespace grafyte
         m_clearColor = types::Color4(r, g, b, a);
 	}
 
-    Scene& Application::makeNewScene()
-    {
-        ctx.meshes.clear();
-        ctx.materials.clear();
-        if (scene)
+    Scene& Application::makeNewScene() {
+        if (scene) {
             scene->clear();
-        scene = std::make_unique<Scene>(&ctx);
+        }
+
+        // Ensure the context exists and is initialized
+        if (!ctx) {
+            ctx = std::make_unique<WorldContext>();
+            ctx->init();
+        } else {
+            ctx->meshes.clear();
+            ctx->materials.clear();
+            ctx->init(); // Re-init default textures if needed
+        }
+
+        scene = std::make_unique<Scene>(ctx.get());
         return *scene;
     }
 
@@ -138,8 +164,15 @@ namespace grafyte
 
     void Application::computeProjection() {
         const double aspect = static_cast<double>(m_winWidth) / m_winHeight;
-        const float halfWorldWidth = 100.0f * aspect;
+        const float worldHeight = 200.0f;
+        const float worldWidth = worldHeight * static_cast<float>(aspect);
 
-        ctx.camera.projection = glm::ortho(-halfWorldWidth, halfWorldWidth, -100.0f, 100.0f, -1.0f, 1.0f);
+        ctx->camera.projection = glm::ortho(-worldWidth / 2.0f, worldWidth / 2.0f, -worldHeight / 2.0f, worldHeight / 2.0f, -1.0f, 1.0f);
     }
 }
+
+
+
+
+
+

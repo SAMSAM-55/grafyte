@@ -66,6 +66,11 @@ namespace grafyte::types {
         }
     };
 
+    struct Vertex {
+        Vec2 pos;
+        Vec2 texPos;
+    };
+
     struct MeshHandle {
         ObjectId id = 0;
 
@@ -123,8 +128,8 @@ namespace grafyte::types {
         PrimitiveGeometry geo = QUAD;
         MaterialHandle material;
         int zIndex = 0;
-        Transform transform;
-        Color4 color{};
+        mutable Transform transform;
+        mutable Color4 color{};
     };
 
     struct TextData

@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <iostream>
+#include <map>
 #include <ranges>
 
 namespace grafyte {
@@ -11,14 +12,9 @@ namespace grafyte {
     }
 
     std::shared_ptr<Object> Scene::spawnObject(const types::MeshAsset& mesh, const types::MaterialAsset& mat,
-                                               const types::Vec2& pos, const int& zIndex) {
-        // std::cout << "[Scene](SpawnObject): this = " << this << std::endl;
-
+                                               const types::Vec2& pos, const int& zIndex,
+                                               types::PrimitiveGeometry geo) {
         const types::ObjectId id = allocateId();
-
-        // std::cout << "[Scene](SpawnObject): Spawning object with ID: " << id
-        //           << " at position: (" << pos.x << ", " << pos.y << ")"
-        //           << " with zIndex: " << zIndex << std::endl;
 
         const auto meshH = m_ctx->meshes.createAsset(mesh, id);
         const auto matH = m_ctx->materials.createAsset(mat, id);
@@ -27,7 +23,7 @@ namespace grafyte {
 
         const auto rc = types::RenderComponent{meshH, matH, zIndex};
         m_renderables.insert_or_assign(id, rc);
-        m_objects.insert_or_assign(id, std::make_shared<Object>(id, this));
+        m_objects.insert_or_assign(id, std::make_shared<Object>(id, this, geo));
         m_transforms.insert_or_assign(id, types::Transform{
             .pos = pos,
             .rot = 0.0f,
@@ -35,10 +31,6 @@ namespace grafyte {
         });
 
         const auto& t = m_transforms[id];
-        // std::cout << "[Scene](SpawnObject): Object transform set: "
-        //           << "pos=(" << t.pos.x << ", " << t.pos.y << "), "
-        //           << "rot=" << t.rot << ", "
-        //           << "scale=(" << t.scale.x << ", " << t.scale.y << ")" << std::endl;
 
         itemsDirty = true;
         return m_objects[id];
@@ -64,7 +56,9 @@ namespace grafyte {
                     .objectId = id,
                     .mesh = rc.mesh,
                     .material = rc.mat,
-                    .zIndex = rc.zIndex
+                    .zIndex = rc.zIndex,
+                    .transform = m_transforms[id],
+                    .color = {1.0f, 1.0f, 0.0f, 1.0f}
                 });
             }
             std::ranges::sort(m_items, [](const types::DrawItem& a, const types::DrawItem& b)
@@ -75,6 +69,26 @@ namespace grafyte {
         }
 
        return m_items;
+    }
+
+    std::vector<types::BatchGroup> Scene::getBatchedRenderList() {
+        std::map<types::BatchingKey, std::vector<types::DrawItem>> groups;
+
+        for (const auto& items = buildRenderList(); const auto& item : items) {
+            const auto* mat = m_ctx->materials.mat(item.material);
+            types::BatchingKey key{
+                .th = mat->texture,
+                .sh = mat->shader,
+                .zIndex = item.zIndex
+            };
+            groups[key].push_back(item);
+        }
+
+        std::vector<types::BatchGroup> result;
+        for (auto& pair : groups) {
+            result.emplace_back(std::move(pair));
+        }
+        return result;
     }
 
     void Scene::GetTextRenderList(std::vector<types::TextData>& out) const

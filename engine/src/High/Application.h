@@ -15,6 +15,7 @@ namespace grafyte
 	{
 	public:
 		explicit Application(std::string  name, std::string font);
+		explicit Application(std::string  name);
 		~Application();
 
 		int init(int winWidth, int winHeight);
@@ -40,7 +41,7 @@ namespace grafyte
 		Scene& makeNewScene();
 
 		static Application* s_appInstance;
-		WorldContext ctx;
+		std::unique_ptr<WorldContext> ctx;
 		std::unique_ptr<Scene> scene;
 	private:
 		static void BeginFrame();
