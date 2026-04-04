@@ -44,6 +44,9 @@ namespace grafyte {
 
         m_keyToGLFW[Key::RightShift] = GLFW_KEY_RIGHT_SHIFT;
         m_glfwToKey[GLFW_KEY_RIGHT_SHIFT] = Key::RightShift;
+
+        m_keyToGLFW[Key::Space] = GLFW_KEY_SPACE;
+        m_glfwToKey[GLFW_KEY_SPACE] = Key::Space;
     }
 
     void InputManager::on_key(GLFWwindow *window, int key, int scancode, int action, int mods) {
@@ -55,9 +58,11 @@ namespace grafyte {
             }
 
             for (const auto&[name, inputAction]: m_inputActions) {
-                if (m_keyToGLFW[inputAction.key] == key) {
-                    m_actionDown[name] = true;
-                    m_actionPressed[name] = true;
+                for (const auto& inputKey: inputAction.keys) {
+                    if (m_keyToGLFW[inputKey] == key) {
+                        m_actionDown[name] = true;
+                        m_actionPressed[name] = true;
+                    }
                 }
             }
         }
@@ -70,9 +75,11 @@ namespace grafyte {
             }
 
             for (const auto&[name, inputAction]: m_inputActions) {
-                if (m_keyToGLFW[inputAction.key] == key) {
-                    m_actionDown[name] = false;
-                    m_actionReleased[name] = true;
+                for (const auto& inputKey: inputAction.keys) {
+                    if (m_keyToGLFW[inputKey] == key) {
+                        m_actionDown[name] = false;
+                        m_actionReleased[name] = true;
+                    }
                 }
             }
         }
@@ -81,13 +88,12 @@ namespace grafyte {
     bool InputManager::isActionActive(const std::string& name)
     {
         ensureActionExists(name);
-        const InputAction& action = m_inputActions[name];
-        switch (action.trigger)
+        switch (const auto&[_, trigger] = m_inputActions[name]; trigger)
         {
-            case Press: return m_actionPressed[name]; break;
-            case Hold: return m_actionDown[name]; break;
-            case Release: return m_actionReleased[name]; break;
-            default: return false; break;
+            case Press: return m_actionPressed[name];
+            case Hold: return m_actionDown[name];
+            case Release: return m_actionReleased[name];
+            default: return false;
         }
     }
 }
