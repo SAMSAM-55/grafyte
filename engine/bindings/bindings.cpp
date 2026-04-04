@@ -8,34 +8,11 @@
 
 #include "High/Application.h"
 #include "Intermediate/Object.h"
-#include <glm/gtc/type_ptr.hpp>
 
 #include "Inputs/InputManager.h"
 
 #include "Scene/Scene.h"
 #include "Scene/Managers/CollisionManager.h"
-
-#include <windows.h>
-#include <dbghelp.h>
-#pragma comment(lib, "dbghelp.lib")
-
-// In your bindings.cpp, before the module definition:
-static LONG WINAPI crashHandler(EXCEPTION_POINTERS* ex) {
-    void* stack[62];
-    USHORT frames = CaptureStackBackTrace(0, 62, stack, nullptr);
-    SYMBOL_INFO* symbol = (SYMBOL_INFO*)calloc(sizeof(SYMBOL_INFO) + 256, 1);
-    symbol->MaxNameLen = 255;
-    symbol->SizeOfStruct = sizeof(SYMBOL_INFO);
-    SymInitialize(GetCurrentProcess(), nullptr, TRUE);
-
-    fprintf(stderr, "\n=== CRASH (code 0x%lX) ===\n", ex->ExceptionRecord->ExceptionCode);
-    for (USHORT i = 0; i < frames; i++) {
-        SymFromAddr(GetCurrentProcess(), (DWORD64)stack[i], 0, symbol);
-        fprintf(stderr, "  #%d %s (0x%llX)\n", i, symbol->Name, symbol->Address);
-    }
-    free(symbol);
-    return EXCEPTION_EXECUTE_HANDLER;
-}
 
 namespace py = pybind11;
 
@@ -48,13 +25,12 @@ namespace py = pybind11;
 
 PYBIND11_MODULE(GRAFYTE_PY_MODULE_NAME, m)
 {
-    SetUnhandledExceptionFilter(crashHandler);
     m.doc() = "Python bindings for the Grafyte engine";
 
     // Expose Vec2 as a Python type that can be built from a tuple
     py::class_<grafyte::types::Vec2>(m, "Vec2")
         .def(py::init<float, float>(), py::arg("x") = 0.0f, py::arg("y") = 0.0f)
-        .def(py::init([](py::sequence seq)
+        .def(py::init([](const py::sequence& seq)
         {
             if (py::len(seq) != 2) throw std::runtime_error("Vec2 must have exactly two elements");
             return grafyte::types::Vec2{seq[0].cast<float>(), seq[1].cast<float>()};
