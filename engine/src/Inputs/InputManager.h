@@ -95,7 +95,6 @@ namespace grafyte {
             {Key::Num7, '7'},
             {Key::Num8, '8'},
             {Key::Num9, '9'},
-            {Key::Space, ' '},
         };
 
         static inline std::unordered_map<Key, int> m_keyToGLFW;

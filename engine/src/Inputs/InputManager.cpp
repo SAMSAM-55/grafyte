@@ -44,6 +44,9 @@ namespace grafyte {
 
         m_keyToGLFW[Key::RightShift] = GLFW_KEY_RIGHT_SHIFT;
         m_glfwToKey[GLFW_KEY_RIGHT_SHIFT] = Key::RightShift;
+
+        m_keyToGLFW[Key::Space] = GLFW_KEY_SPACE;
+        m_glfwToKey[GLFW_KEY_SPACE] = Key::Space;
     }
 
     void InputManager::on_key(GLFWwindow *window, int key, int scancode, int action, int mods) {
