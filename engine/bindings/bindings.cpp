@@ -260,7 +260,7 @@ PYBIND11_MODULE(GRAFYTE_PY_MODULE_NAME, m)
         "create_action",
         &grafyte::InputManager::createAction,
         py::arg("name"),
-        py::arg("key"),
+        py::arg("keys"),
         py::arg("trigger"),
         "Creates a new input action for the current application"
     )
@@ -273,7 +273,7 @@ PYBIND11_MODULE(GRAFYTE_PY_MODULE_NAME, m)
 
     py::class_<grafyte::Application>(m, "Application")
         .def_property_readonly_static("input", [](const py::object& self) {
-            return (grafyte::InputManager*)nullptr;
+            return static_cast<grafyte::InputManager *>(nullptr);
         })
 
         .def(py::init<const std::string&, const std::string&>(), py::arg("name"), py::arg("font"))

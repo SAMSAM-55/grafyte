@@ -50,13 +50,13 @@ class InputManager(_NativeInputManager):
         """
         ...
     @staticmethod
-    def create_action(name: str, key: Key, trigger: InputTrigger) -> None:
+    def create_action(name: str, trigger: InputTrigger, *key: Key) -> None:
         """
         Creates a new input action for the application.
 
         :param trigger:
         :param name: The name of the action.
-        :param key: The Key to bind to the action.
+        :param key: The Key(s) to bind to the action.
         """
         ...
     @staticmethod

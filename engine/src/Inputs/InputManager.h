@@ -9,6 +9,7 @@
 
 namespace grafyte {
     using inputs::Key;
+    using Keys = std::vector<Key>;
 
     enum InputTrigger
     {
@@ -19,9 +20,10 @@ namespace grafyte {
 
     struct InputAction
     {
-        Key key;
-        InputTrigger trigger;
+        Keys keys;
+        InputTrigger trigger{};
     };
+
 
     class InputManager {
     public:
@@ -36,8 +38,8 @@ namespace grafyte {
             m_keyReleased.clear();
         }
 
-        static void createAction(const std::string &name, const Key &key, const InputTrigger& trigger) {
-            m_inputActions[name] = InputAction{key, trigger};
+        static void createAction(const std::string &name, const Keys &keys, const InputTrigger& trigger) {
+            m_inputActions[name] = InputAction{keys, trigger};
         }
 
         static bool isKeyDown(const Key& key) {

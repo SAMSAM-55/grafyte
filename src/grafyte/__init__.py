@@ -126,8 +126,8 @@ class InputManager(_NativeInputManager):
     @staticmethod
     def was_key_released(key: Key) -> bool: return _NativeInputManager.was_key_released(key)
     @staticmethod
-    def create_action(name: str, key: Key, trigger: InputTrigger) -> None:
-        _NativeInputManager.create_action(name, key, trigger)
+    def create_action(name: str, trigger: InputTrigger, *key: Key) -> None:
+        _NativeInputManager.create_action(name, [*key], trigger)
     @staticmethod
     def is_action_active(action: str) -> bool: return _NativeInputManager.is_action_active(action)
 

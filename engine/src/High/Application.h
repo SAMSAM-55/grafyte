@@ -32,8 +32,8 @@ namespace grafyte
 		static bool wasKeyReleased(const Key& key) {return InputManager::wasKeyReleased(key);};
 
 		static bool isActionActive(const std::string& name) {return InputManager::isActionActive(name);};
-		static void createInputAction(const std::string &name, const Key &key, const InputTrigger& trigger) {
-			InputManager::createAction(name, key, trigger);
+		static void createInputAction(const std::string &name, const Keys &keys, const InputTrigger& trigger) {
+			InputManager::createAction(name, keys, trigger);
 		}
 		
 		void setClearColor(float r, float g, float b, float a);
