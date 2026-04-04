@@ -110,9 +110,8 @@ class TextObject:
 
 class Scene:
     def spawn_object(self,
-                     positions: Buffer,
-                     vertex_count: SupportsInt,
-                     indices: Buffer,
+                     sx: float,
+                     sy: float,
                      shader_source_path: str,
                      pos_x: float,
                      pos_y: float,

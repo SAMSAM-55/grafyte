@@ -16,12 +16,18 @@ namespace grafyte
     {
     }
 
+    Application::Application(std::string name)
+        : Application(std::move(name), "res/fonts/Inter_Medium.ttf")
+    {
+    }
+
     Application::~Application()
     = default;
 
     int Application::init(const int winWidth, const int winHeight) {
-        if (!glfwInit())
+        if (!glfwInit()) {
             return -1;
+        }
 
         glfwSetErrorCallback([](int error, const char* description) {
             fprintf(stderr, "GLFW Error (%d): %s\n", error, description);
@@ -43,8 +49,9 @@ namespace grafyte
 
         glfwMakeContextCurrent(m_window);
 
-        if (!gladLoadGLLoader(reinterpret_cast<GLADloadproc>(glfwGetProcAddress)))
+        if (!gladLoadGLLoader(reinterpret_cast<GLADloadproc>(glfwGetProcAddress))) {
             throw std::runtime_error("Could not load glad.");
+        }
 
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -52,6 +59,8 @@ namespace grafyte
 
         s_appInstance = this;
         InputManager::Init();
+        ctx = std::make_unique<WorldContext>();
+        ctx->init();
         m_textRenderer = std::make_unique<TextRenderer>(m_font, 32);
         m_textRenderer->SetDpi({96.0f, 96.0f});
         glfwSetKeyCallback(m_window, InputManager::on_key);
@@ -63,12 +72,12 @@ namespace grafyte
     void Application::quit() {
         if (!m_window) return;
 
-        // Clear scenes and managers while context is definitely alive
         if (scene) scene->clear();
-        ctx.meshes.clear();
-        ctx.materials.clear();
+        ctx->meshes.clear();
+        ctx->materials.clear();
+        ctx.reset();
 
-        m_textRenderer.reset(); // Specifically destroy the unique_ptr here
+        m_textRenderer.reset();
 
         glfwDestroyWindow(m_window);
         m_window = nullptr;
@@ -86,10 +95,8 @@ namespace grafyte
         m_deltaTime = m_now - m_lastFrame;
         m_lastFrame = m_now;
 
-        // std::cout << "[Application](Render): Frame started. DeltaTime: " << m_deltaTime << std::endl;
-
         glClearColor(m_clearColor.x, m_clearColor.y, m_clearColor.z, m_clearColor.w);
-        grafyte::Renderer::Clear();
+        Renderer::Clear();
 
         glfwGetFramebufferSize(m_window, &m_winWidth, &m_winHeight);
         glViewport(0, 0, m_winWidth, m_winHeight);
@@ -97,38 +104,41 @@ namespace grafyte
         // Render
         computeProjection();
         std::vector<types::TextData> texts;
-        const auto& transforms = scene->GetTransforms();
-        const auto& items = scene->buildRenderList();
+        auto& transforms = scene->GetTransforms();
+        auto& colors = scene->GetColors();
+        const auto& items = scene->getBatchedRenderList();
         scene->GetTextRenderList(texts);
 
-        // if (!texts.empty()) {
-        //     std::cout << "[Application](render): texts.size() = " << texts.size() << std::endl;
-        //     std::cout << "[Application](render): winDim=(" << m_winWidth << ", " << m_winHeight << ")" << std::endl;
-        // }
-
-        ctx.renderer.Render(items, transforms, ctx.camera);
-        m_textRenderer->Render(texts, &ctx.camera);
+        ctx->renderer.Render(items, transforms, colors, ctx->camera);
+        m_textRenderer->Render(texts, &ctx->camera);
 
         /* Swap front and back buffers */
         glfwSwapBuffers(m_window);
 
         /* Poll for and process events */
         glfwPollEvents();
-
-        // std::cout << "[Application](Render): Frame completed." << std::endl;
     }
 
     void Application::setClearColor(const float r, const float g, const float b, const float a) {
         m_clearColor = types::Color4(r, g, b, a);
 	}
 
-    Scene& Application::makeNewScene()
-    {
-        ctx.meshes.clear();
-        ctx.materials.clear();
-        if (scene)
+    Scene& Application::makeNewScene() {
+        if (scene) {
             scene->clear();
-        scene = std::make_unique<Scene>(&ctx);
+        }
+
+        // Ensure the context exists and is initialized
+        if (!ctx) {
+            ctx = std::make_unique<WorldContext>();
+            ctx->init();
+        } else {
+            ctx->meshes.clear();
+            ctx->materials.clear();
+            ctx->init(); // Re-init default textures if needed
+        }
+
+        scene = std::make_unique<Scene>(ctx.get());
         return *scene;
     }
 
@@ -138,8 +148,15 @@ namespace grafyte
 
     void Application::computeProjection() {
         const double aspect = static_cast<double>(m_winWidth) / m_winHeight;
-        const float halfWorldWidth = 100.0f * aspect;
+        const float worldHeight = 200.0f;
+        const float worldWidth = worldHeight * static_cast<float>(aspect);
 
-        ctx.camera.projection = glm::ortho(-halfWorldWidth, halfWorldWidth, -100.0f, 100.0f, -1.0f, 1.0f);
+        ctx->camera.projection = glm::ortho(-worldWidth / 2.0f, worldWidth / 2.0f, -worldHeight / 2.0f, worldHeight / 2.0f, -1.0f, 1.0f);
     }
 }
+
+
+
+
+
+

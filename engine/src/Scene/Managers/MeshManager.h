@@ -12,13 +12,6 @@
 
 namespace grafyte {
     namespace types {
-        struct  Mesh {
-            VertexArray va;
-            IndexBuffer ib;
-            VertexBuffer vb;
-            VertexBufferLayout layout;
-        };
-
         enum class AttribType : uint8_t { Float, UInt, UByte };
 
         struct LayoutSlot {
@@ -26,15 +19,17 @@ namespace grafyte {
             uint32_t count;
         };
 
-        struct MeshAsset {
+        struct  Mesh {
+            std::vector<Vertex> vertices;
             std::vector<LayoutSlot> layoutSlots;
-
-            std::vector<uint8_t> bytes;
-            unsigned int sizeBytes = 0;
-            unsigned int posOffsetBytes = 0;
             std::vector<uint32_t> indices;
+        };
 
-            uint32_t vertexCount = 0;
+        struct MeshAsset {
+            Vec2 scale;
+            std::vector<LayoutSlot> layoutSlots;
+            std::vector<uint32_t> indices;
+            PrimitiveGeometry geo;
         };
     }
 
@@ -52,5 +47,14 @@ namespace grafyte {
     private:
         std::unordered_map<types::MeshHandle, types::Mesh> m_meshes;
         std::unordered_map<types::MeshHandle, std::unique_ptr<types::MeshAsset>> m_assets;
+
+        types::MeshHandle m_unitQuad = {0};
+        types::MeshHandle m_unitTriangle = {0};
+        types::ObjectId m_nextBuiltinId = 1;
+
+        [[nodiscard]] types::MeshHandle getUnitQuad() const {return m_unitQuad;};
+        static std::vector<types::Vertex> makeUnitQuad() ;
+        [[nodiscard]] types::MeshHandle getUnitTriangle() const {return m_unitTriangle;};
+        static std::vector<types::Vertex> makeUnitTriangle();
     };
 }

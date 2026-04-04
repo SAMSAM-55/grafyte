@@ -50,9 +50,8 @@ namespace grafyte
             glGetShaderiv(id, GL_INFO_LOG_LENGTH, &length);
             const auto message = static_cast<char *>(alloca(length * sizeof(char)));
             glGetShaderInfoLog(id, length, &length, message);
-            // std::cout << "[OpenGL Shader Compilation]" << (type == GL_VERTEX_SHADER ? "Vertex" : "Fragment")
-            //           << "shader compilation failed! Error :" << std::endl;
-            // std::cout << message << std::endl;
+            fprintf(stderr, "[OpenGL Shader Compilation] %s shader compilation failed! Error :\n%s\n",
+                    (type == GL_VERTEX_SHADER ? "Vertex" : "Fragment"), message);
             glDeleteShader(id);
             return 0;
         }
@@ -122,7 +121,7 @@ namespace grafyte
         const int location = glGetUniformLocation(m_RendererID, name.c_str());
 
         if (location == -1) {
-            std::cout << "[OpenGL Shader Uniform](" << m_FilePath << ") : Shader uniform " << name << " doesn't exist !" << std::endl;
+            fprintf(stderr, "[OpenGL Shader Uniform](%s) : Shader uniform %s doesn't exist !\n", m_FilePath.c_str(), name.c_str());
         }
         else
             m_UniformLocationCache[name] = location;
