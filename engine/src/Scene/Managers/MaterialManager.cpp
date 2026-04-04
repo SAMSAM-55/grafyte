@@ -6,9 +6,7 @@
 
 namespace grafyte {
     MaterialManager::MaterialManager() {
-        std::cout << "[MaterialManager] ctor" << std::endl;
         m_textures.insert_or_assign(m_defaultTextureHandle, std::make_unique<Texture>());
-        std::cout << "[MaterialManager] ctor OK !" << std::endl;
     }
 
     void MaterialManager::init() {

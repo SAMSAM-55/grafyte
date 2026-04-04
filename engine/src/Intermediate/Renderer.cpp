@@ -81,9 +81,7 @@ namespace grafyte {
                           std::unordered_map<types::ObjectId, types::Transform>& transforms,
                           std::unordered_map<types::ObjectId, types::Color4>& colors,
                           const Camera &camera) {
-        // std::cout << "[Renderer](Render): Starting render of " << items.size() << " items." << std::endl;
         for (const auto& group: groups) {
-            // std::cout << "[Renderer](Render): Processing item for object ID: " << it.objectId << " at zIndex: " << it.zIndex << std::endl;
             const types::DrawItem& first = group.second[0];
             const auto* mat = m_materials.mat(first.material);
             const auto* matA = m_materials.asset(first.material);
@@ -101,7 +99,6 @@ namespace grafyte {
 
             Draw(group, transforms, colors);
         }
-        // std::cout << "[Renderer](Render): Render completed." << std::endl;
     }
 
     void Renderer::Clear()

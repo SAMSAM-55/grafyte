@@ -35,9 +35,7 @@ namespace grafyte {
 
     class MeshManager {
     public:
-        MeshManager() {
-            std::cout << "[MeshManager] ctor" << std::endl;
-        }
+        MeshManager() = default;
         ~MeshManager() = default;
 
         types::MeshHandle createAsset(const types::MeshAsset& asset, const types::ObjectId& id);

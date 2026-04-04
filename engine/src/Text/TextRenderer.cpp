@@ -127,9 +127,6 @@ namespace grafyte
         const glm::vec4& color,
         const types::Vec2& windowDimensions) const {
 
-        // std::cout << "[TextRenderer](DrawText): Drawing text: '" << text << "' at (" << x << ", " << y <<
-        //    ") with scale " << scale << std::endl;
-
         const float finalScale = Font::TextScaleFromPt(scale, m_dpi.x, font.bakedRes);
 
         const glm::mat4 uiProj = glm::ortho(
@@ -183,13 +180,7 @@ namespace grafyte
                                       Camera *camera
     ) const {
 
-        // std::cout << "[TextRenderer](DrawText): Drawing text: '" << text << "' at (" << x << ", " << y <<
-        //    ") with scale " << scale << std::endl;
-
         const glm::mat4 mvp = camera->projection * camera->view;
-
-        // std::cout << "[TextRenderer](DrawTextObject): text='" << text << "' pos=(" << x << ", " << y << ") scale=" << scale << std::endl;
-        // std::cout << "[TextRenderer](DrawTextObject): camera projection[0][0]=" << camera->projection[0][0] << " [1][1]=" << camera->projection[1][1] << std::endl;
 
         shader.Bind();
         shader.SetUniform4f("u_TextColor", color.x, color.y, color.z, color.w);
@@ -224,11 +215,6 @@ namespace grafyte
                 xpos + w, ypos,     g.u1, g.v0,
             };
 
-            // if (c == text[0]) {
-            //      std::cout << "[TextRenderer](DrawTextObject): Char='" << c << "' xpos=" << xpos << " ypos=" << ypos << " w=" << w << " h=" << h << std::endl;
-            //      std::cout << "[TextRenderer](DrawTextObject): First vertex: (" << vertices[0] << ", " << vertices[1] << ")" << std::endl;
-            // }
-
             glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices);
             glDrawArrays(GL_TRIANGLES, 0, 6);
 
@@ -238,14 +224,10 @@ namespace grafyte
 
     void TextRenderer::Render(const std::vector<types::TextData>& renderList, Camera* camera) const
     {
-        // if (!renderList.empty()) {
-        //     std::cout << "[TextRenderer](Render): Rendering " << renderList.size() << " text objects." << std::endl;
-        // }
         for (const auto& text: renderList)
         {
             const float finalScale = Font::TextScaleFromPt(text.transform.scale.x, m_dpi.x, font.bakedRes);
             const float width = MeasureTextWidth(text.text, finalScale);
-            // std::cout << "[TextRenderer](Render): Object '" << text.text << "' pos=(" << text.transform.pos.x << ", " << text.transform.pos.y << ") finalScale=" << finalScale << std::endl;
             DrawTextObject(
                 text.text,
                 text.transform.pos.x,
@@ -280,7 +262,6 @@ namespace grafyte
 
     float TextRenderer::MeasureTextWidth(const std::string& text, float scale) const
     {
-        // std::cout << "[TextRenderer](MeasureTextWidth): Measuring width for: '" << text << "' with scale " << scale << std::endl;
         float width = 0.0f;
 
         for (char c : text) {

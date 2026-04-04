@@ -17,7 +17,6 @@ namespace grafyte {
         WorldContext()
             : renderer(meshes, materials)
         {
-            std::cout << "[WorldContext] constructed OK" << std::endl;
         }
 
         void init() {
