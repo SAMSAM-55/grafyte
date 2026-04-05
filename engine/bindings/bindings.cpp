@@ -8,7 +8,6 @@
 
 #include "High/Application.h"
 #include "Intermediate/Object.h"
-#include <glm/gtc/type_ptr.hpp>
 
 #include "Inputs/InputManager.h"
 
@@ -31,7 +30,7 @@ PYBIND11_MODULE(GRAFYTE_PY_MODULE_NAME, m)
     // Expose Vec2 as a Python type that can be built from a tuple
     py::class_<grafyte::types::Vec2>(m, "Vec2")
         .def(py::init<float, float>(), py::arg("x") = 0.0f, py::arg("y") = 0.0f)
-        .def(py::init([](py::sequence seq)
+        .def(py::init([](const py::sequence& seq)
         {
             if (py::len(seq) != 2) throw std::runtime_error("Vec2 must have exactly two elements");
             return grafyte::types::Vec2{seq[0].cast<float>(), seq[1].cast<float>()};
@@ -136,13 +135,14 @@ PYBIND11_MODULE(GRAFYTE_PY_MODULE_NAME, m)
             auto box = grafyte::collision::AABB{{pos_x, pos_y}, size_x, size_y};
             self.AddCollisionBox(box);
         }, py::arg("size_x"), py::arg("size_y"), py::arg("scale_x"), py::arg("scale_y"))
-        .def("collides_with", [](const grafyte::Object& self, const grafyte::Object& other)
-        {
-            return self.GetScene()->collisions().ObjectsCollides(self.GetId(), other.GetId(), *self.GetScene());
-        }, py::arg("other"))
+        .def("collides_with", &grafyte::Object::CollidesWith, py::arg("other"))
         .def("is_colliding", [](const grafyte::Object& self)
         {
-            return self.GetScene()->collisions().IsColliding(self.GetId(), *self.GetScene());
+            auto* scene = self.GetScene();
+            if (!scene) {
+                return grafyte::collision::Hit{grafyte::collision::AABB{}, grafyte::collision::AABB{}, false, grafyte::collision::Top};
+            }
+            return scene->collisions().IsColliding(self.GetId(), *scene);
         })
         .def("enable_auto_collides", &grafyte::Object::EnableAutoCollides)
 
@@ -162,44 +162,25 @@ PYBIND11_MODULE(GRAFYTE_PY_MODULE_NAME, m)
 
     py::class_<grafyte::Scene, std::shared_ptr<grafyte::Scene>>(m, "Scene")
         .def("spawn_object", [](grafyte::Scene& self,
-                            const py::buffer& positions,
-                            unsigned int vertexCount,
-                            const py::buffer& indices,
+                            const float sx, const float sy,
                             const std::string& shaderSourcePath,
-                            float x, float y,
-                            bool hasTexture,
-                            int zIndex) {
-            // --- preprocess buffers into MeshAsset ---
-            const py::buffer_info pos_info = positions.request();
-            const py::buffer_info idx_info = indices.request();
-
-            if (pos_info.format != py::format_descriptor<float>::value)
-                throw std::runtime_error("Positions must be float32 buffer");
-            if (idx_info.format != py::format_descriptor<uint32_t>::value)
-                throw std::runtime_error("Indices must be uint32 buffer");
-
+                            const float x, const float y,
+                            const bool hasTexture,
+                            const int zIndex) {
             grafyte::types::MeshAsset mesh;
-            mesh.vertexCount = vertexCount;
-            mesh.indices.assign(static_cast<uint32_t*>(idx_info.ptr),
-                                static_cast<uint32_t*>(idx_info.ptr) + idx_info.size);
 
-            if (hasTexture)
-            {
-                mesh.layoutSlots = {
-                    grafyte::types::LayoutSlot{grafyte::types::AttribType::Float, 2},
-                    grafyte::types::LayoutSlot{grafyte::types::AttribType::Float, 2}
-                };
-            } else
-            {
-                mesh.layoutSlots = {
-                    grafyte::types::LayoutSlot{grafyte::types::AttribType::Float, 2}
-                };
-            }
+            mesh.layoutSlots = {
+                grafyte::types::LayoutSlot{grafyte::types::AttribType::Float, 2}, // pos
+                grafyte::types::LayoutSlot{grafyte::types::AttribType::Float, 2}, // uv
+                grafyte::types::LayoutSlot{grafyte::types::AttribType::Float, 4}, // color
+            };
 
-            mesh.sizeBytes = pos_info.size * sizeof(float);
-            mesh.posOffsetBytes = 0;
-            mesh.bytes.resize(mesh.sizeBytes);
-            std::memcpy(mesh.bytes.data(), pos_info.ptr, mesh.sizeBytes);
+            mesh.geo = grafyte::types::QUAD;
+            mesh.scale = {sx, sy};
+            mesh.indices = {
+                0, 1, 2,
+                2, 3, 0
+            };
 
             grafyte::types::MaterialAsset mat;
             mat.shaderSourcePath = shaderSourcePath;
@@ -211,11 +192,10 @@ PYBIND11_MODULE(GRAFYTE_PY_MODULE_NAME, m)
                 mat.textureSourcePath = "@embed/Textures/Default";
             }
 
-            grafyte::types::Vec2 pos{x, y};
-            return self.spawnObject(mesh, mat, pos, zIndex);
-        }, py::arg("positions"), py::arg("vertex_count"), py::arg("indices"),
-        py::arg("shader_source_path"), py::arg("pos_x"), py::arg("pos_y"), py::arg("has_texture"),
-        py::arg("z_index"))
+            const grafyte::types::Vec2 pos{x, y};
+            return self.spawnObject(mesh, mat, pos, zIndex, grafyte::types::QUAD);
+        }, py::arg("scale_x"), py::arg("scale_y"), py::arg("shader_source_path"), py::arg("pos_x"),
+        py::arg("pos_y"), py::arg("has_texture"), py::arg("z_index"))
         .def("spawn_text_object", [](grafyte::Scene& self,
             const float x,  const float y,
             const std::string& text,
@@ -224,7 +204,7 @@ PYBIND11_MODULE(GRAFYTE_PY_MODULE_NAME, m)
             return self.spawnTextObject({x, y}, text, scale);
         }, py::arg("pos_x"), py::arg("pos_y"), py::arg("text"), py::arg("scale"));
 
-    py::class_<grafyte::TextObject>(m, "TextObject")
+    py::class_<grafyte::TextObject, std::shared_ptr<grafyte::TextObject>>(m, "TextObject")
         .def("set_text", &grafyte::TextObject::SetText, py::arg("text"))
         .def("set_scale", &grafyte::TextObject::SetScale, py::arg("scale"))
         .def("set_color", [](const grafyte::TextObject& self, const float& r, const float& g, const float& b, const float& a)
@@ -232,8 +212,49 @@ PYBIND11_MODULE(GRAFYTE_PY_MODULE_NAME, m)
             self.SetColor({r, g, b, a});
         }, py::arg("color_r"), py::arg("color_g"), py::arg("color_b"), py::arg("color_a"));
 
+    py::class_<grafyte::InputManager>(m, "InputManager")
+    // inputs
+    .def_static(
+        "is_key_down",
+        &grafyte::InputManager::isKeyDown,
+        py::arg("key"),
+        "Return current input state"
+    )
+    .def_static(
+        "was_key_pressed",
+        &grafyte::InputManager::wasKeyPressed,
+        py::arg("key"),
+        "Return current input state"
+    )
+    .def_static(
+        "was_key_released",
+        &grafyte::InputManager::wasKeyReleased,
+        py::arg("key"),
+        "Return current input state"
+    )
+
+    .def_static(
+        "create_action",
+        &grafyte::InputManager::createAction,
+        py::arg("name"),
+        py::arg("keys"),
+        py::arg("trigger"),
+        "Creates a new input action for the current application"
+    )
+    .def_static(
+        "is_action_active",
+        &grafyte::InputManager::isActionActive,
+        py::arg("action"),
+        "Return current input state"
+    );
+
     py::class_<grafyte::Application>(m, "Application")
+        .def_property_readonly_static("input", [](const py::object& self) {
+            return static_cast<grafyte::InputManager *>(nullptr);
+        })
+
         .def(py::init<const std::string&, const std::string&>(), py::arg("name"), py::arg("font"))
+        .def(py::init<const std::string&>(), py::arg("name"))
 
         // init(winWidth, winHeight) -> int
         .def(
@@ -275,7 +296,7 @@ PYBIND11_MODULE(GRAFYTE_PY_MODULE_NAME, m)
         // make_new_scene()
         .def(
             "make_new_scene",
-            &grafyte::Application::makeNewScene, py::return_value_policy::reference,
+            &grafyte::Application::makeNewScene,
             "Sets the current renderer used by the application"
         )
 

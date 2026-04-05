@@ -1,10 +1,10 @@
 #include "Texture.h"
 
 #include "glad/glad.h"
-#include <GLFW/glfw3.h>
 
 #include "stb_image/stb_image.h"
 #include "macros.hpp"
+#include "GlContextState.h"
 
 #include "embedd/EmbeddedAsset.h"
 
@@ -59,10 +59,11 @@ namespace grafyte {
 		buffer = stbi_load(idOrPath.c_str(), &m_Width, &m_Height, &m_BPP, 4);
 	}
 
-	void Texture::release() {
-		if (glfwGetCurrentContext()) {
-			Unbind();
-			GLCall(glDeleteTextures(1, &m_RendererID));
+    void Texture::release() {
+        if (m_RendererID && GlContextAlive()) {
+            Unbind();
+            GLCall(glDeleteTextures(1, &m_RendererID));
+            m_RendererID = 0;
 		}
 	}
 }

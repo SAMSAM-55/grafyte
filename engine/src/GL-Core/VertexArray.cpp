@@ -3,9 +3,9 @@
 #include "VertexBufferLayout.h"
 
 #include "glad/glad.h"
-#include <GLFW/glfw3.h>
 
 #include "macros.hpp"
+#include "GlContextState.h"
 
 namespace grafyte
 {
@@ -20,7 +20,7 @@ namespace grafyte
 	}
 
 	void VertexArray::release() {
-		if (m_RendererID && glfwGetCurrentContext()) {
+		if (m_RendererID && GlContextAlive()) {
 			GLCall(glDeleteVertexArrays(1, &m_RendererID));
 			m_RendererID = 0;
 		}

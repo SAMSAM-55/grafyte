@@ -13,8 +13,8 @@ import sys
 # -- Project information -----------------------------------------------------
 
 project = 'Grafyte'
-copyright = '2026, Grafyte'
-author = 'Grafyte'
+copyright = '2026, Sami Saubion'
+author = 'Sami Saubion'
 
 # The full version, including alpha/beta/rc tags
 release = '0.1.0'

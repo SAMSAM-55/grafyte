@@ -15,6 +15,7 @@ namespace grafyte
 	{
 	public:
 		explicit Application(std::string  name, std::string font);
+		explicit Application(std::string  name);
 		~Application();
 
 		int init(int winWidth, int winHeight);
@@ -31,17 +32,17 @@ namespace grafyte
 		static bool wasKeyReleased(const Key& key) {return InputManager::wasKeyReleased(key);};
 
 		static bool isActionActive(const std::string& name) {return InputManager::isActionActive(name);};
-		static void createInputAction(const std::string &name, const Key &key, const InputTrigger& trigger) {
-			InputManager::createAction(name, key, trigger);
+		static void createInputAction(const std::string &name, const Keys &keys, const InputTrigger& trigger) {
+			InputManager::createAction(name, keys, trigger);
 		}
 		
 		void setClearColor(float r, float g, float b, float a);
 
-		Scene& makeNewScene();
+		std::shared_ptr<Scene> makeNewScene();
 
 		static Application* s_appInstance;
-		WorldContext ctx;
-		std::unique_ptr<Scene> scene;
+		std::shared_ptr<WorldContext> ctx;
+		std::shared_ptr<Scene> scene;
 	private:
 		static void BeginFrame();
 		void computeProjection();

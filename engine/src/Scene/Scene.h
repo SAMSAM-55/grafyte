@@ -11,19 +11,23 @@
 #include "Text/TextObject.h"
 
 namespace grafyte {
-    class Scene {
+    struct WorldContext;
+
+    class Scene : public std::enable_shared_from_this<Scene> {
     public:
-        explicit Scene(WorldContext* ctx);
+        explicit Scene(std::shared_ptr<WorldContext> ctx);
 
         types::ObjectId allocateId() {return m_nextId++;};
         types::ObjectId allocateTextId() {return m_nextTextId++;};
         std::shared_ptr<Object> spawnObject(const types::MeshAsset& mesh, const types::MaterialAsset& mat,
-                                            const types::Vec2& pos, const int& zIndex);
+                                            const types::Vec2& pos, const int& zIndex,
+                                            types::PrimitiveGeometry geo);
         std::shared_ptr<TextObject> spawnTextObject(const types::Vec2& pos, const std::string& text, const float& size);
 
-        types::Transform& transform(const types::ObjectId& id) {return m_transforms[id];};
-        types::TextData& text(const types::ObjectId& textId) {return m_texts[textId];};
-        types::RenderComponent& renderable(const types::ObjectId& id) {return m_renderables[id];};
+        types::Transform& transform(const types::ObjectId& id) {return m_transforms.at(id);};
+        types::Color4& color(const types::ObjectId& id) {return m_colors.at(id);};
+        types::TextData& text(const types::ObjectId& textId) {return m_texts.at(textId);};
+        types::RenderComponent& renderable(const types::ObjectId& id) {return m_renderables.at(id);};
 
         [[nodiscard]] types::MaterialAsset *mat(const types::MaterialHandle &h) const {
             return m_ctx->materials.asset(h);
@@ -35,16 +39,23 @@ namespace grafyte {
         [[nodiscard]] CollisionManager& collisions() {return m_ctx->collisions;};
         [[nodiscard]] const CollisionManager& collisions() const {return m_ctx->collisions;};
 
-        void setTransform(const types::ObjectId& id, const types::Transform& t) {m_transforms[id] = t;};
-        void setRenderable(const types::ObjectId& id, const types::RenderComponent& rc) {m_renderables[id] = rc;};
+        void setTransform(const types::ObjectId& id, const types::Transform& t) {m_transforms.at(id) = t;};
+        void setRenderable(const types::ObjectId& id, const types::RenderComponent& rc) {m_renderables.at(id) = rc;};
+
+        auto& GetTransforms() {return m_transforms;};
+        auto& GetColors() {return m_colors;};
 
         // void destroyObject(types::ObjectId id);
         void RemoveText(const types::ObjectId id) {m_texts.erase(id);};
 
-        void buildRenderList(std::vector<types::DrawItem>& out) const;
+        const std::vector<types::DrawItem>& buildRenderList();
+
+        std::vector<types::BatchGroup> getBatchedRenderList();
+
         void GetTextRenderList(std::vector<types::TextData>& out) const;
         void clear();
 
+        bool itemsDirty = false;
     private:
         types::ObjectId m_nextId = 1;
         types::ObjectId m_nextTextId = 1;
@@ -53,10 +64,13 @@ namespace grafyte {
         std::unordered_map<types::ObjectId, std::shared_ptr<TextObject>> m_textObjects;
 
         std::unordered_map<types::ObjectId, types::Transform> m_transforms;
+        std::unordered_map<types::ObjectId, types::Color4> m_colors;
         std::unordered_map<types::ObjectId, types::RenderComponent> m_renderables;
         std::unordered_map<types::ObjectId, types::TextData> m_texts;
 
-        WorldContext* m_ctx;
+        std::shared_ptr<WorldContext> m_ctx;
+
+        std::vector<types::DrawItem> m_items;
     };
 
 }

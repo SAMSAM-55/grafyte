@@ -16,7 +16,12 @@ namespace grafyte {
 
         WorldContext()
             : renderer(meshes, materials)
-        {}
+        {
+        }
+
+        void init() {
+            materials.init();
+        }
     };
 
     class World {

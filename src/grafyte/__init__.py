@@ -9,6 +9,7 @@ from __grafyte_internal import Application as _NativeApplication
 from __grafyte_internal import Object as _NativeObject
 from __grafyte_internal import Scene as _NativeScene
 from __grafyte_internal import TextObject as _NativeTextObject
+from __grafyte_internal import InputManager as _NativeInputManager
 from __grafyte_internal import Key, InputTrigger, Vec2, Direction, Hit
 
 class Object:
@@ -100,23 +101,6 @@ class Scene:
         pos = ensure_vec2f("Object(pos=...)", pos)
         size = ensure_vec2f("Object(size=...)", size)
 
-        positions = array("f", [
-            -size[0], -size[1], 0, 0,
-            size[0], -size[1], 1, 0,
-            size[0], size[1], 1, 1,
-            -size[0], size[1], 0, 1
-        ]) if has_texture else array("f", [
-            -size[0], -size[1],
-            size[0], -size[1],
-            size[0], size[1],
-            -size[0], size[1],
-        ])
-
-        indices = array("I", [
-            0, 1, 2,
-            2, 3, 0
-        ])
-
         if shader_source_path == "":
             if has_texture:
                 shader_source = "@embed/Shaders/Texture"
@@ -125,7 +109,7 @@ class Scene:
         else:
             shader_source = shader_source_path
 
-        native_obj = self.__native.spawn_object(positions, 4, indices, shader_source, *pos, has_texture, layer)
+        native_obj = self.__native.spawn_object(*size, shader_source, *pos, has_texture, layer)
         return Object(native_obj)
 
     def spawn_text_object(self, pos: Vec2Like, text: str, scale: float = 12) -> TextObject:
@@ -134,7 +118,24 @@ class Scene:
         native_obj = self.__native.spawn_text_object(*pos, text, scale)
         return TextObject(native_obj)
 
+class InputManager(_NativeInputManager):
+    @staticmethod
+    def is_key_down(key: Key) -> bool: return _NativeInputManager.is_key_down(key);
+    @staticmethod
+    def was_key_pressed(key: Key) -> bool: return _NativeInputManager.was_key_pressed(key)
+    @staticmethod
+    def was_key_released(key: Key) -> bool: return _NativeInputManager.was_key_released(key)
+    @staticmethod
+    def create_action(name: str, trigger: InputTrigger, *key: Key) -> None:
+        _NativeInputManager.create_action(name, [*key], trigger)
+    @staticmethod
+    def is_action_active(action: str) -> bool: return _NativeInputManager.is_action_active(action)
+
 class Application(_NativeApplication):
+    @property
+    def input(self) -> type[InputManager]:
+        return InputManager
+
     def make_new_scene(self) -> Scene:
         native_scene = super().make_new_scene()
         return Scene(native_scene)

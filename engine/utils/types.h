@@ -1,15 +1,20 @@
 #pragma once
 #include <cstdint>
 #include <string>
+#include <variant>
+#include <glm/glm.hpp>
+#include <glm/ext/matrix_transform.hpp>
 
 namespace grafyte::types {
 
     using ObjectId = uint32_t;
 
-    struct Color4
+    struct Float4
     {
         float x, y, z, w;
     };
+
+    using Color4 = Float4;
 
     struct Vec2 {
         float x = 0.0f;
@@ -51,6 +56,19 @@ namespace grafyte::types {
         Vec2 pos{0.0f, 0.0f};
         float rot = 0.0f;
         Vec2 scale{1.0f, 1.0f};
+
+        [[nodiscard]] glm::mat4 toMatrix() const {
+            auto m = glm::mat4(1.0f);
+            m = glm::translate(m, glm::vec3(pos.x, pos.y, 0.0f));
+            m = glm::rotate(m, glm::radians(rot), glm::vec3(0.0f, 0.0f, 1.0f));
+            m = glm::scale(m, glm::vec3(scale.x, scale.y, 1.0f));
+            return m;
+        }
+    };
+
+    struct Vertex {
+        Vec2 pos;
+        Vec2 texPos;
     };
 
     struct MeshHandle {
@@ -69,18 +87,49 @@ namespace grafyte::types {
         }
     };
 
+    struct TextureHandle {
+        ObjectId id = 0;
+
+        bool operator==(const TextureHandle & other) const {
+            return id == other.id;
+        }
+    };
+
+    struct ShaderHandle {
+        ObjectId id = 0;
+
+        bool operator==(const ShaderHandle & other) const {
+            return id == other.id;
+        }
+    };
+
+    using UniformValue = std::variant<int, float, Float4, glm::mat4>;
+
+    struct ShaderUniform {
+        std::string name;
+        UniformValue value;
+    };
+
     struct RenderComponent {
         MeshHandle mesh;
         MaterialHandle mat;
         int zIndex = 0;
     };
 
+    enum PrimitiveGeometry {
+        QUAD,
+        TRIANGLE,
+        CUSTOM
+    };
+
     struct DrawItem {
         ObjectId objectId = 0;
-        Transform transform;
         MeshHandle mesh;
+        PrimitiveGeometry geo = QUAD;
         MaterialHandle material;
         int zIndex = 0;
+        Transform transform;
+        Color4 color{};
     };
 
     struct TextData
@@ -102,6 +151,20 @@ struct std::hash<grafyte::types::MeshHandle> {
 template<>
 struct std::hash<grafyte::types::MaterialHandle> {
     size_t operator()(const grafyte::types::MaterialHandle& h) const noexcept {
+        return std::hash<grafyte::types::ObjectId>()(h.id);
+    }
+};
+
+template<>
+struct std::hash<grafyte::types::TextureHandle> {
+    size_t operator()(const grafyte::types::TextureHandle& h) const noexcept {
+        return std::hash<grafyte::types::ObjectId>()(h.id);
+    }
+};
+
+template<>
+struct std::hash<grafyte::types::ShaderHandle> {
+    size_t operator()(const grafyte::types::ShaderHandle& h) const noexcept {
         return std::hash<grafyte::types::ObjectId>()(h.id);
     }
 };

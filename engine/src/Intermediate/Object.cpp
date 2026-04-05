@@ -3,74 +3,77 @@
 
 namespace grafyte 
 {
-	Object::Object(const types::ObjectId& id, Scene* scene)
-		: m_scene(scene), m_id(id)
+	Object::Object(std::shared_ptr<Scene> scene, const types::ObjectId& id, types::PrimitiveGeometry geo)
+		: m_scene(std::move(scene)), m_id(id), m_geo(geo)
 	{
 	}
 
 	Object::~Object() = default;
 
 	void Object::SetTexture(const std::string& textureSourcePath, const unsigned int slot) const {
-		const types::MaterialHandle h = m_scene->renderable(m_id).mat;
-		types::MaterialAsset* mat = m_scene->mat(h);
+		auto scene = m_scene.lock();
+		if (!scene) return;
+
+		const types::MaterialHandle h = scene->renderable(m_id).mat;
+		types::MaterialAsset* mat = scene->mat(h);
 		mat->textureSlot = slot;
 		mat->textureSourcePath = textureSourcePath;
 
-		m_scene->materials().upload(h);
+		scene->materials().upload(h);
 	}
 
 	void Object::SetTint(const types::Color4& t) const
 	{
-		const types::MaterialHandle h = m_scene->renderable(m_id).mat;
-		const types::Material* mat = m_scene->materials().mat(h);
-		mat->shader.Bind();
-		mat->shader.SetUniform4f("u_Tint", t.x, t.y, t.z, t.w);
+		if (auto scene = m_scene.lock()) scene->color(m_id) = t;
 	}
 
 	void Object::SetColor(const types::Color4& c) const
 	{
-		const types::MaterialHandle h = m_scene->renderable(m_id).mat;
-		const types::Material* mat = m_scene->materials().mat(h);
-		mat->shader.Bind();
-		mat->shader.SetUniform4f("u_Color", c.x, c.y, c.z, c.w);
+		if (auto scene = m_scene.lock()) scene->color(m_id) = c;
 	}
 
 	void Object::Move(const types::Vec2 offset) const {
-		m_scene->transform(m_id).pos += offset;
-		if (m_scene->collisions().AutoCollides(m_id))
-			m_scene->transform(m_id).pos += m_scene->collisions().PushBackOnMove(m_id, offset, *m_scene);
+		auto scene = m_scene.lock();
+		if (!scene) return;
+
+		scene->transform(m_id).pos += offset;
+		if (scene->collisions().AutoCollides(m_id))
+			scene->transform(m_id).pos += scene->collisions().PushBackOnMove(m_id, offset, *scene);
 	}
 
 	void Object::MoveTo(const types::Vec2 pos) const {
-		const types::Vec2 offset = pos - m_scene->transform(m_id).pos;
-		m_scene->transform(m_id).pos = pos;
-		if (m_scene->collisions().AutoCollides(m_id))
-			m_scene->transform(m_id).pos += m_scene->collisions().PushBackOnMove(m_id, offset, *m_scene);
+		auto scene = m_scene.lock();
+		if (!scene) return;
+
+		const types::Vec2 offset = pos - scene->transform(m_id).pos;
+		scene->transform(m_id).pos = pos;
+		if (scene->collisions().AutoCollides(m_id))
+			scene->transform(m_id).pos += scene->collisions().PushBackOnMove(m_id, offset, *scene);
 	}
 
 	void Object::Rotate(const float angle) const
 	{
-		m_scene->transform(m_id).rot += angle;
+		if (auto scene = m_scene.lock()) scene->transform(m_id).rot += angle;
 	}
 
 	void Object::SetRotation(const float angle) const
 	{
-		m_scene->transform(m_id).rot = angle;
+		if (auto scene = m_scene.lock()) scene->transform(m_id).rot = angle;
 	}
 
 	void Object::SetScale(const float scale) const
 	{
-		m_scene->transform(m_id).scale = {scale, scale};
+		if (auto scene = m_scene.lock()) scene->transform(m_id).scale = {scale, scale};
 	}
 
 	void Object::SetScale(const types::Vec2 scale) const
 	{
-		m_scene->transform(m_id).scale = scale;
+		if (auto scene = m_scene.lock()) scene->transform(m_id).scale = scale;
 	}
 
 	void Object::AddCollisionBox(collision::AABB& b) const
 	{
-		m_scene->collisions().AddCollisionBox(m_id, b);
+		if (auto scene = m_scene.lock()) scene->collisions().AddCollisionBox(m_id, b);
 	}
 
 	// void Object::AddCollisionCircle(collision::Circle& c) const
@@ -80,31 +83,36 @@ namespace grafyte
 
 	void Object::EnableAutoCollides() const
 	{
-		m_scene->collisions().EnableAutoCollides(m_id);
+		if (auto scene = m_scene.lock()) scene->collisions().EnableAutoCollides(m_id);
 	}
 
 	types::Vec2 Object::GetScale() const
 	{
-		return m_scene->transform(m_id).scale;
+		if (auto scene = m_scene.lock()) return scene->transform(m_id).scale;
+		return {0.0f, 0.0f};
 	}
 
 	types::Vec2 Object::GetPosition() const
 	{
-		return m_scene->transform(m_id).pos;
+		if (auto scene = m_scene.lock()) return scene->transform(m_id).pos;
+		return {0.0f, 0.0f};
 	}
 
 	float Object::GetRotation() const
 	{
-		return m_scene->transform(m_id).rot;
+		if (auto scene = m_scene.lock()) return scene->transform(m_id).rot;
+		return 0.0f;
 	}
 
 	bool Object::CollidesWith(const Object& other) const
 	{
-		return static_cast<bool>(m_scene->collisions().ObjectsCollides(m_id, other.GetId(), *m_scene));
+		if (auto scene = m_scene.lock()) return static_cast<bool>(scene->collisions().ObjectsCollides(m_id, other.GetId(), *scene));
+		return false;
 	}
 
 	bool Object::IsColliding() const
 	{
-		return static_cast<bool>(m_scene->collisions().IsColliding(m_id, *m_scene));
+		if (auto scene = m_scene.lock()) return static_cast<bool>(scene->collisions().IsColliding(m_id, *scene));
+		return false;
 	}
 }

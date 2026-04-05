@@ -4,6 +4,7 @@ from .__converters import Vec2f, Color, Vec2Like
 
 from __grafyte_internal import Key as _NativeKey
 from __grafyte_internal import InputTrigger as _NativeInputTrigger
+from __grafyte_internal import InputManager as _NativeInputManager
 from __grafyte_internal import Vec2 as _NativeVec2
 from __grafyte_internal import Application as _NativeApplication
 from __grafyte_internal import Object as _NativeObject
@@ -20,10 +21,62 @@ class Direction(_NativeDirection): ...
 class AABB(_NativeAABB): ...
 class Hit(_NativeHit): ...
 
+class InputManager(_NativeInputManager):
+    @staticmethod
+    def is_key_down(key: Key) -> bool:
+        """
+        Checks if a specific key is currently being held down.
+
+        :param key: The Key enum value.
+        :return: True if the key is down, False otherwise.
+        """
+        ...
+    @staticmethod
+    def was_key_pressed(key: Key) -> bool:
+        """
+        Checks if a specific key was pressed in the current frame.
+
+        :param key: The Key enum value.
+        :return: True if the key was just pressed, False otherwise.
+        """
+        ...
+    @staticmethod
+    def was_key_released(key: Key) -> bool:
+        """
+        Checks if a specific key was released in the current frame.
+
+        :param key: The Key enum value.
+        :return: True if the key was just released, False otherwise.
+        """
+        ...
+    @staticmethod
+    def create_action(name: str, trigger: InputTrigger, *key: Key) -> None:
+        """
+        Creates a new input action for the application.
+
+        :param trigger:
+        :param name: The name of the action.
+        :param key: The Key(s) to bind to the action.
+        """
+        ...
+    @staticmethod
+    def is_action_active(action: str) -> bool:
+        """
+        Checks if a specific action is currently being held down.
+
+        :param action: The name of the action.
+        :return: True if the action is down, False otherwise.
+        """
+        ...
+
 class Application:
     """
     The main application class that manages the window, rendering context, and input.
     """
+
+    @property
+    def input(self) -> type[InputManager]: ...
+
     def __init__(self, name: str, window_dimensions: Vec2Like):
         """
         Initializes the application window and rendering context.
@@ -87,52 +140,6 @@ class Application:
         Sets the background (clear) color of the application window.
 
         :param color: A Color object (RGB) representing the new background color.
-        """
-        ...
-    @staticmethod
-    def is_key_down(key: Key) -> bool:
-        """
-        Checks if a specific key is currently being held down.
-
-        :param key: The Key enum value.
-        :return: True if the key is down, False otherwise.
-        """
-        ...
-    @staticmethod
-    def was_key_pressed(key: Key) -> bool:
-        """
-        Checks if a specific key was pressed in the current frame.
-
-        :param key: The Key enum value.
-        :return: True if the key was just pressed, False otherwise.
-        """
-        ...
-    @staticmethod
-    def was_key_released(key: Key) -> bool:
-        """
-        Checks if a specific key was released in the current frame.
-
-        :param key: The Key enum value.
-        :return: True if the key was just released, False otherwise.
-        """
-        ...
-    @staticmethod
-    def create_input_action(name: str, key: Key, trigger: InputTrigger) -> None:
-        """
-        Creates a new input action for the application.
-
-        :param trigger:
-        :param name: The name of the action.
-        :param key: The Key to bind to the action.
-        """
-        ...
-    @staticmethod
-    def is_action_active(action: str) -> bool:
-        """
-        Checks if a specific action is currently being held down.
-
-        :param action: The name of the action.
-        :return: True if the action is down, False otherwise.
         """
         ...
 

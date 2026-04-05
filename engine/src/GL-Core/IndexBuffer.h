@@ -1,14 +1,13 @@
 #pragma once
+
+#include "glad/glad.h"
+
 namespace grafyte
 {
 	class IndexBuffer
 	{
-	private:
-		unsigned int m_RendererID{};
-		unsigned int m_Count;
-
 	public:
-		IndexBuffer(const unsigned int* data, unsigned int count);
+		IndexBuffer(const unsigned int* data, unsigned int count, unsigned int usage = GL_STATIC_DRAW);
 		~IndexBuffer();
 
 		IndexBuffer(const IndexBuffer&) = delete;
@@ -30,10 +29,17 @@ namespace grafyte
 			return *this;
 		}
 
+		void UpdateData(const unsigned int* data, unsigned int count);
+
 		void Bind() const;
 		void Unbind() const;
 		void release();
 
-		inline unsigned int GetCount() const { return m_Count; }
+		[[nodiscard]] unsigned int GetCount() const { return m_Count; }
+
+
+	private:
+		unsigned int m_RendererID = 0;
+		unsigned int m_Count;
 	};
 }

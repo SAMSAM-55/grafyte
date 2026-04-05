@@ -23,3 +23,5 @@ engine/res
 dist
 dist_repaired
 build
+
+docs/readthedocs/_build

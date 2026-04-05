@@ -1,22 +1,20 @@
 #include "Scene.h"
+
+#include <algorithm>
 #include <iostream>
+#include <map>
 #include <ranges>
 
 namespace grafyte {
-    Scene::Scene(WorldContext *ctx)
-        : m_ctx(ctx)
+    Scene::Scene(std::shared_ptr<WorldContext> ctx)
+        : m_ctx(std::move(ctx))
     {
     }
 
     std::shared_ptr<Object> Scene::spawnObject(const types::MeshAsset& mesh, const types::MaterialAsset& mat,
-                                               const types::Vec2& pos, const int& zIndex) {
-        // std::cout << "[Scene](SpawnObject): this = " << this << std::endl;
-
+                                               const types::Vec2& pos, const int& zIndex,
+                                               types::PrimitiveGeometry geo) {
         const types::ObjectId id = allocateId();
-
-        // std::cout << "[Scene](SpawnObject): Spawning object with ID: " << id
-        //           << " at position: (" << pos.x << ", " << pos.y << ")"
-        //           << " with zIndex: " << zIndex << std::endl;
 
         const auto meshH = m_ctx->meshes.createAsset(mesh, id);
         const auto matH = m_ctx->materials.createAsset(mat, id);
@@ -25,21 +23,16 @@ namespace grafyte {
 
         const auto rc = types::RenderComponent{meshH, matH, zIndex};
         m_renderables.insert_or_assign(id, rc);
-        m_objects.insert_or_assign(id, std::make_shared<Object>(id, this));
+        m_objects.insert_or_assign(id, std::make_shared<Object>(shared_from_this(), id, geo));
         m_transforms.insert_or_assign(id, types::Transform{
             .pos = pos,
             .rot = 0.0f,
             .scale = {1.0f, 1.0f}
         });
+        m_colors.insert_or_assign(id, types::Color4{0.0f, 0.0f, 0.0f, 0.0f});
 
-        const auto& t = m_transforms[id];
-        // std::cout << "[Scene](SpawnObject): Object transform set: "
-        //           << "pos=(" << t.pos.x << ", " << t.pos.y << "), "
-        //           << "rot=" << t.rot << ", "
-        //           << "scale=(" << t.scale.x << ", " << t.scale.y << ")" << std::endl;
-
-        return m_objects[id];
-
+        itemsDirty = true;
+        return m_objects.at(id);
     }
 
     std::shared_ptr<TextObject> Scene::spawnTextObject(const types::Vec2& pos, const std::string& text, const float& size)
@@ -47,37 +40,54 @@ namespace grafyte {
         const types::ObjectId id = allocateTextId();
         m_texts.insert_or_assign(id, types::TextData{text, {pos, 0.0f, size, size}, {0.0f, 0.0f, 0.0f, 1.0f}});
 
-        m_textObjects.insert_or_assign(id, std::make_shared<TextObject>(this, id));
-        return m_textObjects[id];
+        m_textObjects.insert_or_assign(id, std::make_shared<TextObject>(shared_from_this(), id));
+        return m_textObjects.at(id);
     }
 
-    void Scene::buildRenderList(std::vector<types::DrawItem> &out) const {
-        // std::cout << "[Scene](BuildRenderList): this= " << this << std::endl;
+    const std::vector<types::DrawItem>& Scene::buildRenderList()
+    {
+        if (itemsDirty) {
+            m_items.clear();
+            m_items.reserve(m_renderables.size());
 
-        out.clear();
-        out.reserve(m_renderables.size());
-
-        // std::cout << "[Scene](BuildRenderList): Starting build. Renderables size: " << m_renderables.size() << std::endl;
-
-        for (const auto&[id, rc]: m_renderables) {
-            auto itT = m_transforms.find(id);
-
-            if (itT == m_transforms.end()) {
-                // std::cout << "[Scene](BuildRenderList): No transform for object ID: " << id << ". Skipping." << std::endl;
-                continue;
+            for (const auto& [id, rc] : m_renderables) {
+                m_items.push_back(types::DrawItem{
+                    .objectId = id,
+                    .mesh = rc.mesh,
+                    .material = rc.mat,
+                    .zIndex = rc.zIndex,
+                    .transform = m_transforms.at(id),
+                    .color = {1.0f, 1.0f, 0.0f, 1.0f}
+                });
             }
-
-            // std::cout << "[Scene](BuildRenderList): Adding object ID: " << id << " with zIndex: " << rc.zIndex << std::endl;
-
-            out.push_back(types::DrawItem{
-                .objectId = id,
-                .transform = itT->second,
-                .mesh = rc.mesh,
-                .material = rc.mat,
-                .zIndex = rc.zIndex
+            std::ranges::sort(m_items, [](const types::DrawItem& a, const types::DrawItem& b)
+            {
+                return a.zIndex < b.zIndex;
             });
+            itemsDirty = false;
         }
-        // std::cout << "[Scene](BuildRenderList): Build completed. Final list size: " << out.size() << std::endl;
+
+       return m_items;
+    }
+
+    std::vector<types::BatchGroup> Scene::getBatchedRenderList() {
+        std::map<types::BatchingKey, std::vector<types::DrawItem>> groups;
+
+        for (const auto& items = buildRenderList(); const auto& item : items) {
+            const auto* mat = m_ctx->materials.mat(item.material);
+            types::BatchingKey key{
+                .th = mat->texture,
+                .sh = mat->shader,
+                .zIndex = item.zIndex
+            };
+            groups[key].push_back(item);
+        }
+
+        std::vector<types::BatchGroup> result;
+        for (auto& pair : groups) {
+            result.emplace_back(std::move(pair));
+        }
+        return result;
     }
 
     void Scene::GetTextRenderList(std::vector<types::TextData>& out) const
@@ -93,5 +103,8 @@ namespace grafyte {
         m_transforms.clear();
         m_objects.clear();
         m_textObjects.clear();
+        m_colors.clear();
+        m_items.clear();
+        m_texts.clear();
     }
 }

@@ -4,11 +4,13 @@
 #include <string>
 #include <unordered_map>
 #include <GLFW/glfw3.h>
+#include <vector>
 
 #include "Keys.h"
 
 namespace grafyte {
     using inputs::Key;
+    using Keys = std::vector<Key>;
 
     enum InputTrigger
     {
@@ -19,9 +21,10 @@ namespace grafyte {
 
     struct InputAction
     {
-        Key key;
-        InputTrigger trigger;
+        Keys keys;
+        InputTrigger trigger{};
     };
+
 
     class InputManager {
     public:
@@ -30,32 +33,39 @@ namespace grafyte {
         static void on_key(GLFWwindow* window, int key, int scancode, int action, int mods);
 
         static void resetInputs() {
-            m_actionPressed.clear();
-            m_actionReleased.clear();
-            m_keyPressed.clear();
-            m_keyReleased.clear();
+            m_actionPressed().clear();
+            m_actionReleased().clear();
+            m_keyPressed().clear();
+            m_keyReleased().clear();
         }
 
-        static void createAction(const std::string &name, const Key &key, const InputTrigger& trigger) {
-            m_inputActions[name] = InputAction{key, trigger};
+        template<typename T>
+        static bool getOrFalse(const std::unordered_map<T, bool>& map, const T& key)
+        {
+            const auto it = map.find(key);
+            return it != map.end() ? it->second : false;
+        }
+
+        static void createAction(const std::string &name, const Keys &keys, const InputTrigger& trigger) {
+            m_inputActions().insert_or_assign(name, InputAction{keys, trigger});
         }
 
         static bool isKeyDown(const Key& key) {
-            return m_keyDown[key];
+            return getOrFalse(m_keyDown(), key);
         }
 
         static bool wasKeyPressed(const Key& key) {
-            return m_keyPressed[key];
+            return getOrFalse(m_keyPressed(), key);
         }
 
         static bool wasKeyReleased(const Key& key) {
-            return m_keyReleased[key];
+            return getOrFalse(m_keyReleased(), key);
         }
 
         static bool isActionActive(const std::string &name);
 
     private:
-        static inline const std::unordered_map<inputs::Key, char> m_logicalKeys = {
+        static constexpr std::pair<Key, char> m_logicalKeys[] = {
             {Key::A, 'A'},
             {Key::B, 'B'},
             {Key::C, 'C'},
@@ -93,22 +103,49 @@ namespace grafyte {
             {Key::Num7, '7'},
             {Key::Num8, '8'},
             {Key::Num9, '9'},
-            {Key::Space, ' '},
         };
 
-        static inline std::unordered_map<Key, int> m_keyToGLFW;
-        static inline std::unordered_map<int, Key> m_glfwToKey;
-        static inline std::unordered_map<std::string, InputAction> m_inputActions;
+        static std::unordered_map<Key, int>& m_keyToGLFW() {
+            static auto* map = new std::unordered_map<Key, int>();
+            return *map;
+        }
+
+        static std::unordered_map<int, Key>& m_glfwToKey() {
+            static auto* map = new std::unordered_map<int, Key>();
+            return *map;
+        }
+        static std::unordered_map<std::string, InputAction>& m_inputActions() {
+            static auto* map = new std::unordered_map<std::string, InputAction>();
+            return *map;
+        }
         static void ensureActionExists(const std::string& name) {
-            if (!m_inputActions.contains(name)) throw std::runtime_error("Input action: " + name + " does not exist.");
+            if (!m_inputActions().contains(name)) throw std::runtime_error("Input action: " + name + " does not exist.");
         };
 
-        static inline std::unordered_map<std::string, bool> m_actionDown;
-        static inline std::unordered_map<std::string, bool> m_actionPressed;
-        static inline std::unordered_map<std::string, bool> m_actionReleased;
+        static std::unordered_map<std::string, bool>& m_actionDown() {
+            static auto* map = new std::unordered_map<std::string, bool>();
+            return *map;
+        }
+        static std::unordered_map<std::string, bool>& m_actionPressed() {
+            static auto* map = new std::unordered_map<std::string, bool>();
+            return *map;
+        }
+        static std::unordered_map<std::string, bool>& m_actionReleased() {
+            static auto* map = new std::unordered_map<std::string, bool>();
+            return *map;
+        }
 
-        static inline std::unordered_map<Key, bool> m_keyDown;
-        static inline std::unordered_map<Key, bool> m_keyPressed;
-        static inline std::unordered_map<Key, bool> m_keyReleased;
+        static std::unordered_map<Key, bool>& m_keyDown() {
+            static auto* map = new std::unordered_map<Key, bool>();
+            return *map;
+        }
+        static std::unordered_map<Key, bool>& m_keyPressed() {
+            static auto* map = new std::unordered_map<Key, bool>();
+            return *map;
+        }
+        static std::unordered_map<Key, bool>& m_keyReleased() {
+            static auto* map = new std::unordered_map<Key, bool>();
+            return *map;
+        }
     };
 }

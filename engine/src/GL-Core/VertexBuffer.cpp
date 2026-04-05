@@ -1,16 +1,16 @@
 #include "VertexBuffer.h"
 
 #include "glad/glad.h"
-#include <GLFW/glfw3.h>
+#include "GlContextState.h"
 
 namespace grafyte
 {
-    VertexBuffer::VertexBuffer(const void* data, unsigned int size)
+    VertexBuffer::VertexBuffer(const void* data, unsigned int size, unsigned int usage)
         : m_RendererID(0)
     {
         glGenBuffers(1, &m_RendererID);
         glBindBuffer(GL_ARRAY_BUFFER, m_RendererID);
-        glBufferData(GL_ARRAY_BUFFER, size, data, GL_STATIC_DRAW);
+        glBufferData(GL_ARRAY_BUFFER, size, data, usage);
     }
 
     VertexBuffer::~VertexBuffer() {
@@ -18,10 +18,16 @@ namespace grafyte
     }
 
     void VertexBuffer::release() {
-        if (m_RendererID && glfwGetCurrentContext()) {
+        if (m_RendererID && GlContextAlive()) {
             glDeleteBuffers(1, &m_RendererID);
             m_RendererID = 0;
         }
+    }
+
+    void VertexBuffer::UpdateData(const void* data, const unsigned int size) const {
+        glBindBuffer(GL_ARRAY_BUFFER, m_RendererID);
+        glBufferData(GL_ARRAY_BUFFER, size, nullptr, GL_DYNAMIC_DRAW);
+        glBufferData(GL_ARRAY_BUFFER, size, data, GL_DYNAMIC_DRAW);
     }
 
     void VertexBuffer::Bind() const
