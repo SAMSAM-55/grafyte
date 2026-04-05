@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <memory>
 
 #include "types.h"
 #include "GL-Core/IndexBuffer.h"
@@ -31,7 +32,7 @@ namespace grafyte
 	class Object
 	{
 	public:
-		Object(const types::ObjectId& id, Scene* scene, types::PrimitiveGeometry geo);
+		Object(std::shared_ptr<Scene> scene, const types::ObjectId& id, types::PrimitiveGeometry geo);
 		~Object();
 
 		void SetTexture(const std::string& textureSourcePath, unsigned int slot) const;
@@ -52,7 +53,7 @@ namespace grafyte
 
 		/* Getters */
 		[[nodiscard]] types::ObjectId GetId() const {return m_id;};
-		[[nodiscard]] Scene* GetScene() const {return m_scene;};
+		[[nodiscard]] Scene* GetScene() const {return m_scene.lock().get();};
 		[[nodiscard]] types::Vec2 GetScale() const;
 		[[nodiscard]] types::Vec2 GetPosition() const;
 		[[nodiscard]] float GetRotation() const;
@@ -62,7 +63,7 @@ namespace grafyte
 		[[nodiscard]] bool IsColliding() const;
 
 	private:
-		Scene* m_scene = nullptr;
+		std::weak_ptr<Scene> m_scene;
 		types::ObjectId m_id = 0;
 		types::PrimitiveGeometry m_geo = types::QUAD;
 	};

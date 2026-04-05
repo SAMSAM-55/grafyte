@@ -15,9 +15,9 @@ struct Glyph
 class Font 
 {
 public:
-	GLuint textureID;
-	int bakedRes;
-	int atlasWidth, atlasHeight;
+	GLuint textureID = 0;
+	int bakedRes = 0;
+	int atlasWidth = 0, atlasHeight = 0;
 	std::unordered_map<char, Glyph> glyphs;
 
 	static float TextScaleFromPt(const float pt, const float dpi, const int baked)

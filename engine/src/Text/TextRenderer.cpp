@@ -2,14 +2,14 @@
 
 #include <vector>
 #include <iostream>
+#include <stdexcept>
 
 #include <algorithm>
-#include <GLFW/glfw3.h>
 #include <glm/ext/matrix_clip_space.hpp>
 
 #include "embedd/EmbeddedAsset.h"
 #include "High/Application.h"
-#include "High/Application.h"
+#include "GlContextState.h"
 
 namespace grafyte
 {
@@ -19,7 +19,7 @@ namespace grafyte
         // --- Load FreeType ---
         FT_Library ft;
         if (FT_Init_FreeType(&ft)) {
-            return;
+            throw std::runtime_error("[TextRenderer] Could not initialize FreeType.");
         }
 
         FT_Face face;
@@ -28,7 +28,7 @@ namespace grafyte
         FT_Set_Pixel_Sizes(face, 0, pixelSize);
 
         font.atlasWidth = 1024;
-        font.atlasHeight = 256;
+        font.atlasHeight = 1024;
         font.bakedRes = pixelSize;
         std::vector<unsigned char> pixels(font.atlasWidth * font.atlasHeight, 0);
 
@@ -50,8 +50,17 @@ namespace grafyte
                 maxRowHeight = 0;
             }
 
+            if (yOffset + PAD + g->bitmap.rows > font.atlasHeight) {
+                throw std::runtime_error("[TextRenderer] Font atlas is too small for the requested glyph set.");
+            }
+
             for (int y = 0; y < g->bitmap.rows; y++) {
                 for (int x = 0; x < g->bitmap.width; x++) {
+                    const int dstY = yOffset + PAD + y;
+                    const int dstX = xOffset + PAD + x;
+                    if (dstX < 0 || dstX >= font.atlasWidth || dstY < 0 || dstY >= font.atlasHeight) {
+                        throw std::runtime_error("[TextRenderer] Font atlas write would exceed allocated bounds.");
+                    }
                     pixels[(yOffset + PAD + y) * font.atlasWidth + (xOffset + PAD + x)] =
                         g->bitmap.buffer[y * g->bitmap.pitch + x];
                 }
@@ -109,10 +118,10 @@ namespace grafyte
     }
 
     TextRenderer::~TextRenderer() {
-        if (glfwGetCurrentContext()) {
-            glDeleteTextures(1, &font.textureID);
-            glDeleteBuffers(1, &vbo);
-            glDeleteVertexArrays(1, &vao);
+        if (GlContextAlive()) {
+            if (font.textureID) glDeleteTextures(1, &font.textureID);
+            if (vbo) glDeleteBuffers(1, &vbo);
+            if (vao) glDeleteVertexArrays(1, &vao);
         }
     }
 

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <memory>
 
 #include "types.h"
 namespace grafyte {
@@ -8,7 +9,7 @@ namespace grafyte {
 
     class TextObject {
     public:
-        explicit TextObject(Scene* scene, const types::ObjectId& id);
+        explicit TextObject(std::shared_ptr<Scene> scene, const types::ObjectId& id);
         ~TextObject();
 
         void SetText(const std::string& text) const;
@@ -17,7 +18,7 @@ namespace grafyte {
         void Remove() const;
 
     private:
-        Scene* m_scene;
+        std::weak_ptr<Scene> m_scene;
         types::ObjectId m_id;
     };
 }

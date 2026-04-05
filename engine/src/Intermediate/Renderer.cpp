@@ -24,8 +24,8 @@ namespace grafyte {
     }
 
     void Renderer::Draw(const types::BatchGroup& group,
-        std::unordered_map<types::ObjectId, types::Transform>& transforms,
-        std::unordered_map<types::ObjectId, types::Color4>& colors ) {
+        const std::unordered_map<types::ObjectId, types::Transform>& transforms,
+        const std::unordered_map<types::ObjectId, types::Color4>& colors ) {
         m_vertexScratch.clear();
         m_indexScratch.clear();
         m_vertexScratch.reserve(group.second.size() * 4);
@@ -36,9 +36,9 @@ namespace grafyte {
             if (!mesh) continue;
 
             const auto vertexOffset = static_cast<uint32_t>(m_vertexScratch.size());
-            item.transform = transforms[item.objectId];
-            item.color = colors[item.objectId];
-            glm::mat4 model = computeModel(item.transform);
+            const auto& transform = transforms.at(item.objectId);
+            const auto& color = colors.at(item.objectId);
+            glm::mat4 model = computeModel(transform);
 
             // Add transformed vertices
             for (const auto&[pos, texPos] : mesh->vertices) {
@@ -46,7 +46,7 @@ namespace grafyte {
                 m_vertexScratch.push_back({
                     {worldPos.x, worldPos.y},
                     texPos,
-                    {item.color.x, item.color.y, item.color.z, item.color.w}
+                    {color.x, color.y, color.z, color.w}
                 });
             }
 
@@ -81,6 +81,8 @@ namespace grafyte {
                           std::unordered_map<types::ObjectId, types::Transform>& transforms,
                           std::unordered_map<types::ObjectId, types::Color4>& colors,
                           const Camera &camera) {
+        _CrtCheckMemory();
+
         for (const auto& group: groups) {
             const types::DrawItem& first = group.second[0];
             const auto* mat = m_materials.mat(first.material);
@@ -99,10 +101,28 @@ namespace grafyte {
 
             Draw(group, transforms, colors);
         }
+
+        _CrtCheckMemory();
     }
 
     void Renderer::Clear()
     {
         glClear(GL_COLOR_BUFFER_BIT);
+    }
+
+    void Renderer::clear() {
+        m_ib.Unbind();
+        m_va.Unbind();
+        m_vb.Unbind();
+
+        m_ib.release();
+        m_va.release();
+        m_vb.release();
+
+        m_indexScratch.clear();
+        m_vertexScratch.clear();
+
+        m_materials.clear();
+        m_meshes.clear();
     }
 }

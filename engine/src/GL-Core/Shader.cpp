@@ -5,11 +5,11 @@
 #include <sstream>
 
 #include <glad/glad.h>
-#include <GLFW/glfw3.h>
 
 #include "macros.hpp"
 #include "utils.hpp"
 #include "embedd/EmbeddedAsset.h"
+#include "GlContextState.h"
 
 namespace grafyte
 {
@@ -23,9 +23,7 @@ namespace grafyte
 
     Shader::~Shader()
     {
-        if (glfwGetCurrentContext()) {
-            GLCall(glDeleteProgram(m_RendererID));
-        }
+        release();
     }
 
     ShaderProgramSource Shader::ParseShader(const std::string& filePath)
@@ -86,10 +84,12 @@ namespace grafyte
         glUseProgram(0);
     }
 
-    void Shader::release() const
-    {
-        Unbind();
-        glDeleteProgram(m_RendererID);
+    void Shader::release() {
+        if (m_RendererID && GlContextAlive()) {
+            Unbind();
+            glDeleteProgram(m_RendererID);
+            m_RendererID = 0;
+        }
     }
 
     void Shader::SetUniform1i(const std::string& name, int value) const
@@ -116,7 +116,7 @@ namespace grafyte
     int Shader::GetUniformLocation(const std::string& name) const
     {
         if (m_UniformLocationCache.contains(name))
-            return m_UniformLocationCache[name];
+            return m_UniformLocationCache.at(name);
 
         const int location = glGetUniformLocation(m_RendererID, name.c_str());
 
@@ -124,7 +124,7 @@ namespace grafyte
             fprintf(stderr, "[OpenGL Shader Uniform](%s) : Shader uniform %s doesn't exist !\n", m_FilePath.c_str(), name.c_str());
         }
         else
-            m_UniformLocationCache[name] = location;
+            m_UniformLocationCache.insert_or_assign(name, location);
 
         return location;
     }

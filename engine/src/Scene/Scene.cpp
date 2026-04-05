@@ -6,8 +6,8 @@
 #include <ranges>
 
 namespace grafyte {
-    Scene::Scene(WorldContext *ctx)
-        : m_ctx(ctx)
+    Scene::Scene(std::shared_ptr<WorldContext> ctx)
+        : m_ctx(std::move(ctx))
     {
     }
 
@@ -23,17 +23,16 @@ namespace grafyte {
 
         const auto rc = types::RenderComponent{meshH, matH, zIndex};
         m_renderables.insert_or_assign(id, rc);
-        m_objects.insert_or_assign(id, std::make_shared<Object>(id, this, geo));
+        m_objects.insert_or_assign(id, std::make_shared<Object>(shared_from_this(), id, geo));
         m_transforms.insert_or_assign(id, types::Transform{
             .pos = pos,
             .rot = 0.0f,
             .scale = {1.0f, 1.0f}
         });
-
-        const auto& t = m_transforms[id];
+        m_colors.insert_or_assign(id, types::Color4{0.0f, 0.0f, 0.0f, 0.0f});
 
         itemsDirty = true;
-        return m_objects[id];
+        return m_objects.at(id);
     }
 
     std::shared_ptr<TextObject> Scene::spawnTextObject(const types::Vec2& pos, const std::string& text, const float& size)
@@ -41,8 +40,8 @@ namespace grafyte {
         const types::ObjectId id = allocateTextId();
         m_texts.insert_or_assign(id, types::TextData{text, {pos, 0.0f, size, size}, {0.0f, 0.0f, 0.0f, 1.0f}});
 
-        m_textObjects.insert_or_assign(id, std::make_shared<TextObject>(this, id));
-        return m_textObjects[id];
+        m_textObjects.insert_or_assign(id, std::make_shared<TextObject>(shared_from_this(), id));
+        return m_textObjects.at(id);
     }
 
     const std::vector<types::DrawItem>& Scene::buildRenderList()
@@ -57,7 +56,7 @@ namespace grafyte {
                     .mesh = rc.mesh,
                     .material = rc.mat,
                     .zIndex = rc.zIndex,
-                    .transform = m_transforms[id],
+                    .transform = m_transforms.at(id),
                     .color = {1.0f, 1.0f, 0.0f, 1.0f}
                 });
             }
@@ -104,5 +103,8 @@ namespace grafyte {
         m_transforms.clear();
         m_objects.clear();
         m_textObjects.clear();
+        m_colors.clear();
+        m_items.clear();
+        m_texts.clear();
     }
 }

@@ -40,9 +40,10 @@ namespace grafyte {
             const std::vector<types::BatchGroup> &groups, std::unordered_map<types::ObjectId, types::Transform> &transforms, std
             ::unordered_map<types::ObjectId, types::Color4> &colors, const Camera &camera);
         static void Clear();
+        void clear();
 
     private:
-        void Draw(const types::BatchGroup &group, std::unordered_map<types::ObjectId, types::Transform> &transforms, std::unordered_map<
+        void Draw(const types::BatchGroup &group, const std::unordered_map<types::ObjectId, types::Transform> &transforms, const std::unordered_map<
                   types::ObjectId, types::Color4> &colors);
         static glm::mat4 computeModel(const types::Transform& t);
         MeshManager& m_meshes;

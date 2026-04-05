@@ -8,8 +8,6 @@ namespace grafyte
 
 	class VertexArray
 	{
-	private:
-		unsigned int m_RendererID{};
 	public:
 		VertexArray();
 		~VertexArray();
@@ -35,5 +33,9 @@ namespace grafyte
 		void Bind() const;
 		void Unbind() const;
 		void release();
+
+
+	private:
+		unsigned int m_RendererID = 0;
 	};
 }

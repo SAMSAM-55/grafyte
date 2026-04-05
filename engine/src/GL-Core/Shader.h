@@ -47,7 +47,7 @@ namespace grafyte
 
 		void Bind() const;
 		static void Unbind();
-		void release() const;
+		void release();
 
 		// Set uniforms
 		void SetUniform1i(const std::string& name, int value) const;
@@ -63,7 +63,7 @@ namespace grafyte
 		};
 
 		std::string m_FilePath;
-		unsigned int m_RendererID;
+		unsigned int m_RendererID = 0;
 		// Caching for uniforms
 		mutable std::unordered_map<std::string, int> m_UniformLocationCache;
 

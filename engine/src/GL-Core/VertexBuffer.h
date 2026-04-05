@@ -6,9 +6,6 @@ namespace grafyte
 {
 	class VertexBuffer
 	{
-	private:
-		unsigned int m_RendererID;
-
 	public:
 		VertexBuffer(const void* data, unsigned int size, unsigned int usage = GL_STATIC_DRAW);
 		~VertexBuffer();
@@ -29,10 +26,14 @@ namespace grafyte
 			return *this;
 		}
 
-		void UpdateData(const void* data, unsigned int size);
+		void UpdateData(const void* data, unsigned int size) const;
 
 		void Bind() const;
 		void Unbind() const;
 		void release();
+
+
+	private:
+		unsigned int m_RendererID = 0;
 	};
 }

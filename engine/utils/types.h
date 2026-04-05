@@ -128,8 +128,8 @@ namespace grafyte::types {
         PrimitiveGeometry geo = QUAD;
         MaterialHandle material;
         int zIndex = 0;
-        mutable Transform transform;
-        mutable Color4 color{};
+        Transform transform;
+        Color4 color{};
     };
 
     struct TextData

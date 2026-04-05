@@ -4,6 +4,7 @@
 #include <utility>
 
 #include <glm/ext/matrix_clip_space.hpp>
+#include "GlContextState.h"
 
 namespace grafyte
 {
@@ -21,8 +22,11 @@ namespace grafyte
     {
     }
 
-    Application::~Application()
-    = default;
+    Application::~Application() {
+        quit();
+        std::cout << "~Application begin\n";
+        std::cout << "~Application end\n";
+    }
 
     int Application::init(const int winWidth, const int winHeight) {
         if (!glfwInit()) {
@@ -48,6 +52,7 @@ namespace grafyte
         }
 
         glfwMakeContextCurrent(m_window);
+        GlContextAlive() = true;
 
         if (!gladLoadGLLoader(reinterpret_cast<GLADloadproc>(glfwGetProcAddress))) {
             throw std::runtime_error("Could not load glad.");
@@ -59,7 +64,7 @@ namespace grafyte
 
         s_appInstance = this;
         InputManager::Init();
-        ctx = std::make_unique<WorldContext>();
+        ctx = std::make_shared<WorldContext>();
         ctx->init();
         m_textRenderer = std::make_unique<TextRenderer>(m_font, 32);
         m_textRenderer->SetDpi({96.0f, 96.0f});
@@ -70,18 +75,38 @@ namespace grafyte
 	}
 
     void Application::quit() {
-        if (!m_window) return;
+        _CrtCheckMemory();
 
+        if (!m_window) {
+            s_appInstance = nullptr;
+            return;
+        }
+
+        _CrtCheckMemory();
         if (scene) scene->clear();
-        ctx->meshes.clear();
-        ctx->materials.clear();
-        ctx.reset();
+        scene.reset();
+        _CrtCheckMemory();
+        if (ctx) {
+            ctx->meshes.clear();
+            _CrtCheckMemory();
+            ctx->materials.clear();
+            _CrtCheckMemory();
+            ctx->renderer.clear();
+            _CrtCheckMemory();
+            ctx.reset();
+            _CrtCheckMemory();
+        }
 
         m_textRenderer.reset();
+        _CrtCheckMemory();
 
+        GlContextAlive() = false;
         glfwDestroyWindow(m_window);
         m_window = nullptr;
         glfwTerminate();
+        s_appInstance = nullptr;
+
+        // std::quick_exit(0);
     }
 
     bool Application::shouldClose() const {
@@ -123,14 +148,14 @@ namespace grafyte
         m_clearColor = types::Color4(r, g, b, a);
 	}
 
-    Scene& Application::makeNewScene() {
+    std::shared_ptr<Scene> Application::makeNewScene() {
         if (scene) {
             scene->clear();
         }
 
         // Ensure the context exists and is initialized
         if (!ctx) {
-            ctx = std::make_unique<WorldContext>();
+            ctx = std::make_shared<WorldContext>();
             ctx->init();
         } else {
             ctx->meshes.clear();
@@ -138,8 +163,8 @@ namespace grafyte
             ctx->init(); // Re-init default textures if needed
         }
 
-        scene = std::make_unique<Scene>(ctx.get());
-        return *scene;
+        scene = std::make_shared<Scene>(ctx);
+        return scene;
     }
 
     void Application::BeginFrame() {

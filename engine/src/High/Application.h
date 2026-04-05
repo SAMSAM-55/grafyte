@@ -38,11 +38,11 @@ namespace grafyte
 		
 		void setClearColor(float r, float g, float b, float a);
 
-		Scene& makeNewScene();
+		std::shared_ptr<Scene> makeNewScene();
 
 		static Application* s_appInstance;
-		std::unique_ptr<WorldContext> ctx;
-		std::unique_ptr<Scene> scene;
+		std::shared_ptr<WorldContext> ctx;
+		std::shared_ptr<Scene> scene;
 	private:
 		static void BeginFrame();
 		void computeProjection();

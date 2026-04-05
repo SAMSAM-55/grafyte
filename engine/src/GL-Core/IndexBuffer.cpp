@@ -1,9 +1,9 @@
 #include "IndexBuffer.h"
 
 #include "glad/glad.h"
-#include <GLFW/glfw3.h>
 
 #include "macros.hpp"
+#include "GlContextState.h"
 
 namespace grafyte
 {
@@ -21,7 +21,7 @@ namespace grafyte
     }
 
     void IndexBuffer::release() {
-        if (m_RendererID && glfwGetCurrentContext()) {
+        if (m_RendererID && GlContextAlive()) {
             GLCall(glDeleteBuffers(1, &m_RendererID));
             m_RendererID = 0;
         }

@@ -14,6 +14,9 @@
 #include "Scene/Scene.h"
 #include "Scene/Managers/CollisionManager.h"
 
+#define _CRTDBG_MAP_ALLOC
+#include <crtdbg.h>
+
 namespace py = pybind11;
 
 #ifndef GRAFYTE_PY_MODULE_NAME
@@ -25,6 +28,8 @@ namespace py = pybind11;
 
 PYBIND11_MODULE(GRAFYTE_PY_MODULE_NAME, m)
 {
+    _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_CHECK_ALWAYS_DF | _CRTDBG_LEAK_CHECK_DF);
+
     m.doc() = "Python bindings for the Grafyte engine";
 
     // Expose Vec2 as a Python type that can be built from a tuple
@@ -135,13 +140,14 @@ PYBIND11_MODULE(GRAFYTE_PY_MODULE_NAME, m)
             auto box = grafyte::collision::AABB{{pos_x, pos_y}, size_x, size_y};
             self.AddCollisionBox(box);
         }, py::arg("size_x"), py::arg("size_y"), py::arg("scale_x"), py::arg("scale_y"))
-        .def("collides_with", [](const grafyte::Object& self, const grafyte::Object& other)
-        {
-            return self.GetScene()->collisions().ObjectsCollides(self.GetId(), other.GetId(), *self.GetScene());
-        }, py::arg("other"))
+        .def("collides_with", &grafyte::Object::CollidesWith, py::arg("other"))
         .def("is_colliding", [](const grafyte::Object& self)
         {
-            return self.GetScene()->collisions().IsColliding(self.GetId(), *self.GetScene());
+            auto* scene = self.GetScene();
+            if (!scene) {
+                return grafyte::collision::Hit{grafyte::collision::AABB{}, grafyte::collision::AABB{}, false, grafyte::collision::Top};
+            }
+            return scene->collisions().IsColliding(self.GetId(), *scene);
         })
         .def("enable_auto_collides", &grafyte::Object::EnableAutoCollides)
 
@@ -203,7 +209,7 @@ PYBIND11_MODULE(GRAFYTE_PY_MODULE_NAME, m)
             return self.spawnTextObject({x, y}, text, scale);
         }, py::arg("pos_x"), py::arg("pos_y"), py::arg("text"), py::arg("scale"));
 
-    py::class_<grafyte::TextObject>(m, "TextObject")
+    py::class_<grafyte::TextObject, std::shared_ptr<grafyte::TextObject>>(m, "TextObject")
         .def("set_text", &grafyte::TextObject::SetText, py::arg("text"))
         .def("set_scale", &grafyte::TextObject::SetScale, py::arg("scale"))
         .def("set_color", [](const grafyte::TextObject& self, const float& r, const float& g, const float& b, const float& a)
@@ -295,7 +301,7 @@ PYBIND11_MODULE(GRAFYTE_PY_MODULE_NAME, m)
         // make_new_scene()
         .def(
             "make_new_scene",
-            &grafyte::Application::makeNewScene, py::return_value_policy::reference,
+            &grafyte::Application::makeNewScene,
             "Sets the current renderer used by the application"
         )
 

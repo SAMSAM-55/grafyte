@@ -3,8 +3,8 @@
 
 namespace grafyte
 {
-    TextObject::TextObject(Scene* scene, const types::ObjectId& id)
-        :m_scene(scene), m_id(id)
+    TextObject::TextObject(std::shared_ptr<Scene> scene, const types::ObjectId& id)
+        :m_scene(std::move(scene)), m_id(id)
     {
     }
 
@@ -13,20 +13,20 @@ namespace grafyte
 
     void TextObject::SetText(const std::string& text) const
     {
-        m_scene->text(m_id).text = text;
+        if (auto scene = m_scene.lock()) scene->text(m_id).text = text;
     }
 
     void TextObject::SetScale(const float& scale) const
     {
-        m_scene->text(m_id).transform.scale = {scale, scale};
+        if (auto scene = m_scene.lock()) scene->text(m_id).transform.scale = {scale, scale};
     }
 
     void TextObject::SetColor(const types::Color4 &color) const {
-        m_scene->text(m_id).color = color;
+        if (auto scene = m_scene.lock()) scene->text(m_id).color = color;
     }
 
     void TextObject::Remove() const
     {
-        m_scene->RemoveText(m_id);
+        if (auto scene = m_scene.lock()) scene->RemoveText(m_id);
     }
 }
