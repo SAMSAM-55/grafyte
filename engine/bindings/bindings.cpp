@@ -14,9 +14,6 @@
 #include "Scene/Scene.h"
 #include "Scene/Managers/CollisionManager.h"
 
-#define _CRTDBG_MAP_ALLOC
-#include <crtdbg.h>
-
 namespace py = pybind11;
 
 #ifndef GRAFYTE_PY_MODULE_NAME
@@ -28,8 +25,6 @@ namespace py = pybind11;
 
 PYBIND11_MODULE(GRAFYTE_PY_MODULE_NAME, m)
 {
-    _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_CHECK_ALWAYS_DF | _CRTDBG_LEAK_CHECK_DF);
-
     m.doc() = "Python bindings for the Grafyte engine";
 
     // Expose Vec2 as a Python type that can be built from a tuple

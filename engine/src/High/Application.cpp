@@ -73,30 +73,21 @@ namespace grafyte
 	}
 
     void Application::quit() {
-        _CrtCheckMemory();
-
         if (!m_window) {
             s_appInstance = nullptr;
             return;
         }
 
-        _CrtCheckMemory();
         if (scene) scene->clear();
         scene.reset();
-        _CrtCheckMemory();
         if (ctx) {
             ctx->meshes.clear();
-            _CrtCheckMemory();
             ctx->materials.clear();
-            _CrtCheckMemory();
             ctx->renderer.clear();
-            _CrtCheckMemory();
             ctx.reset();
-            _CrtCheckMemory();
         }
 
         m_textRenderer.reset();
-        _CrtCheckMemory();
 
         GlContextAlive() = false;
         glfwDestroyWindow(m_window);
