@@ -40,6 +40,6 @@ namespace grafyte {
 
         std::unordered_map<types::ObjectId, std::vector<collision::AABB>> m_collisionBounds;
         std::vector<types::ObjectId> m_autoCollides;
-        std::vector<types::ObjectId> m_colliding;
+        std::unordered_map<types::ObjectId, collision::Hit> m_colliding;
     };
 }

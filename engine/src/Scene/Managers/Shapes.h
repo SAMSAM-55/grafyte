@@ -31,8 +31,8 @@ namespace grafyte::collision {
     {
         AABB A;
         AABB B;
-        bool collision;
-        Direction direction;
+        bool collision = false;
+        Direction direction = Top; // arbitrary default here to avoid uninitialized field
 
         explicit operator bool() const { return collision; }
     };

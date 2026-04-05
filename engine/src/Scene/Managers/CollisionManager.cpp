@@ -32,9 +32,8 @@ grafyte::collision::Hit grafyte::CollisionManager::ObjectsCollides(const types::
 
 grafyte::collision::Hit grafyte::CollisionManager::IsColliding(const types::ObjectId& A, Scene& scene)
 {
-    if (std::ranges::find(m_colliding, A) != m_colliding.end()) {
-        // This is a bit problematic as we don't know who we collided with from m_colliding.
-        // For now, let's keep it simple or re-check.
+    if (m_colliding.contains(A)) {
+        return m_colliding.at(A);
     }
 
     for (const auto& B : m_collisionBounds | std::views::keys)
@@ -43,8 +42,8 @@ grafyte::collision::Hit grafyte::CollisionManager::IsColliding(const types::Obje
 
         if (const auto hit = ObjectsCollides(A, B, scene))
         {
-            m_colliding.push_back(A);
-            m_colliding.push_back(B);
+            m_colliding.insert_or_assign(A, hit);
+            m_colliding.insert_or_assign(B, hit);
             return hit;
         }
     }
