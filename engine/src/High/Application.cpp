@@ -24,8 +24,6 @@ namespace grafyte
 
     Application::~Application() {
         quit();
-        std::cout << "~Application begin\n";
-        std::cout << "~Application end\n";
     }
 
     int Application::init(const int winWidth, const int winHeight) {
