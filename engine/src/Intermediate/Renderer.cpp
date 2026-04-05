@@ -81,7 +81,6 @@ namespace grafyte {
                           std::unordered_map<types::ObjectId, types::Transform>& transforms,
                           std::unordered_map<types::ObjectId, types::Color4>& colors,
                           const Camera &camera) {
-        _CrtCheckMemory();
 
         for (const auto& group: groups) {
             const types::DrawItem& first = group.second[0];
@@ -101,8 +100,6 @@ namespace grafyte {
 
             Draw(group, transforms, colors);
         }
-
-        _CrtCheckMemory();
     }
 
     void Renderer::Clear()
