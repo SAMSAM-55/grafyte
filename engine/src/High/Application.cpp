@@ -126,6 +126,8 @@ namespace grafyte
         ctx->renderer.Render(items, transforms, colors, ctx->camera);
         m_textRenderer->Render(texts, &ctx->camera);
 
+        EndFrame();
+
         /* Swap front and back buffers */
         glfwSwapBuffers(m_window);
 
@@ -156,8 +158,13 @@ namespace grafyte
         return scene;
     }
 
-    void Application::BeginFrame() {
+    void Application::EndFrame() const {
+        if (scene) ctx->collisions.resolveAutoCollides(*scene);
+    }
+
+    void Application::BeginFrame() const {
         InputManager::resetInputs();
+        ctx->collisions.reset();
     }
 
     void Application::computeProjection() {

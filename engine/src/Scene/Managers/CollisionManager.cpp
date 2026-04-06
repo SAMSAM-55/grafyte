@@ -76,6 +76,16 @@ grafyte::types::Vec2 grafyte::CollisionManager::PushBackOnMove(const types::Obje
             continue;
         }
 
+        if (m_autoCollides.contains(id) && m_autoCollides.contains(objId)) {
+            if (m_autoCollides.at(id) < m_autoCollides.at(objId)) {
+                const types::Vec2 opposite = PushBackOnMove(id, -v, scene);
+                if (opposite.x != 0.0f || opposite.y != 0.0f) {
+                    scene.transform(id).pos += opposite;
+                    return {0.0f, 0.0f};
+                }
+            }
+        }
+
         const types::Vec2 bPos = scene.transform(id).pos;
 
         for (const auto& A: colliders)
@@ -120,8 +130,13 @@ grafyte::types::Vec2 grafyte::CollisionManager::PushBackOnMove(const types::Obje
     }
 
     const types::Vec2 result = d * bestFinalT;
-    m_colliding.push_back(objId);
     return result;
+}
+
+void grafyte::CollisionManager::resolveAutoCollides(Scene& scene) {
+    for (const auto& id: m_autoCollides | std::views::keys) {
+        PushBackOnMove(id, {0.0f, 0.0f}, scene);
+    }
 }
 
 grafyte::collision::Hit grafyte::CollisionManager::Intersects(const collision::AABB& a, const collision::AABB& b) {

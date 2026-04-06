@@ -81,9 +81,9 @@ namespace grafyte
 	// 	m_scene->collisions().AddCollisionCircle(m_id, c);
 	// }
 
-	void Object::EnableAutoCollides() const
+	void Object::EnableAutoCollides(const int& resolutionOrder) const
 	{
-		if (auto scene = m_scene.lock()) scene->collisions().EnableAutoCollides(m_id);
+		if (auto scene = m_scene.lock()) scene->collisions().EnableAutoCollides(m_id, resolutionOrder);
 	}
 
 	types::Vec2 Object::GetScale() const

@@ -49,7 +49,7 @@ namespace grafyte
 
 		void AddCollisionBox(collision::AABB& b) const;
 		// void AddCollisionCircle(collision::Circle& c) const;
-		void EnableAutoCollides() const;
+		void EnableAutoCollides(const int &resolutionOrder) const;
 
 		/* Getters */
 		[[nodiscard]] types::ObjectId GetId() const {return m_id;};

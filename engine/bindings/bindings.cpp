@@ -144,7 +144,7 @@ PYBIND11_MODULE(GRAFYTE_PY_MODULE_NAME, m)
             }
             return scene->collisions().IsColliding(self.GetId(), *scene);
         })
-        .def("enable_auto_collides", &grafyte::Object::EnableAutoCollides)
+        .def("enable_auto_collides", &grafyte::Object::EnableAutoCollides, py::arg("order"))
 
         .def("move", [](const grafyte::Object& self, const float& offset_x, const float& offset_y)
         {
