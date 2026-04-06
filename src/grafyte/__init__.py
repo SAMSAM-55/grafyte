@@ -7,13 +7,16 @@ from __grafyte_internal import Object as _NativeObject
 from __grafyte_internal import Scene as _NativeScene
 from __grafyte_internal import TextObject as _NativeTextObject
 
-from .__class_utils import _KeyAccessor, _KeyPressedAccessor, _KeyReleasedAccessor, Vec2Proxy, RotProxy
+from .__class_utils import _KeyAccessor, _KeyPressedAccessor, _KeyReleasedAccessor, Vec2Proxy, ColorProxy, TintProxy, RotProxy
 from .__converters import *
 
 
 class Object:
-    def __init__(self, native_object: _NativeObject):
+    def __init__(self, native_object: _NativeObject, has_texture: bool = False):
         self.__native = native_object
+        self.__has_texture = has_texture
+        self.__color = (255, 255, 255, 1.0)
+        self.__tint = (255, 255, 255, 1.0)
         self.__pos_proxy = Vec2Proxy(
             getter=self._get_pos,
             setter=self._set_pos,
@@ -25,6 +28,18 @@ class Object:
         self.__rot_proxy = RotProxy(
             getter=self._get_rot,
             setter=self._set_rot,
+        )
+        self.__color_proxy = ColorProxy(
+            getter=self._get_color,
+            setter=self._set_color,
+            checker=self.__ensure_non_textured,
+            name="color",
+        )
+        self.__tint_proxy = TintProxy(
+            getter=self._get_tint,
+            setter=self._set_tint,
+            checker=self.__ensure_textured,
+            name="tint",
         )
 
     def _get_pos(self):
@@ -46,6 +61,46 @@ class Object:
 
     def _set_rot(self, value: float):
         self.__native.set_rotation(value)
+
+    def _get_color(self):
+        return self.__color
+
+    def _set_color(self, value: Color | tuple[int, int, int, float], a: float = 1):
+        self.__ensure_non_textured("color")
+        if isinstance(value, tuple) and len(value) == 2 and isinstance(value[0], (tuple, list)):
+            color, a = value[0], float(value[1])
+        elif isinstance(value, tuple) and len(value) == 4:
+            color, a = value[:3], float(value[3])
+        else:
+            color = value
+
+        n_color = ensure_color_normalize("Object.set_color(color=...)", color)
+        self.__native.set_color(*n_color, a)
+        self.__color = (*n_color, float(a))
+
+    def _get_tint(self):
+        return self.__tint
+
+    def _set_tint(self, value: Color | tuple[int, int, int, float], strength: float = 1):
+        self.__ensure_textured("tint")
+        if isinstance(value, tuple) and len(value) == 2 and isinstance(value[0], (tuple, list)):
+            tint, strength = value[0], float(value[1])
+        elif isinstance(value, tuple) and len(value) == 4:
+            tint, strength = value[:3], float(value[3])
+        else:
+            tint = value
+
+        n_tint = ensure_color_normalize("Object.set_tint(tint=...)", tint)
+        self.__native.set_color(*n_tint, strength)
+        self.__tint = (*ensure_color("Object.set_tint(tint=...)", tint), float(strength))
+
+    def __ensure_non_textured(self, attr: str):
+        if self.__has_texture:
+            raise RuntimeError(f"Object.{attr} is only available on non-textured objects; use tint instead.")
+
+    def __ensure_textured(self, attr: str):
+        if not self.__has_texture:
+            raise RuntimeError(f"Object.{attr} is only available on textured objects; use color instead.")
 
     @property
     def pos(self):
@@ -77,6 +132,24 @@ class Object:
             return
         self._set_scale(v)
 
+    @property
+    def color(self):
+        return self.__color_proxy
+
+    @color.setter
+    def color(self, v: Color | tuple[int, int, int, float]):
+        if v is self.__color_proxy: return
+        self._set_color(v)
+
+    @property
+    def tint(self):
+        return self.__tint_proxy
+
+    @tint.setter
+    def tint(self, v: Color | tuple[int, int, int, float]):
+        if v is self.__tint_proxy: return
+        self._set_tint(v)
+
     def add_collision_box(self, pos: Vec2Like, size: Vec2Like):
         n_pos = ensure_vec2f("Object.add_collision_box(pos=...", pos)
         n_size = ensure_vec2f("Object.add_collision_box(size=...", size)
@@ -92,27 +165,57 @@ class Object:
         self.__native.enable_auto_collides(order)
 
     def use_texture(self, texture_source_path: str, slot: int):
+        self.__has_texture = True
         self.__native.use_texture(texture_source_path, slot)
 
-    def set_tint(self, tint: Color, strength: float = 1):
-        n_tint = ensure_color_normalize("Object.set_tint(tint=...", tint)
-        self.__native.set_tint(*n_tint, strength)
     def set_color(self, color: Color, a: float = 1):
-        n_color = ensure_color_normalize("Object.set_color(color=...", color)
-        self.__native.set_color(*n_color, a)
+        self._set_color(color, a)
+
+    def set_tint(self, tint: Color, strength: float = 1):
+        self._set_tint(tint, strength)
 
 class TextObject:
     def __init__(self, native_object: _NativeTextObject):
         self.__native = native_object
+        self.__color = (255, 255, 255, 1.0)
+        self.__color_proxy = ColorProxy(
+            getter=self._get_color,
+            setter=self._set_color,
+        )
+
+    def _get_color(self):
+        try:
+            return self.__native.color
+        except AttributeError:
+            return self.__color
+
+    def _set_color(self, value: Color | tuple[int, int, int, float], a: float = 1):
+        if isinstance(value, tuple) and len(value) == 4:
+            color, a = value[:3], float(value[3])
+        else:
+            color = value
+
+        n_color = ensure_color_normalize("TextObject.set_color(color=...)", color)
+        self.__native.set_color(*n_color, a)
+        self.__color = (*ensure_color("TextObject.set_color(color=...)", color), float(a))
+
     def set_text(self, text: str):
         self.__native.set_text(text)
 
     def set_scale(self, scale: float):
         self.__native.set_scale(scale)
 
+    @property
+    def color(self):
+        return self.__color_proxy
+
+    @color.setter
+    def color(self, v: Color | tuple[int, int, int, float]):
+        if v is self.__color_proxy: return
+        self._set_color(v)
+
     def set_color(self, color: Color, a: float = 1):
-        n_color = ensure_color_normalize("TextObject.set_color(color=...)", color)
-        self.__native.set_color(*n_color, a)
+        self._set_color(color, a)
 
 class Scene:
     def __init__(self, native_scene: _NativeScene):
@@ -136,7 +239,7 @@ class Scene:
             shader_source = shader_source_path
 
         native_obj = self.__native.spawn_object(*n_size, shader_source, *n_pos, has_texture, layer)
-        return Object(native_obj)
+        return Object(native_obj, has_texture=has_texture)
 
     def spawn_text_object(self, pos: Vec2Like, text: str, scale: float = 12) -> TextObject:
         n_pos = ensure_vec2f("Scene.spawn_text_object(pos=...)", pos)

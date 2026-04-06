@@ -79,12 +79,15 @@ def ensure_vec2i(name: str, v: Vec2Like) -> Vec2i:
     raise TypeError(f"{name} must be Vec2(x: float, y: float) or tuple[float, float] or tuple[int, int], got {v!r}")
 
 def ensure_color(name: str, v: Color) -> Color:
-    if (
-            not isinstance(v, tuple) or len(v) != 3
-            or not all(isinstance(x, int) for x in v)
-    ):
+    try:
+        r, g, b = v
+    except Exception:
         raise TypeError(f"{name} must be Color = tuple[int, int, int], got {v!r}")
-    return __clamp_int((0, 255), *v)
+
+    if not all(isinstance(x, int) for x in (r, g, b)):
+        raise TypeError(f"{name} must be Color = tuple[int, int, int], got {v!r}")
+
+    return __clamp_int((0, 255), r, g, b)
 
 def ensure_color_normalize(name: str, v: Color) -> ColorNormalized:
     v = ensure_color(name, v)

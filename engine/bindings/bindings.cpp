@@ -120,10 +120,6 @@ PYBIND11_MODULE(GRAFYTE_PY_MODULE_NAME, m)
 
         .def("use_texture", &grafyte::Object::SetTexture, py::arg("texture_source_path"), py::arg("slot"))
 
-        .def("set_tint", [](const grafyte::Object& self, const float& r, const float& g, const float& b, const float& strength)
-        {
-            self.SetTint({r, g, b, strength});
-        }, py::arg("tint_r"), py::arg("tint_g"), py::arg("tint_b"), py::arg("strength"))
         .def("set_color", [](const grafyte::Object& self, const float& r, const float& g, const float& b, const float& a)
         {
             self.SetColor({r, g, b, a});

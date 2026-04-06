@@ -36,7 +36,6 @@ namespace grafyte
 		~Object();
 
 		void SetTexture(const std::string& textureSourcePath, unsigned int slot) const;
-		void SetTint(const types::Color4& t) const;
 		void SetColor(const types::Color4& c) const;
 
 		/* Actual object functions */

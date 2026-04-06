@@ -56,6 +56,94 @@ class Vec2Proxy:
         v = self._get()
         return f"Vec2Proxy({v.x}, {v.y})"
 
+class ColorProxy:
+    def __init__(self, getter, setter, checker=None, name: str = "color"):
+        self._getter = getter
+        self._setter = setter
+        self._checker = checker
+        self._name = name
+
+    def _get(self):
+        if self._checker is not None:
+            self._checker(self._name)
+        return self._getter()
+
+    def _set(self, v):
+        if self._checker is not None:
+            self._checker(self._name)
+        self._setter(v)
+
+    @property
+    def r(self):
+        return self._get()[0]
+
+    @r.setter
+    def r(self, value):
+        v = self._get()
+        self._set((value, v[1], v[2]))
+
+    @property
+    def g(self):
+        return self._get()[1]
+
+    @g.setter
+    def g(self, value):
+        v = self._get()
+        self._set((v[0], value, v[2]))
+
+    @property
+    def b(self):
+        return self._get()[2]
+
+    @b.setter
+    def b(self, value):
+        v = self._get()
+        self._set((v[0], v[1], value))
+
+    @property
+    def a(self):
+        v = self._get()
+        return v[3]
+
+    @a.setter
+    def a(self, value):
+        v = self._get()
+        self._set((v[0], v[1], v[2], value))
+
+    def __iter__(self):
+        v = self._get()
+        yield v[0]
+        yield v[1]
+        yield v[2]
+        yield v[3]
+
+    def __repr__(self):
+        v = self._get()
+        return f"ColorProxy({v[0]}, {v[1]}, {v[2]}, {v[3]})"
+
+class TintProxy(ColorProxy):
+    @property
+    def strength(self):
+        v = self._get()
+        return v[3]
+
+    @strength.setter
+    def strength(self, value):
+        v = self._get()
+        self._set((v[0], v[1], v[2], value))
+
+    @property
+    def a(self):
+        return self.strength
+
+    @a.setter
+    def a(self, value):
+        self.strength = value
+
+    def __repr__(self):
+        v = self._get()
+        return f"TintProxy({v[0]}, {v[1]}, {v[2]}, {v[3]})"
+
 class RotProxy:
     def __init__(self, getter, setter):
         self._getter = getter

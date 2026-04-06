@@ -22,11 +22,6 @@ namespace grafyte
 		scene->materials().upload(h);
 	}
 
-	void Object::SetTint(const types::Color4& t) const
-	{
-		if (auto scene = m_scene.lock()) scene->color(m_id) = t;
-	}
-
 	void Object::SetColor(const types::Color4& c) const
 	{
 		if (auto scene = m_scene.lock()) scene->color(m_id) = c;
