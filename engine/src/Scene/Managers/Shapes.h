@@ -1,7 +1,5 @@
 #pragma once
 
-#include <variant>
-
 #include "types.h"
 
 namespace grafyte::collision {
@@ -16,7 +14,7 @@ namespace grafyte::collision {
         float width, height;
 
         AABB(): Shape(), width(0), height(0) {}
-        explicit AABB(const types::Vec2& p, const float& w, const float& h) :Shape(p), width(w), height(h) {}
+        AABB(const types::Vec2& p, const float& w, const float& h) :Shape(p), width(w), height(h) {}
     };
 
     enum Direction

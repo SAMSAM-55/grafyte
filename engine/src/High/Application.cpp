@@ -165,9 +165,10 @@ namespace grafyte
     void Application::BeginFrame() const {
         InputManager::resetInputs();
         ctx->collisions.reset();
+        if (scene) ctx->collisions.RebuildGrid(*scene);
     }
 
-    void Application::computeProjection() {
+    void Application::computeProjection() const {
         const double aspect = static_cast<double>(m_winWidth) / m_winHeight;
         const float worldHeight = 200.0f;
         const float worldWidth = worldHeight * static_cast<float>(aspect);

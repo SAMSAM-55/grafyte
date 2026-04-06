@@ -5,6 +5,8 @@
 #include <iostream>
 #include <ranges>
 
+#include "Physics/Collisions/CollisionSolver.h"
+
 grafyte::collision::Hit grafyte::CollisionManager::ObjectsCollides(const types::ObjectId& A, const types::ObjectId& B, Scene& scene) {
     if (!(m_collisionBounds.contains(A) && m_collisionBounds.contains(B))) {
         throw std::runtime_error("[Collision Manager] Cannot check for collision between the two objects, at least one "
@@ -23,7 +25,7 @@ grafyte::collision::Hit grafyte::CollisionManager::ObjectsCollides(const types::
         for (const auto& b: BColliders)
         {
             const auto bWorld = collision::AABB{b.pos + bPos, b.width, b.height};
-            if (const auto hit = Intersects(aWorld, bWorld)) return hit;
+            if (const auto hit = CollisionSolver::Intersects(aWorld, bWorld)) return hit;
         }
     }
 
@@ -36,7 +38,10 @@ grafyte::collision::Hit grafyte::CollisionManager::IsColliding(const types::Obje
         return m_colliding.at(A);
     }
 
-    for (const auto& B : m_collisionBounds | std::views::keys)
+    const auto worldBounds = ComputeObjectWorldBounds(A, scene);
+    const auto queryCandidates = m_grid.queryCandidates(worldBounds);
+
+    for (const auto& B : queryCandidates)
     {
         if (B == A) continue;
 
@@ -59,7 +64,7 @@ grafyte::types::Vec2 grafyte::CollisionManager::PushBackOnMove(const types::Obje
     const float len = sqrt(v.x*v.x + v.y*v.y);
     if (len == 0.0f) return {0.0f, 0.0f};
 
-    const types::Vec2 d = -1.0f * (v/len);
+    const types::Vec2 d = -(v/len);
 
     if (!m_collisionBounds.contains(objId)) return {0.0f, 0.0f};
 
@@ -92,35 +97,14 @@ grafyte::types::Vec2 grafyte::CollisionManager::PushBackOnMove(const types::Obje
         {
             for (const auto& B: bounds)
             {
-                const auto worldA = collision::AABB{A.pos + aPos, A.width, A.height};
-                const auto worldB = collision::AABB{B.pos + bPos, B.width, B.height};
+                const float finalT = CollisionSolver::ComputePushBackT(A, B, aPos, bPos, d);
 
-                const types::Vec2 hA = {A.width, A.height};
-                const types::Vec2 hB = {B.width, B.height};
+                if (finalT == -1.0f) continue;
 
-                const types::Vec2 p = worldA.pos - worldB.pos;
-                const types::Vec2 h = hA + hB;
-
-                if (std::abs(p.x) < h.x && std::abs(p.y) < h.y)
+                if (finalT < bestFinalT)
                 {
-                    types::Vec2 t = {INFINITY, INFINITY};
-
-                    // For x
-                    if (d.x > 0) t.x = (h.x - p.x)/d.x;
-                    else if (d.x < 0) t.x = (- h.x - p.x)/d.x;
-
-                    // For y
-                    if (d.y > 0) t.y = (h.y - p.y)/d.y;
-                    else if (d.y < 0) t.y = (- h.y - p.y)/d.y;
-
-                    const float tmin = std::min(t.x, t.y);
-                    if (tmin < 0.0f) continue;
-
-                    if (const float finalT = tmin + EPSILON; finalT < bestFinalT)
-                    {
-                        found = true;
-                        bestFinalT = finalT;
-                    }
+                    found = true;
+                    bestFinalT = finalT;
                 }
             }
         }
@@ -139,52 +123,41 @@ void grafyte::CollisionManager::resolveAutoCollides(Scene& scene) {
     }
 }
 
-grafyte::collision::Hit grafyte::CollisionManager::Intersects(const collision::AABB& a, const collision::AABB& b) {
-    const float dx = a.pos.x - b.pos.x;
-    const float dy = a.pos.y - b.pos.y;
-    const float combinedWidth = a.width + b.width;
-    const float combinedHeight = a.height + b.height;
+void grafyte::CollisionManager::RebuildGrid(Scene &scene) {
+    m_grid.clear();
 
-    if (std::abs(dx) <= combinedWidth && std::abs(dy) <= combinedHeight) {
-        const float overlapX = combinedWidth - std::abs(dx);
-        const float overlapY = combinedHeight - std::abs(dy);
-
-        collision::Direction dir;
-        if (overlapX < overlapY) {
-            dir = (dx > 0) ? collision::Right : collision::Left;
-        } else {
-            dir = (dy > 0) ? collision::Bottom : collision::Top;
-        }
-
-        return {a, b, true, dir};
+    for (const auto& [id, bounds] : m_collisionBounds) {
+        if (bounds.empty()) continue;
+        const auto worldBounds = ComputeObjectWorldBounds(id, scene);
+        m_grid.insert(id, worldBounds);
     }
-
-    return {a, b, false, collision::Top};
 }
 
-// bool grafyte::CollisionManager::Intersects(const collision::AABB &a, const collision::Circle &b) {
-//     const types::Vec2 bl = {a.pos.x - a.width, a.pos.y - a.height};
-//     const types::Vec2 tr = {a.pos.x + a.width, a.pos.y + a.height};
-//
-//     const types::Vec2 pt = {clampf(b.pos.x, bl.x, tr.x), clampf(b.pos.y, bl.y, tr.y)};
-//
-//     const float dx = pt.x - b.pos.x;
-//     const float dy = pt.y - b.pos.y;
-//     // Avoid using square root (as we don't need it here)
-//     return (dx * dx + dy * dy) <= (b.radius*b.radius);
-// }
-//
-// bool grafyte::CollisionManager::Intersects(const collision::Circle &a, const collision::Circle &b) {
-//     const float dx = b.pos.x - a.pos.x;
-//     const float dy = b.pos.y - a.pos.y;
-//     const float r = a.radius + b.radius;
-//
-//     return (dx * dx + dy * dy) <= (r * r);
-// }
-//
-// bool grafyte::CollisionManager::Intersects(const collision::Collider& a, const collision::Collider& b) const
-// {
-//     return std::visit([](auto const& lhs, auto const& rhs) -> bool {
-//         return Intersects(lhs, rhs);
-//     }, a, b);
-// }
+grafyte::collision::AABB grafyte::CollisionManager::ComputeObjectWorldBounds(const types::ObjectId& id, Scene& scene) const {
+    const auto& colliders = m_collisionBounds.at(id);
+    const auto objPos = scene.transform(id).pos;
+
+    float minX = INFINITY;
+    float minY = INFINITY;
+    float maxX = -INFINITY;
+    float maxY = -INFINITY;
+
+    for (const auto& c : colliders) {
+        const float cMinX = objPos.x + c.pos.x - c.width;
+        const float cMaxX = objPos.x + c.pos.x + c.width;
+        const float cMinY = objPos.y + c.pos.y - c.height;
+        const float cMaxY = objPos.y + c.pos.y + c.height;
+
+        minX = std::min(minX, cMinX);
+        minY = std::min(minY, cMinY);
+        maxX = std::max(maxX, cMaxX);
+        maxY = std::max(maxY, cMaxY);
+    }
+
+    const float centerX = (minX + maxX) * 0.5f;
+    const float centerY = (minY + maxY) * 0.5f;
+    const float halfW = (maxX - minX) * 0.5f;
+    const float halfH = (maxY - minY) * 0.5f;
+
+    return {{centerX, centerY}, halfW, halfH};
+}

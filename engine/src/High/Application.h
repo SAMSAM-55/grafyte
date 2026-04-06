@@ -47,7 +47,7 @@ namespace grafyte
 		std::shared_ptr<Scene> scene;
 	private:
 		void BeginFrame() const;
-		void computeProjection();
+		void computeProjection() const;
 
 		const std::string m_name;
 		std::unique_ptr<TextRenderer> m_textRenderer;

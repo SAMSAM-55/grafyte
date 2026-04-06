@@ -3,9 +3,9 @@
 #include <iostream>
 #include <unordered_map>
 #include <vector>
-#include <__msvc_ranges_to.hpp>
 
 #include "Shapes.h"
+#include "Physics/Collisions/SpatialGrid.h"
 
 namespace grafyte {
     constexpr float EPSILON = 1e-8f;
@@ -32,6 +32,9 @@ namespace grafyte {
 
         void resolveAutoCollides(Scene &scene);
 
+        void RebuildGrid(Scene& scene);
+        collision::AABB ComputeObjectWorldBounds(const types::ObjectId& id, Scene& scene) const;
+
         void reset() {
             m_colliding.clear();
         }
@@ -40,14 +43,10 @@ namespace grafyte {
             return (v < lo) ? lo : (v > hi) ? hi : v;
         }
 
-        static collision::Hit Intersects(const collision::AABB& a, const collision::AABB& b);
-        // static bool Intersects(const collision::AABB& a, const collision::Circle& b);
-        // static bool Intersects(const collision::Circle& a, const collision::AABB& b) {return Intersects(b, a);};
-        // static bool Intersects(const collision::Circle& a, const collision::Circle& b);
-        // [[nodiscard]] bool Intersects(const collision::Collider& a, const collision::Collider& b) const;
-
         std::unordered_map<types::ObjectId, std::vector<collision::AABB>> m_collisionBounds;
         std::unordered_map<types::ObjectId, int> m_autoCollides;
         std::unordered_map<types::ObjectId, collision::Hit> m_colliding;
+
+        collision::SpatialGrid m_grid{12.0f};
     };
 }
