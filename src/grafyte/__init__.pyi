@@ -140,20 +140,6 @@ class Application:
         Closes the application window and cleans up resources.
         """
         ...
-    def get_now(self) -> float:
-        """
-        Returns the current time in seconds since the application started.
-
-        :return: Current time as a float.
-        """
-        ...
-    def get_delta_time(self) -> float:
-        """
-        Returns the time elapsed since the last frame.
-
-        :return: Delta time in seconds.
-        """
-        ...
     def render(self) -> None:
         """
         Renders all objects and text in the current frame.
@@ -185,6 +171,16 @@ class Application:
         """
         ...
 
+    @property
+    def background_color(self) -> None: ...
+    @background_color.setter
+    def background_color(self, color: Color) -> None: ...
+
+    @property
+    def now(self) -> float: ...
+    @property
+    def dt(self) -> float: ...
+
     def make_new_scene(self) -> Scene: ...
 
 class Scene:
@@ -207,16 +203,20 @@ class TextObject:
 
     def __init__(self, native: _NativeTextObject): ...
 
-    def set_text(self, text: str) -> None: ...
-    def set_scale(self, scale: float) -> None: ...
-    def set_color(self, color: Color, a: float = 1) -> None: ...
+    @property
+    def text(self) -> None: ...
+    @text.setter
+    def text(self, value: str) -> None: ...
+
+    @property
+    def scale(self) -> None: ...
+    @scale.setter
+    def scale(self, value: float) -> None: ...
 
     @property
     def color(self) -> ColorProxy: ...
     @color.setter
     def color(self, v: Color | tuple[Color, float] | tuple[int, int, int, float]) -> None: ...
-
-def set_text(self, text: str): ...
 
 class Object:
     """
@@ -292,28 +292,13 @@ class Object:
 
     def __init__(self, native: _NativeObject, has_texture: bool = False): ...
 
-    def set_color(self, color: Color, a: float = 1) -> None:
-        """
-        Sets the uniform color of the object. Only applicable if the object doesn't have a texture.
-
-        :param color: A Color object (RGB) for the object.
-        :param a: The alpha chanel for the color. (default = 1)
-        """
-        ...
-
-    def set_tint(self, tint: Color, strength: float = 1) -> None:
-        """
-        Sets the tint color of the object. Only applicable if the object has a texture.
-
-        :param tint: A Color object (RGB) for the tint.
-        :param strength: The strength channel for the tint. (default = 1)
-        """
-        ...
-
     def add_collision_box(self, pos: Vec2Like, size: Vec2Like): ...
     def collides_with(self, other: Object) -> Hit: ...
     def is_colliding(self) -> Hit: ...
-    def enable_auto_collides(self, order: int): ...
+    @property
+    def auto_collides(self) -> None: ...
+    @auto_collides.setter
+    def auto_collides(self, order: int) -> None: ...
 
     def use_texture(self, path: str, slot: int = 0) -> None:
         """

@@ -81,7 +81,7 @@ class Object:
     def _get_tint(self):
         return self.__tint
 
-    def _set_tint(self, value: Color | tuple[int, int, int, float], strength: float = 1):
+    def _set_tint(self, value: Color | tuple[int, int, int, float], strength: float = 0):
         self.__ensure_textured("tint")
         if isinstance(value, tuple) and len(value) == 2 and isinstance(value[0], (tuple, list)):
             tint, strength = value[0], float(value[1])
@@ -161,18 +161,17 @@ class Object:
     def is_colliding(self) -> bool:
         return self.__native.is_colliding()
 
-    def enable_auto_collides(self, order: int):
+    @property
+    def auto_collides(self):
+        raise AttributeError("Object.auto_collides is write-only")
+
+    @auto_collides.setter
+    def auto_collides(self, order: int):
         self.__native.enable_auto_collides(order)
 
     def use_texture(self, texture_source_path: str, slot: int):
         self.__has_texture = True
         self.__native.use_texture(texture_source_path, slot)
-
-    def set_color(self, color: Color, a: float = 1):
-        self._set_color(color, a)
-
-    def set_tint(self, tint: Color, strength: float = 1):
-        self._set_tint(tint, strength)
 
 class TextObject:
     def __init__(self, native_object: _NativeTextObject):
@@ -199,11 +198,21 @@ class TextObject:
         self.__native.set_color(*n_color, a)
         self.__color = (*ensure_color("TextObject.set_color(color=...)", color), float(a))
 
-    def set_text(self, text: str):
-        self.__native.set_text(text)
+    @property
+    def text(self):
+        raise AttributeError("TextObject.text is write-only")
 
-    def set_scale(self, scale: float):
-        self.__native.set_scale(scale)
+    @text.setter
+    def text(self, value: str):
+        self.__native.set_text(value)
+
+    @property
+    def scale(self):
+        raise AttributeError("TextObject.scale is write-only")
+
+    @scale.setter
+    def scale(self, value: float):
+        self.__native.set_scale(value)
 
     @property
     def color(self):
@@ -213,9 +222,6 @@ class TextObject:
     def color(self, v: Color | tuple[int, int, int, float]):
         if v is self.__color_proxy: return
         self._set_color(v)
-
-    def set_color(self, color: Color, a: float = 1):
-        self._set_color(color, a)
 
 class Scene:
     def __init__(self, native_scene: _NativeScene):
@@ -277,6 +283,19 @@ class Application(_NativeApplication):
         self.__input = InputManager()
         super().init(*n_window_dimensions)
 
-    def set_background_color(self, color: Color):
-        r, g, b = ensure_color("Application.set_background_color(color=...)", color)
+    @property
+    def now(self) -> float:
+        return super().get_now()
+
+    @property
+    def dt(self) -> float:
+        return super().get_delta_time()
+
+    @property
+    def background_color(self):
+        raise AttributeError("Application.background_color is write-only")
+
+    @background_color.setter
+    def background_color(self, color: Color):
+        r, g, b = ensure_color("Application.background_color= ...", color)
         super().set_clear_color(r / 255, g / 255, b / 255, 1)
