@@ -3,6 +3,7 @@ from __grafyte_internal import Vec2
 
 Vec2f: TypeAlias = tuple[float, float]
 Vec2i: TypeAlias = tuple[int, int]
+Vec1Like: TypeAlias = int | float
 Vec2Like: TypeAlias = Vec2 | Vec2f | Vec2i
 Color: TypeAlias = tuple[int, int, int]
 ColorNormalized: TypeAlias = tuple[float, float, float]

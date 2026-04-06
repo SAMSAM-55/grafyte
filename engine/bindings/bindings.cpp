@@ -156,7 +156,10 @@ PYBIND11_MODULE(GRAFYTE_PY_MODULE_NAME, m)
         }, py::arg("pos_x"), py::arg("pos_y"))
         .def("rotate", &grafyte::Object::Rotate, py::arg("angle"))
         .def("set_rotation", &grafyte::Object::SetRotation, py::arg("angle"))
-        .def("set_scale", py::overload_cast<float>(&grafyte::Object::SetScale, py::const_), py::arg("scale"))
+        .def("set_scale", [](const grafyte::Object& self, const float& scale_x, const float& scale_y)
+        {
+            self.SetScale({scale_x, scale_y});
+        }, py::arg("scale_x"), py::arg("scale_y"))
         .def("set_scale", py::overload_cast<grafyte::types::Vec2>(&grafyte::Object::SetScale, py::const_), py::arg("scale"));
 
 

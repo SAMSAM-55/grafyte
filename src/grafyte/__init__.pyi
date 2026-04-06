@@ -192,7 +192,7 @@ class Object:
     def _set_rot(self, value): ...
 
     @property
-    def pos(self) -> Vec2:
+    def pos(self) -> Vec2Proxy:
         """The current position of the object."""
         ...
 
@@ -208,12 +208,12 @@ class Object:
     def rot(self, v: float) -> None: ...
 
     @property
-    def scale(self) -> Vec2:
+    def scale(self) -> Vec2Proxy:
         """The current scale of the object."""
         ...
 
     @scale.setter
-    def scale(self, v: Vec2Like) -> None: ...
+    def scale(self, v: Vec2Like | float) -> None: ...
 
     def __init__(self, native: _NativeObject): ...
 

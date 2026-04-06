@@ -67,11 +67,14 @@ class Object:
 
     @property
     def scale(self):
-        return self.__native.scale
+        return self.__scale_proxy
 
     @scale.setter
-    def scale(self, v: Vec2Like):
+    def scale(self, v: Vec2Like | Vec1Like):
         if v is self.__scale_proxy: return
+        if isinstance(v, Vec1Like):
+            self._set_scale((float(v), float(v)))
+            return
         self._set_scale(v)
 
     def add_collision_box(self, pos: Vec2Like, size: Vec2Like):
