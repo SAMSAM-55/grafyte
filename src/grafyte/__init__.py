@@ -1,118 +1,15 @@
 from __future__ import annotations
 
-from array import array
-from typing import Union
-
-from .__converters import *
-
 from __grafyte_internal import Application as _NativeApplication
+from __grafyte_internal import InputManager as _NativeInputManager
+from __grafyte_internal import Key, InputTrigger, Direction
 from __grafyte_internal import Object as _NativeObject
 from __grafyte_internal import Scene as _NativeScene
 from __grafyte_internal import TextObject as _NativeTextObject
-from __grafyte_internal import InputManager as _NativeInputManager
-from __grafyte_internal import Key, InputTrigger, Vec2, Direction, Hit
 
-class Vec2Proxy:
-    def __init__(self, getter, setter):
-        self._getter = getter
-        self._setter = setter
+from .__class_utils import _KeyAccessor, _KeyPressedAccessor, _KeyReleasedAccessor, Vec2Proxy, RotProxy
+from .__converters import *
 
-    def _get(self):
-        return self._getter()
-
-    def _set(self, v):
-        self._setter(v)
-
-    @property
-    def x(self):
-        return self._get().x
-
-    @x.setter
-    def x(self, value):
-        v = self._get()
-        self._set((value, v.y))
-
-    @property
-    def y(self):
-        return self._get().y
-
-    @y.setter
-    def y(self, value):
-        v = self._get()
-        self._set((v.x, value))
-
-    def __iadd__(self, other: Vec2Like):
-        ox, oy = ensure_vec2f("Vec2Proxy.__iadd__(other=...)", other)
-        v = self._get()
-        self._set((v.x + ox, v.y + oy))
-        return self
-
-    def __isub__(self, other: Vec2Like):
-        ox, oy = ensure_vec2f("Vec2Proxy.__iadd__(other=...)", other)
-        v = self._get()
-        self._set((v.x - ox, v.y - oy))
-        return self
-    def __imul__(self, other: float):
-        v = self._get()
-        self._set((v.x * other, v.y * other))
-        return self
-
-    def __iter__(self):
-        v = self._get()
-        yield v.x
-        yield v.y
-
-    def __repr__(self):
-        v = self._get()
-        return f"Vec2Proxy({v.x}, {v.y})"
-
-class RotProxy:
-    def __init__(self, getter, setter):
-        self._getter = getter
-        self._setter = setter
-
-    def _get(self):
-        return float(self._getter())
-
-    def _set(self, value):
-        self._setter(float(value))
-
-    @property
-    def value(self):
-        return self._get()
-
-    @value.setter
-    def value(self, value):
-        self._set(value)
-
-    def set(self, value):
-        self._set(value)
-        return self
-
-    def __float__(self):
-        return self._get()
-
-    def __int__(self):
-        return int(self._get())
-
-    def __iadd__(self, other):
-        self._set(self._get() + float(other))
-        return self
-
-    def __isub__(self, other):
-        self._set(self._get() - float(other))
-        return self
-
-    def __imul__(self, other):
-        self._set(self._get() * float(other))
-        return self
-
-    def __itruediv__(self, other):
-        self._set(self._get() / float(other))
-        return self
-
-    def __repr__(self):
-        return f"RotProxy({self._get()})"
 
 class Object:
     def __init__(self, native_object: _NativeObject):
@@ -161,7 +58,7 @@ class Object:
 
     @property
     def rot(self):
-        return self.__rot_proxy
+        return self.__rot_proxy.value
 
     @rot.setter
     def rot(self, v: float):
@@ -245,22 +142,24 @@ class Scene:
         return TextObject(native_obj)
 
 class InputManager(_NativeInputManager):
-    @staticmethod
-    def is_key_down(key: Key) -> bool: return _NativeInputManager.is_key_down(key);
-    @staticmethod
-    def was_key_pressed(key: Key) -> bool: return _NativeInputManager.was_key_pressed(key)
-    @staticmethod
-    def was_key_released(key: Key) -> bool: return _NativeInputManager.was_key_released(key)
+    def __init__(self):
+        super().__init__()
+
+        self.key = _KeyAccessor()
+        self.key_pressed = _KeyPressedAccessor()
+        self.key_released = _KeyReleasedAccessor()
+
     @staticmethod
     def create_action(name: str, trigger: InputTrigger, *key: Key) -> None:
         _NativeInputManager.create_action(name, [*key], trigger)
-    @staticmethod
-    def is_action_active(action: str) -> bool: return _NativeInputManager.is_action_active(action)
+
+    def __getitem__(self, action: str) -> bool:
+        return _NativeInputManager.is_action_active(action)
 
 class Application(_NativeApplication):
     @property
-    def input(self) -> type[InputManager]:
-        return InputManager
+    def input(self) -> InputManager:
+        return self.__input
 
     def make_new_scene(self) -> Scene:
         native_scene = super().make_new_scene()
@@ -269,6 +168,7 @@ class Application(_NativeApplication):
     def __init__(self, name: str, window_dimensions: Vec2Like):
         super().__init__(name, "@embed/Fonts/Base")
         n_window_dimensions = ensure_vec2i("Application(window_dimensions=...)", window_dimensions)
+        self.__input = InputManager()
         super().init(*n_window_dimensions)
 
     def set_background_color(self, color: Color):

@@ -213,6 +213,8 @@ PYBIND11_MODULE(GRAFYTE_PY_MODULE_NAME, m)
         }, py::arg("color_r"), py::arg("color_g"), py::arg("color_b"), py::arg("color_a"));
 
     py::class_<grafyte::InputManager>(m, "InputManager")
+    .def(py::init())
+
     // inputs
     .def_static(
         "is_key_down",

@@ -76,6 +76,8 @@ class InputTrigger(IntEnum):
     Release = 2
 
 class InputManager:
+    def __init__(self): ...
+
     @staticmethod
     def is_key_down(key: Key) -> bool: ...
     @staticmethod

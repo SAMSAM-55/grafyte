@@ -1,6 +1,7 @@
 from typing import overload, Union
 
 from .__converters import Vec2f, Color, Vec2Like
+from .__class_utils import _KeyAccessor, _KeyPressedAccessor, _KeyReleasedAccessor, _ActionAccessor
 
 from __grafyte_internal import Key as _NativeKey
 from __grafyte_internal import InputTrigger as _NativeInputTrigger
@@ -42,33 +43,21 @@ class RotProxy:
     def __itruediv__(self, other: float): ...
 
 class InputManager(_NativeInputManager):
-    @staticmethod
-    def is_key_down(key: Key) -> bool:
-        """
-        Checks if a specific key is currently being held down.
+    key: _KeyAccessor
+    key_pressed: _KeyPressedAccessor
+    key_released: _KeyReleasedAccessor
 
-        :param key: The Key enum value.
-        :return: True if the key is down, False otherwise.
+    def __init__(self): ...
+
+    def __getitem__(self, action: str):
+        """
+        Checks if a specific action is currently active.
+
+        :param action: The name of the action.
+        :return: True if the action is active, False otherwise.
         """
         ...
-    @staticmethod
-    def was_key_pressed(key: Key) -> bool:
-        """
-        Checks if a specific key was pressed in the current frame.
 
-        :param key: The Key enum value.
-        :return: True if the key was just pressed, False otherwise.
-        """
-        ...
-    @staticmethod
-    def was_key_released(key: Key) -> bool:
-        """
-        Checks if a specific key was released in the current frame.
-
-        :param key: The Key enum value.
-        :return: True if the key was just released, False otherwise.
-        """
-        ...
     @staticmethod
     def create_action(name: str, trigger: InputTrigger, *key: Key) -> None:
         """
@@ -79,23 +68,16 @@ class InputManager(_NativeInputManager):
         :param key: The Key(s) to bind to the action.
         """
         ...
-    @staticmethod
-    def is_action_active(action: str) -> bool:
-        """
-        Checks if a specific action is currently being held down.
-
-        :param action: The name of the action.
-        :return: True if the action is down, False otherwise.
-        """
-        ...
 
 class Application:
     """
     The main application class that manages the window, rendering context, and input.
     """
 
+    __input: InputManager
+
     @property
-    def input(self) -> type[InputManager]: ...
+    def input(self) -> InputManager: ...
 
     def __init__(self, name: str, window_dimensions: Vec2Like):
         """
@@ -218,7 +200,7 @@ class Object:
     def pos(self, v: Vec2Like) -> None: ...
 
     @property
-    def rot(self) -> RotProxy:
+    def rot(self) -> float:
         """The current rotation of the object."""
         ...
 
