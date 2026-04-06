@@ -101,13 +101,18 @@ namespace grafyte
 
 	bool Object::CollidesWith(const Object& other) const
 	{
-		if (auto scene = m_scene.lock()) return static_cast<bool>(scene->collisions().ObjectsCollides(m_id, other.GetId(), *scene));
+		if (const auto scene = m_scene.lock())
+			return static_cast<bool>(scene->collisions().ObjectsCollides(m_id, other.GetId(), *scene));
 		return false;
 	}
 
 	bool Object::IsColliding() const
 	{
-		if (auto scene = m_scene.lock()) return static_cast<bool>(scene->collisions().IsColliding(m_id, *scene));
+		if (const auto scene = m_scene.lock()) {
+			for (const auto& h: scene->collisions().IsColliding(m_id, *scene)) {
+				if (h.collision) return true;
+			}
+		}
 		return false;
 	}
 }

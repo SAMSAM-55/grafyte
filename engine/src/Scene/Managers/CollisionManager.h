@@ -27,7 +27,7 @@ namespace grafyte {
         }
 
         collision::Hit ObjectsCollides(const types::ObjectId& A, const types::ObjectId& B, Scene& scene);
-        collision::Hit IsColliding(const types::ObjectId& A, Scene& scene);
+        std::vector<collision::Hit> IsColliding(const types::ObjectId& A, Scene& scene);
         types::Vec2 PushBackOnMove(const types::ObjectId& objId, const types::Vec2& v, Scene& scene);
 
         void resolveAutoCollides(Scene &scene);
@@ -45,7 +45,7 @@ namespace grafyte {
 
         std::unordered_map<types::ObjectId, std::vector<collision::AABB>> m_collisionBounds;
         std::unordered_map<types::ObjectId, int> m_autoCollides;
-        std::unordered_map<types::ObjectId, collision::Hit> m_colliding;
+        std::unordered_map<types::ObjectId, std::vector<collision::Hit>> m_colliding;
 
         collision::SpatialGrid m_grid{12.0f};
     };

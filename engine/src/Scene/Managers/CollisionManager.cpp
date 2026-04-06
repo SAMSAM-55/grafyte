@@ -4,6 +4,7 @@
 #include <stdexcept>
 #include <iostream>
 #include <ranges>
+#include <cmath>
 
 #include "Physics/Collisions/CollisionSolver.h"
 
@@ -32,12 +33,8 @@ grafyte::collision::Hit grafyte::CollisionManager::ObjectsCollides(const types::
     return collision::Hit{collision::AABB{}, collision::AABB{}, false, collision::Top};
 }
 
-grafyte::collision::Hit grafyte::CollisionManager::IsColliding(const types::ObjectId& A, Scene& scene)
+std::vector<grafyte::collision::Hit> grafyte::CollisionManager::IsColliding(const types::ObjectId &A, Scene &scene)
 {
-    if (m_colliding.contains(A)) {
-        return m_colliding.at(A);
-    }
-
     const auto worldBounds = ComputeObjectWorldBounds(A, scene);
     const auto queryCandidates = m_grid.queryCandidates(worldBounds);
 
@@ -47,24 +44,19 @@ grafyte::collision::Hit grafyte::CollisionManager::IsColliding(const types::Obje
 
         if (const auto hit = ObjectsCollides(A, B, scene))
         {
-            m_colliding.insert_or_assign(A, hit);
-            m_colliding.insert_or_assign(B, hit);
-            return hit;
+            m_colliding[A].push_back(hit);
+            m_colliding[B].push_back(hit);
         }
     }
 
-    return collision::Hit{collision::AABB{}, collision::AABB{}, false, collision::Top};
+    if (!m_colliding[A].empty()) return m_colliding[A];
+
+    return {collision::Hit{collision::AABB{}, collision::AABB{}, false, collision::Top}};
 }
 
 grafyte::types::Vec2 grafyte::CollisionManager::PushBackOnMove(const types::ObjectId& objId, const types::Vec2& v, Scene& scene)
 {
-
     if (v.x == 0 && v.y == 0) return {0.0f, 0.0f};
-
-    const float len = sqrt(v.x*v.x + v.y*v.y);
-    if (len == 0.0f) return {0.0f, 0.0f};
-
-    const types::Vec2 d = -(v/len);
 
     if (!m_collisionBounds.contains(objId)) return {0.0f, 0.0f};
 
@@ -72,7 +64,8 @@ grafyte::types::Vec2 grafyte::CollisionManager::PushBackOnMove(const types::Obje
     const std::vector<collision::AABB> colliders = m_collisionBounds[objId];
 
     bool found = false;
-    float bestFinalT = INFINITY;
+    types::Vec2 bestTranslation{0.0f, 0.0f};
+    float bestLenSq = INFINITY;
 
     for (const auto&[id, bounds]: m_collisionBounds)
     {
@@ -97,14 +90,13 @@ grafyte::types::Vec2 grafyte::CollisionManager::PushBackOnMove(const types::Obje
         {
             for (const auto& B: bounds)
             {
-                const float finalT = CollisionSolver::ComputePushBackT(A, B, aPos, bPos, d);
-
-                if (finalT == -1.0f) continue;
-
-                if (finalT < bestFinalT)
-                {
-                    found = true;
-                    bestFinalT = finalT;
+                if (const auto translation = CollisionSolver::ComputePushBackTranslation(A, B, aPos, bPos)) {
+                    const float lenSq = translation->x * translation->x + translation->y * translation->y;
+                    if (!found || lenSq < bestLenSq) {
+                        found = true;
+                        bestLenSq = lenSq;
+                        bestTranslation = *translation;
+                    }
                 }
             }
         }
@@ -113,8 +105,7 @@ grafyte::types::Vec2 grafyte::CollisionManager::PushBackOnMove(const types::Obje
         return {0, 0};
     }
 
-    const types::Vec2 result = d * bestFinalT;
-    return result;
+    return bestTranslation;
 }
 
 void grafyte::CollisionManager::resolveAutoCollides(Scene& scene) {

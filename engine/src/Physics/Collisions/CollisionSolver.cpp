@@ -1,39 +1,30 @@
 #include "CollisionSolver.h"
 
-#include "Scene/Scene.h"
+#include <cmath>
 
 namespace grafyte {
-    float CollisionSolver::ComputePushBackT(const collision::AABB& A, const collision::AABB& B,
-                                            const types::Vec2& aPos,  const types::Vec2& bPos,
-                                            const types::Vec2& d) {
+    std::optional<types::Vec2> CollisionSolver::ComputePushBackTranslation(
+        const collision::AABB& A,
+        const collision::AABB& B,
+        const types::Vec2& aPos,
+        const types::Vec2& bPos)
+    {
         const auto worldA = collision::AABB{A.pos + aPos, A.width, A.height};
         const auto worldB = collision::AABB{B.pos + bPos, B.width, B.height};
 
-        const types::Vec2 hA = {A.width, A.height};
-        const types::Vec2 hB = {B.width, B.height};
+        const types::Vec2 delta = worldA.pos - worldB.pos;
+        const float overlapX = (A.width + B.width) - std::abs(delta.x);
+        const float overlapY = (A.height + B.height) - std::abs(delta.y);
 
-        const types::Vec2 p = worldA.pos - worldB.pos;
-        const types::Vec2 h = hA + hB;
+        if (overlapX <= 0.0f || overlapY <= 0.0f) return std::nullopt;
 
-        if (std::abs(p.x) < h.x && std::abs(p.y) < h.y)
-        {
-            types::Vec2 t = {INFINITY, INFINITY};
-
-            // For x
-            if (d.x > 0) t.x = (h.x - p.x)/d.x;
-            else if (d.x < 0) t.x = (- h.x - p.x)/d.x;
-
-            // For y
-            if (d.y > 0) t.y = (h.y - p.y)/d.y;
-            else if (d.y < 0) t.y = (- h.y - p.y)/d.y;
-
-            const float tmin = std::min(t.x, t.y);
-            if (tmin < 0.0f) return -1.0f;
-
-            return tmin + EPSILON;
+        if (overlapX < overlapY) {
+            const float sign = (delta.x > 0.0f) ? 1.0f : -1.0f;
+            return types::Vec2{sign * overlapX, 0.0f};
         }
 
-        return -1.0f;
+        const float sign = (delta.y > 0.0f) ? 1.0f : -1.0f;
+        return types::Vec2{0.0f, sign * overlapY};
     }
 
 

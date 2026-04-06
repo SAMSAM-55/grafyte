@@ -132,11 +132,15 @@ PYBIND11_MODULE(GRAFYTE_PY_MODULE_NAME, m)
             self.AddCollisionBox(box);
         }, py::arg("size_x"), py::arg("size_y"), py::arg("scale_x"), py::arg("scale_y"))
         .def("collides_with", &grafyte::Object::CollidesWith, py::arg("other"))
-        .def("is_colliding", [](const grafyte::Object& self)
+        .def("is_colliding", [](const grafyte::Object& self) -> std::vector<grafyte::collision::Hit>
         {
             auto* scene = self.GetScene();
             if (!scene) {
-                return grafyte::collision::Hit{grafyte::collision::AABB{}, grafyte::collision::AABB{}, false, grafyte::collision::Top};
+                return {
+                    grafyte::collision::Hit{
+                        grafyte::collision::AABB{}, grafyte::collision::AABB{}, false, grafyte::collision::Top
+                    }
+                };
             }
             return scene->collisions().IsColliding(self.GetId(), *scene);
         })
