@@ -35,10 +35,14 @@ namespace grafyte {
         void RebuildGrid(Scene& scene);
         collision::AABB ComputeObjectWorldBounds(const types::ObjectId& id, Scene& scene) const;
 
+        void markDirty(const types::ObjectId& id) {m_gridDirty.emplace_back(id);}
+
         void reset() {
             m_colliding.clear();
         }
     private:
+        void buildGridFromDirty(Scene &scene);
+
         static float clampf(const float v, const float lo, const float hi) {
             return (v < lo) ? lo : (v > hi) ? hi : v;
         }
@@ -48,5 +52,7 @@ namespace grafyte {
         std::unordered_map<types::ObjectId, std::vector<collision::Hit>> m_colliding;
 
         collision::SpatialGrid m_grid{12.0f};
+        std::vector<types::ObjectId> m_gridDirty;
+        bool built = false;
     };
 }

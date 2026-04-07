@@ -32,6 +32,7 @@ namespace grafyte
 		if (!scene) return;
 
 		scene->transform(m_id).pos += offset;
+		scene->collisions().markDirty(m_id);
 		if (scene->collisions().AutoCollides(m_id))
 			scene->transform(m_id).pos += scene->collisions().PushBackOnMove(m_id, offset, *scene);
 	}
@@ -42,6 +43,7 @@ namespace grafyte
 
 		const types::Vec2 offset = pos - scene->transform(m_id).pos;
 		scene->transform(m_id).pos = pos;
+		scene->collisions().markDirty(m_id);
 		if (scene->collisions().AutoCollides(m_id))
 			scene->transform(m_id).pos += scene->collisions().PushBackOnMove(m_id, offset, *scene);
 	}
@@ -68,7 +70,10 @@ namespace grafyte
 
 	void Object::AddCollisionBox(collision::AABB& b) const
 	{
-		if (auto scene = m_scene.lock()) scene->collisions().AddCollisionBox(m_id, b);
+		if (auto scene = m_scene.lock()) {
+			scene->collisions().AddCollisionBox(m_id, b);
+			scene->collisions().markDirty(m_id);
+		}
 	}
 
 	// void Object::AddCollisionCircle(collision::Circle& c) const

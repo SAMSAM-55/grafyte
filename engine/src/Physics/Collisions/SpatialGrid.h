@@ -35,6 +35,7 @@ namespace grafyte::collision {
         }
 
         void insert(const types::ObjectId& id, const AABB& aabb);
+        void cleanDirty(const std::vector<types::ObjectId>& dirty);
 
         [[nodiscard]] std::vector<types::ObjectId> queryCandidates(const AABB& area) const;
     private:

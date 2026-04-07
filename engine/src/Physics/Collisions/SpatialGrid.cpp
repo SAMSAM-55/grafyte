@@ -4,6 +4,7 @@
 
 #include "SpatialGrid.h"
 
+#include <ranges>
 #include <unordered_set>
 
 #include "Scene/Scene.h"
@@ -54,5 +55,16 @@ namespace grafyte::collision {
         }
 
         return result;
+    }
+
+    void SpatialGrid::cleanDirty(const std::vector<types::ObjectId> &dirty) {
+        for (const auto& id_to_remove: dirty) {
+            for (auto& ids: m_cells | std::views::values) {
+                std::vector<types::ObjectId>& vec = ids;
+                // Remove all instances of the id
+                const auto newEnd = std::remove(vec.begin(), vec.end(), id_to_remove);
+                vec.erase(newEnd, vec.end());
+            }
+        }
     }
 }

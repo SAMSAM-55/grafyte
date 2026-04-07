@@ -115,6 +115,11 @@ void grafyte::CollisionManager::resolveAutoCollides(Scene& scene) {
 }
 
 void grafyte::CollisionManager::RebuildGrid(Scene &scene) {
+    if (built) {
+        buildGridFromDirty(scene);
+        return;
+    }
+
     m_grid.clear();
 
     for (const auto& [id, bounds] : m_collisionBounds) {
@@ -122,6 +127,8 @@ void grafyte::CollisionManager::RebuildGrid(Scene &scene) {
         const auto worldBounds = ComputeObjectWorldBounds(id, scene);
         m_grid.insert(id, worldBounds);
     }
+
+    built = true;
 }
 
 grafyte::collision::AABB grafyte::CollisionManager::ComputeObjectWorldBounds(const types::ObjectId& id, Scene& scene) const {
@@ -151,4 +158,17 @@ grafyte::collision::AABB grafyte::CollisionManager::ComputeObjectWorldBounds(con
     const float halfH = (maxY - minY) * 0.5f;
 
     return {{centerX, centerY}, halfW, halfH};
+}
+
+void grafyte::CollisionManager::buildGridFromDirty(Scene &scene) {
+    m_grid.cleanDirty(m_gridDirty);
+
+    for (const auto& id : m_gridDirty) {
+        const auto& bounds = m_collisionBounds[id];
+        if (bounds.empty()) continue;
+        const auto worldBounds = ComputeObjectWorldBounds(id, scene);
+        m_grid.insert(id, worldBounds);
+    }
+
+    m_gridDirty.clear();
 }
