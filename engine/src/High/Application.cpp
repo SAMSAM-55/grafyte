@@ -126,6 +126,8 @@ namespace grafyte
         ctx->renderer.Render(items, transforms, colors, ctx->camera);
         m_textRenderer->Render(texts, &ctx->camera);
 
+        EndFrame();
+
         /* Swap front and back buffers */
         glfwSwapBuffers(m_window);
 
@@ -156,11 +158,17 @@ namespace grafyte
         return scene;
     }
 
-    void Application::BeginFrame() {
-        InputManager::resetInputs();
+    void Application::EndFrame() const {
+        if (scene) ctx->collisions.resolveAutoCollides(*scene);
     }
 
-    void Application::computeProjection() {
+    void Application::BeginFrame() const {
+        InputManager::resetInputs();
+        ctx->collisions.reset();
+        if (scene) ctx->collisions.RebuildGrid(*scene);
+    }
+
+    void Application::computeProjection() const {
         const double aspect = static_cast<double>(m_winWidth) / m_winHeight;
         const float worldHeight = 200.0f;
         const float worldWidth = worldHeight * static_cast<float>(aspect);

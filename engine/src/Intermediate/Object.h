@@ -36,7 +36,6 @@ namespace grafyte
 		~Object();
 
 		void SetTexture(const std::string& textureSourcePath, unsigned int slot) const;
-		void SetTint(const types::Color4& t) const;
 		void SetColor(const types::Color4& c) const;
 
 		/* Actual object functions */
@@ -49,7 +48,7 @@ namespace grafyte
 
 		void AddCollisionBox(collision::AABB& b) const;
 		// void AddCollisionCircle(collision::Circle& c) const;
-		void EnableAutoCollides() const;
+		void EnableAutoCollides(const int &resolutionOrder) const;
 
 		/* Getters */
 		[[nodiscard]] types::ObjectId GetId() const {return m_id;};

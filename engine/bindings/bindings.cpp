@@ -120,10 +120,6 @@ PYBIND11_MODULE(GRAFYTE_PY_MODULE_NAME, m)
 
         .def("use_texture", &grafyte::Object::SetTexture, py::arg("texture_source_path"), py::arg("slot"))
 
-        .def("set_tint", [](const grafyte::Object& self, const float& r, const float& g, const float& b, const float& strength)
-        {
-            self.SetTint({r, g, b, strength});
-        }, py::arg("tint_r"), py::arg("tint_g"), py::arg("tint_b"), py::arg("strength"))
         .def("set_color", [](const grafyte::Object& self, const float& r, const float& g, const float& b, const float& a)
         {
             self.SetColor({r, g, b, a});
@@ -136,15 +132,19 @@ PYBIND11_MODULE(GRAFYTE_PY_MODULE_NAME, m)
             self.AddCollisionBox(box);
         }, py::arg("size_x"), py::arg("size_y"), py::arg("scale_x"), py::arg("scale_y"))
         .def("collides_with", &grafyte::Object::CollidesWith, py::arg("other"))
-        .def("is_colliding", [](const grafyte::Object& self)
+        .def("is_colliding", [](const grafyte::Object& self) -> std::vector<grafyte::collision::Hit>
         {
             auto* scene = self.GetScene();
             if (!scene) {
-                return grafyte::collision::Hit{grafyte::collision::AABB{}, grafyte::collision::AABB{}, false, grafyte::collision::Top};
+                return {
+                    grafyte::collision::Hit{
+                        grafyte::collision::AABB{}, grafyte::collision::AABB{}, false, grafyte::collision::Top
+                    }
+                };
             }
             return scene->collisions().IsColliding(self.GetId(), *scene);
         })
-        .def("enable_auto_collides", &grafyte::Object::EnableAutoCollides)
+        .def("enable_auto_collides", &grafyte::Object::EnableAutoCollides, py::arg("order"))
 
         .def("move", [](const grafyte::Object& self, const float& offset_x, const float& offset_y)
         {
@@ -156,7 +156,10 @@ PYBIND11_MODULE(GRAFYTE_PY_MODULE_NAME, m)
         }, py::arg("pos_x"), py::arg("pos_y"))
         .def("rotate", &grafyte::Object::Rotate, py::arg("angle"))
         .def("set_rotation", &grafyte::Object::SetRotation, py::arg("angle"))
-        .def("set_scale", py::overload_cast<float>(&grafyte::Object::SetScale, py::const_), py::arg("scale"))
+        .def("set_scale", [](const grafyte::Object& self, const float& scale_x, const float& scale_y)
+        {
+            self.SetScale({scale_x, scale_y});
+        }, py::arg("scale_x"), py::arg("scale_y"))
         .def("set_scale", py::overload_cast<grafyte::types::Vec2>(&grafyte::Object::SetScale, py::const_), py::arg("scale"));
 
 
@@ -213,6 +216,8 @@ PYBIND11_MODULE(GRAFYTE_PY_MODULE_NAME, m)
         }, py::arg("color_r"), py::arg("color_g"), py::arg("color_b"), py::arg("color_a"));
 
     py::class_<grafyte::InputManager>(m, "InputManager")
+    .def(py::init())
+
     // inputs
     .def_static(
         "is_key_down",

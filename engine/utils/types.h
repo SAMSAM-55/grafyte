@@ -31,7 +31,11 @@ namespace grafyte::types {
 
         Vec2 operator-(const Vec2& other) const {
             return {x - other.x, y - other.y};
-        };
+        }
+
+        bool operator==(const Vec2 & other) const {
+            return other.x == x && other.y == y;
+        }
 
         Vec2& operator-=(const Vec2& other) {
             x -= other.x;
@@ -45,6 +49,10 @@ namespace grafyte::types {
 
         Vec2 operator/(const float& a) const {
             return {x / a, y / a};
+        };
+
+        Vec2 operator-() const {
+            return {-x, -y};
         };
     };
 

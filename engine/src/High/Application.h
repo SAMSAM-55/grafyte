@@ -40,12 +40,14 @@ namespace grafyte
 
 		std::shared_ptr<Scene> makeNewScene();
 
+		void EndFrame() const;
+
 		static Application* s_appInstance;
 		std::shared_ptr<WorldContext> ctx;
 		std::shared_ptr<Scene> scene;
 	private:
-		static void BeginFrame();
-		void computeProjection();
+		void BeginFrame() const;
+		void computeProjection() const;
 
 		const std::string m_name;
 		std::unique_ptr<TextRenderer> m_textRenderer;

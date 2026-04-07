@@ -50,6 +50,11 @@ add_library(grafyte_core STATIC
         src/World/World.cpp
         src/Scene/Text/TextObject.h
         src/Scene/Text/TextObject.cpp
+        src/Physics/Collisions/CollisionSolver.cpp
+        src/Physics/Collisions/CollisionSolver.h
+        src/Physics/Collisions/CollisionSolver.h
+        src/Physics/Collisions/SpatialGrid.cpp
+        src/Physics/Collisions/SpatialGrid.h
 )
 
 target_include_directories(grafyte_core PUBLIC

@@ -22,11 +22,6 @@ namespace grafyte
 		scene->materials().upload(h);
 	}
 
-	void Object::SetTint(const types::Color4& t) const
-	{
-		if (auto scene = m_scene.lock()) scene->color(m_id) = t;
-	}
-
 	void Object::SetColor(const types::Color4& c) const
 	{
 		if (auto scene = m_scene.lock()) scene->color(m_id) = c;
@@ -37,6 +32,7 @@ namespace grafyte
 		if (!scene) return;
 
 		scene->transform(m_id).pos += offset;
+		scene->collisions().markDirty(m_id);
 		if (scene->collisions().AutoCollides(m_id))
 			scene->transform(m_id).pos += scene->collisions().PushBackOnMove(m_id, offset, *scene);
 	}
@@ -47,6 +43,7 @@ namespace grafyte
 
 		const types::Vec2 offset = pos - scene->transform(m_id).pos;
 		scene->transform(m_id).pos = pos;
+		scene->collisions().markDirty(m_id);
 		if (scene->collisions().AutoCollides(m_id))
 			scene->transform(m_id).pos += scene->collisions().PushBackOnMove(m_id, offset, *scene);
 	}
@@ -73,7 +70,10 @@ namespace grafyte
 
 	void Object::AddCollisionBox(collision::AABB& b) const
 	{
-		if (auto scene = m_scene.lock()) scene->collisions().AddCollisionBox(m_id, b);
+		if (auto scene = m_scene.lock()) {
+			scene->collisions().AddCollisionBox(m_id, b);
+			scene->collisions().markDirty(m_id);
+		}
 	}
 
 	// void Object::AddCollisionCircle(collision::Circle& c) const
@@ -81,9 +81,9 @@ namespace grafyte
 	// 	m_scene->collisions().AddCollisionCircle(m_id, c);
 	// }
 
-	void Object::EnableAutoCollides() const
+	void Object::EnableAutoCollides(const int& resolutionOrder) const
 	{
-		if (auto scene = m_scene.lock()) scene->collisions().EnableAutoCollides(m_id);
+		if (auto scene = m_scene.lock()) scene->collisions().EnableAutoCollides(m_id, resolutionOrder);
 	}
 
 	types::Vec2 Object::GetScale() const
@@ -106,13 +106,18 @@ namespace grafyte
 
 	bool Object::CollidesWith(const Object& other) const
 	{
-		if (auto scene = m_scene.lock()) return static_cast<bool>(scene->collisions().ObjectsCollides(m_id, other.GetId(), *scene));
+		if (const auto scene = m_scene.lock())
+			return static_cast<bool>(scene->collisions().ObjectsCollides(m_id, other.GetId(), *scene));
 		return false;
 	}
 
 	bool Object::IsColliding() const
 	{
-		if (auto scene = m_scene.lock()) return static_cast<bool>(scene->collisions().IsColliding(m_id, *scene));
+		if (const auto scene = m_scene.lock()) {
+			for (const auto& h: scene->collisions().IsColliding(m_id, *scene)) {
+				if (h.collision) return true;
+			}
+		}
 		return false;
 	}
 }

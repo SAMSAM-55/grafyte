@@ -4,6 +4,9 @@
 #include <stdexcept>
 #include <iostream>
 #include <ranges>
+#include <cmath>
+
+#include "Physics/Collisions/CollisionSolver.h"
 
 grafyte::collision::Hit grafyte::CollisionManager::ObjectsCollides(const types::ObjectId& A, const types::ObjectId& B, Scene& scene) {
     if (!(m_collisionBounds.contains(A) && m_collisionBounds.contains(B))) {
@@ -23,44 +26,37 @@ grafyte::collision::Hit grafyte::CollisionManager::ObjectsCollides(const types::
         for (const auto& b: BColliders)
         {
             const auto bWorld = collision::AABB{b.pos + bPos, b.width, b.height};
-            if (const auto hit = Intersects(aWorld, bWorld)) return hit;
+            if (const auto hit = CollisionSolver::Intersects(aWorld, bWorld)) return hit;
         }
     }
 
     return collision::Hit{collision::AABB{}, collision::AABB{}, false, collision::Top};
 }
 
-grafyte::collision::Hit grafyte::CollisionManager::IsColliding(const types::ObjectId& A, Scene& scene)
+std::vector<grafyte::collision::Hit> grafyte::CollisionManager::IsColliding(const types::ObjectId &A, Scene &scene)
 {
-    if (std::ranges::find(m_colliding, A) != m_colliding.end()) {
-        // This is a bit problematic as we don't know who we collided with from m_colliding.
-        // For now, let's keep it simple or re-check.
-    }
+    const auto worldBounds = ComputeObjectWorldBounds(A, scene);
+    const auto queryCandidates = m_grid.queryCandidates(worldBounds);
 
-    for (const auto& B : m_collisionBounds | std::views::keys)
+    for (const auto& B : queryCandidates)
     {
         if (B == A) continue;
 
         if (const auto hit = ObjectsCollides(A, B, scene))
         {
-            m_colliding.push_back(A);
-            m_colliding.push_back(B);
-            return hit;
+            m_colliding[A].push_back(hit);
+            m_colliding[B].push_back(hit);
         }
     }
 
-    return collision::Hit{collision::AABB{}, collision::AABB{}, false, collision::Top};
+    if (!m_colliding[A].empty()) return m_colliding[A];
+
+    return {collision::Hit{collision::AABB{}, collision::AABB{}, false, collision::Top}};
 }
 
 grafyte::types::Vec2 grafyte::CollisionManager::PushBackOnMove(const types::ObjectId& objId, const types::Vec2& v, Scene& scene)
 {
-
     if (v.x == 0 && v.y == 0) return {0.0f, 0.0f};
-
-    const float len = sqrt(v.x*v.x + v.y*v.y);
-    if (len == 0.0f) return {0.0f, 0.0f};
-
-    const types::Vec2 d = -1.0f * (v/len);
 
     if (!m_collisionBounds.contains(objId)) return {0.0f, 0.0f};
 
@@ -68,7 +64,8 @@ grafyte::types::Vec2 grafyte::CollisionManager::PushBackOnMove(const types::Obje
     const std::vector<collision::AABB> colliders = m_collisionBounds[objId];
 
     bool found = false;
-    float bestFinalT = INFINITY;
+    types::Vec2 bestTranslation{0.0f, 0.0f};
+    float bestLenSq = INFINITY;
 
     for (const auto&[id, bounds]: m_collisionBounds)
     {
@@ -77,40 +74,28 @@ grafyte::types::Vec2 grafyte::CollisionManager::PushBackOnMove(const types::Obje
             continue;
         }
 
+        if (m_autoCollides.contains(id) && m_autoCollides.contains(objId)) {
+            if (m_autoCollides.at(id) < m_autoCollides.at(objId)) {
+                const types::Vec2 opposite = PushBackOnMove(id, -v, scene);
+                if (opposite.x != 0.0f || opposite.y != 0.0f) {
+                    scene.transform(id).pos += opposite;
+                    return {0.0f, 0.0f};
+                }
+            }
+        }
+
         const types::Vec2 bPos = scene.transform(id).pos;
 
         for (const auto& A: colliders)
         {
             for (const auto& B: bounds)
             {
-                const auto worldA = collision::AABB{A.pos + aPos, A.width, A.height};
-                const auto worldB = collision::AABB{B.pos + bPos, B.width, B.height};
-
-                const types::Vec2 hA = {A.width, A.height};
-                const types::Vec2 hB = {B.width, B.height};
-
-                const types::Vec2 p = worldA.pos - worldB.pos;
-                const types::Vec2 h = hA + hB;
-
-                if (std::abs(p.x) < h.x && std::abs(p.y) < h.y)
-                {
-                    types::Vec2 t = {INFINITY, INFINITY};
-
-                    // For x
-                    if (d.x > 0) t.x = (h.x - p.x)/d.x;
-                    else if (d.x < 0) t.x = (- h.x - p.x)/d.x;
-
-                    // For y
-                    if (d.y > 0) t.y = (h.y - p.y)/d.y;
-                    else if (d.y < 0) t.y = (- h.y - p.y)/d.y;
-
-                    const float tmin = std::min(t.x, t.y);
-                    if (tmin < 0.0f) continue;
-
-                    if (const float finalT = tmin + EPSILON; finalT < bestFinalT)
-                    {
+                if (const auto translation = CollisionSolver::ComputePushBackTranslation(A, B, aPos, bPos)) {
+                    const float lenSq = translation->x * translation->x + translation->y * translation->y;
+                    if (!found || lenSq < bestLenSq) {
                         found = true;
-                        bestFinalT = finalT;
+                        bestLenSq = lenSq;
+                        bestTranslation = *translation;
                     }
                 }
             }
@@ -120,57 +105,70 @@ grafyte::types::Vec2 grafyte::CollisionManager::PushBackOnMove(const types::Obje
         return {0, 0};
     }
 
-    const types::Vec2 result = d * bestFinalT;
-    m_colliding.push_back(objId);
-    return result;
+    return bestTranslation;
 }
 
-grafyte::collision::Hit grafyte::CollisionManager::Intersects(const collision::AABB& a, const collision::AABB& b) {
-    const float dx = a.pos.x - b.pos.x;
-    const float dy = a.pos.y - b.pos.y;
-    const float combinedWidth = a.width + b.width;
-    const float combinedHeight = a.height + b.height;
+void grafyte::CollisionManager::resolveAutoCollides(Scene& scene) {
+    for (const auto& id: m_autoCollides | std::views::keys) {
+        PushBackOnMove(id, {0.0f, 0.0f}, scene);
+    }
+}
 
-    if (std::abs(dx) <= combinedWidth && std::abs(dy) <= combinedHeight) {
-        const float overlapX = combinedWidth - std::abs(dx);
-        const float overlapY = combinedHeight - std::abs(dy);
-
-        collision::Direction dir;
-        if (overlapX < overlapY) {
-            dir = (dx > 0) ? collision::Right : collision::Left;
-        } else {
-            dir = (dy > 0) ? collision::Bottom : collision::Top;
-        }
-
-        return {a, b, true, dir};
+void grafyte::CollisionManager::RebuildGrid(Scene &scene) {
+    if (built) {
+        buildGridFromDirty(scene);
+        return;
     }
 
-    return {a, b, false, collision::Top};
+    m_grid.clear();
+
+    for (const auto& [id, bounds] : m_collisionBounds) {
+        if (bounds.empty()) continue;
+        const auto worldBounds = ComputeObjectWorldBounds(id, scene);
+        m_grid.insert(id, worldBounds);
+    }
+
+    built = true;
 }
 
-// bool grafyte::CollisionManager::Intersects(const collision::AABB &a, const collision::Circle &b) {
-//     const types::Vec2 bl = {a.pos.x - a.width, a.pos.y - a.height};
-//     const types::Vec2 tr = {a.pos.x + a.width, a.pos.y + a.height};
-//
-//     const types::Vec2 pt = {clampf(b.pos.x, bl.x, tr.x), clampf(b.pos.y, bl.y, tr.y)};
-//
-//     const float dx = pt.x - b.pos.x;
-//     const float dy = pt.y - b.pos.y;
-//     // Avoid using square root (as we don't need it here)
-//     return (dx * dx + dy * dy) <= (b.radius*b.radius);
-// }
-//
-// bool grafyte::CollisionManager::Intersects(const collision::Circle &a, const collision::Circle &b) {
-//     const float dx = b.pos.x - a.pos.x;
-//     const float dy = b.pos.y - a.pos.y;
-//     const float r = a.radius + b.radius;
-//
-//     return (dx * dx + dy * dy) <= (r * r);
-// }
-//
-// bool grafyte::CollisionManager::Intersects(const collision::Collider& a, const collision::Collider& b) const
-// {
-//     return std::visit([](auto const& lhs, auto const& rhs) -> bool {
-//         return Intersects(lhs, rhs);
-//     }, a, b);
-// }
+grafyte::collision::AABB grafyte::CollisionManager::ComputeObjectWorldBounds(const types::ObjectId& id, Scene& scene) const {
+    const auto& colliders = m_collisionBounds.at(id);
+    const auto objPos = scene.transform(id).pos;
+
+    float minX = INFINITY;
+    float minY = INFINITY;
+    float maxX = -INFINITY;
+    float maxY = -INFINITY;
+
+    for (const auto& c : colliders) {
+        const float cMinX = objPos.x + c.pos.x - c.width;
+        const float cMaxX = objPos.x + c.pos.x + c.width;
+        const float cMinY = objPos.y + c.pos.y - c.height;
+        const float cMaxY = objPos.y + c.pos.y + c.height;
+
+        minX = std::min(minX, cMinX);
+        minY = std::min(minY, cMinY);
+        maxX = std::max(maxX, cMaxX);
+        maxY = std::max(maxY, cMaxY);
+    }
+
+    const float centerX = (minX + maxX) * 0.5f;
+    const float centerY = (minY + maxY) * 0.5f;
+    const float halfW = (maxX - minX) * 0.5f;
+    const float halfH = (maxY - minY) * 0.5f;
+
+    return {{centerX, centerY}, halfW, halfH};
+}
+
+void grafyte::CollisionManager::buildGridFromDirty(Scene &scene) {
+    m_grid.cleanDirty(m_gridDirty);
+
+    for (const auto& id : m_gridDirty) {
+        const auto& bounds = m_collisionBounds[id];
+        if (bounds.empty()) continue;
+        const auto worldBounds = ComputeObjectWorldBounds(id, scene);
+        m_grid.insert(id, worldBounds);
+    }
+
+    m_gridDirty.clear();
+}
