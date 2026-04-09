@@ -53,6 +53,8 @@ namespace grafyte {
             m_items.reserve(m_renderables.size());
 
             for (const auto& [id, rc] : m_renderables) {
+                if (!inCamera(id, rc.mesh)) continue;
+
                 m_items.push_back(types::DrawItem{
                     .objectId = id,
                     .mesh = rc.mesh,
@@ -138,4 +140,15 @@ namespace grafyte {
             glm::scale(glm::mat4(1.0f), glm::vec3(m_ctx->camera.zoom)) *
             glm::translate(glm::mat4(1.0f), -glm::vec3(m_ctx->camera.pos.x, m_ctx->camera.pos.y, 0.0f));
         }
+
+    bool Scene::inCamera(const types::ObjectId& id, const types::MeshHandle& mesh)
+    {
+        const types::Vec2& pos = transform(id).pos;
+        const types::Vec2& size = m_ctx->meshes.asset(mesh)->scale;
+
+        return pos.x - size.x >= m_ctx->camera.left
+        || pos.x + size.x <= m_ctx->camera.right
+        || pos.y - size.y >= m_ctx->camera.bottom
+        || pos.y + size.y <= m_ctx->camera.top;
+    }
 }

@@ -59,6 +59,7 @@ namespace grafyte {
         const Camera& camera() const {return m_ctx->camera;};
 
         void computeCamera(const float& worldWidth, const float& worldHeight, const float& dt);
+        bool inCamera(const types::ObjectId& id, const types::MeshHandle& mesh);
 
         bool itemsDirty = false;
     private:
