@@ -5,6 +5,8 @@
 #include <map>
 #include <ranges>
 
+#include "glm/gtc/matrix_transform.hpp"
+
 namespace grafyte {
     Scene::Scene(std::shared_ptr<WorldContext> ctx)
         : m_ctx(std::move(ctx))
@@ -107,4 +109,33 @@ namespace grafyte {
         m_items.clear();
         m_texts.clear();
     }
+
+    void Scene::computeCamera(const float& worldWidth, const float& worldHeight, const float& dt)
+    {
+        m_ctx->camera.right =   worldWidth  / 2.0f;
+        m_ctx->camera.left =   -worldWidth  / 2.0f;
+        m_ctx->camera.top =     worldHeight / 2.0f;
+        m_ctx->camera.bottom = -worldHeight / 2.0f;
+
+        m_ctx->camera.projection = glm::ortho(
+            m_ctx->camera.left,
+            m_ctx->camera.right,
+            m_ctx->camera.bottom,
+            m_ctx->camera.top,
+            -1.0f, 1.0f
+            );
+
+        if (m_ctx->camera.followObject != -1)
+        {
+            const float t = 1.0f - std::exp(-m_ctx->camera.followSpeed * dt);
+            const auto [followX, followY] = transform(m_ctx->camera.followObject).pos + m_ctx->camera.followOffset;
+
+            m_ctx->camera.pos.x = std::lerp(m_ctx->camera.pos.x, followX, t);
+            m_ctx->camera.pos.y = std::lerp(m_ctx->camera.pos.y, followY, t);
+        }
+
+        m_ctx->camera.view =
+            glm::scale(glm::mat4(1.0f), glm::vec3(m_ctx->camera.zoom)) *
+            glm::translate(glm::mat4(1.0f), -glm::vec3(m_ctx->camera.pos.x, m_ctx->camera.pos.y, 0.0f));
+        }
 }

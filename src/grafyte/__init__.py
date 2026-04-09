@@ -6,6 +6,7 @@ from __grafyte_internal import Key, InputTrigger, Direction
 from __grafyte_internal import Object as _NativeObject
 from __grafyte_internal import Scene as _NativeScene
 from __grafyte_internal import TextObject as _NativeTextObject
+from __grafyte_internal import Camera as _NativeCamera
 
 from .__class_utils import _KeyAccessor, _KeyPressedAccessor, _KeyReleasedAccessor, Vec2Proxy, ColorProxy, TintProxy, RotProxy
 from .__converters import *
@@ -41,6 +42,9 @@ class Object:
             checker=self.__ensure_textured,
             name="tint",
         )
+
+    def _get_native(self) -> _NativeObject:
+        return self.__native
 
     def _get_pos(self):
         return self.__native.pos
@@ -223,6 +227,52 @@ class TextObject:
         if v is self.__color_proxy: return
         self._set_color(v)
 
+class Camera:
+    def __init__(self, native_camera: _NativeCamera):
+        self.__native = native_camera
+        self.__pos_proxy = Vec2Proxy(
+            getter=(),
+            setter= self._set_pos
+        )
+
+    def _set_pos(self, value: Vec2Like):
+        n_value = ensure_vec2f("Object.__set_pos(value=...)", value)
+        self.__native.move_to(*n_value)
+
+    @property
+    def pos(self):
+        raise AttributeError("Camera.pos is write-only")
+
+    @pos.setter
+    def pos(self, v: Vec2Like):
+        if v is self.__pos_proxy: return
+        self._set_pos(v)
+
+    @property
+    def follow(self):
+        raise AttributeError("Camera.follow is write-only")
+
+    @follow.setter
+    def follow(self, v: Object):
+        self.__native.follow(v._get_native())
+
+    @property
+    def follow_offset(self):
+        raise AttributeError("Camera.follow_offset is write-only")
+
+    @follow_offset.setter
+    def follow_offset(self, v: Vec2Like):
+        n_v = ensure_vec2f("Camera.follow_offset = ...", v)
+        self.__native.follow_offset(*n_v)
+
+    @property
+    def zoom(self):
+        raise AttributeError("Camera.zoom is write-only")
+
+    @zoom.setter
+    def zoom(self, v: float):
+        self.__native.zoom(v)
+
 class Scene:
     def __init__(self, native_scene: _NativeScene):
         self.__native = native_scene
@@ -252,6 +302,10 @@ class Scene:
 
         native_obj = self.__native.spawn_text_object(*n_pos, text, scale)
         return TextObject(native_obj)
+
+    @property
+    def camera(self) -> Camera:
+        return Camera(self.__native.get_camera())
 
 class InputManager(_NativeInputManager):
     def __init__(self):

@@ -4,6 +4,7 @@
 #include <utility>
 
 #include <glm/ext/matrix_clip_space.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 #include "GlContextState.h"
 
 namespace grafyte
@@ -116,7 +117,7 @@ namespace grafyte
         glViewport(0, 0, m_winWidth, m_winHeight);
 
         // Render
-        computeProjection();
+        computeCamera();
         std::vector<types::TextData> texts;
         auto& transforms = scene->GetTransforms();
         auto& colors = scene->GetColors();
@@ -168,12 +169,12 @@ namespace grafyte
         if (scene) ctx->collisions.RebuildGrid(*scene);
     }
 
-    void Application::computeProjection() const {
+    void Application::computeCamera() const {
         const double aspect = static_cast<double>(m_winWidth) / m_winHeight;
-        const float worldHeight = 200.0f;
+        constexpr float worldHeight = 200.0f;
         const float worldWidth = worldHeight * static_cast<float>(aspect);
 
-        ctx->camera.projection = glm::ortho(-worldWidth / 2.0f, worldWidth / 2.0f, -worldHeight / 2.0f, worldHeight / 2.0f, -1.0f, 1.0f);
+        scene->computeCamera(worldWidth, worldHeight, m_deltaTime);
     }
 }
 
