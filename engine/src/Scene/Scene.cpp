@@ -5,6 +5,8 @@
 #include <map>
 #include <ranges>
 
+#include "glm/gtc/matrix_transform.hpp"
+
 namespace grafyte {
     Scene::Scene(std::shared_ptr<WorldContext> ctx)
         : m_ctx(std::move(ctx))
@@ -51,6 +53,8 @@ namespace grafyte {
             m_items.reserve(m_renderables.size());
 
             for (const auto& [id, rc] : m_renderables) {
+                if (!inCamera(id, rc.mesh)) continue;
+
                 m_items.push_back(types::DrawItem{
                     .objectId = id,
                     .mesh = rc.mesh,
@@ -106,5 +110,45 @@ namespace grafyte {
         m_colors.clear();
         m_items.clear();
         m_texts.clear();
+    }
+
+    void Scene::computeCamera(const float& worldWidth, const float& worldHeight, const float& dt)
+    {
+        m_ctx->camera.right =   worldWidth  / 2.0f;
+        m_ctx->camera.left =   -worldWidth  / 2.0f;
+        m_ctx->camera.top =     worldHeight / 2.0f;
+        m_ctx->camera.bottom = -worldHeight / 2.0f;
+
+        m_ctx->camera.projection = glm::ortho(
+            m_ctx->camera.left,
+            m_ctx->camera.right,
+            m_ctx->camera.bottom,
+            m_ctx->camera.top,
+            -1.0f, 1.0f
+            );
+
+        if (m_ctx->camera.followObject != -1)
+        {
+            const float t = 1.0f - std::exp(-m_ctx->camera.followSpeed * dt);
+            const auto [followX, followY] = transform(m_ctx->camera.followObject).pos + m_ctx->camera.followOffset;
+
+            m_ctx->camera.pos.x = std::lerp(m_ctx->camera.pos.x, followX, t);
+            m_ctx->camera.pos.y = std::lerp(m_ctx->camera.pos.y, followY, t);
+        }
+
+        m_ctx->camera.view =
+            glm::scale(glm::mat4(1.0f), glm::vec3(m_ctx->camera.zoom)) *
+            glm::translate(glm::mat4(1.0f), -glm::vec3(m_ctx->camera.pos.x, m_ctx->camera.pos.y, 0.0f));
+        }
+
+    bool Scene::inCamera(const types::ObjectId& id, const types::MeshHandle& mesh)
+    {
+        const types::Vec2& pos = transform(id).pos;
+        const types::Vec2& size = m_ctx->meshes.asset(mesh)->scale;
+
+        return pos.x - size.x >= m_ctx->camera.left
+        || pos.x + size.x <= m_ctx->camera.right
+        || pos.y - size.y >= m_ctx->camera.bottom
+        || pos.y + size.y <= m_ctx->camera.top;
     }
 }

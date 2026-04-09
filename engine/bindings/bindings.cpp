@@ -113,6 +113,26 @@ PYBIND11_MODULE(GRAFYTE_PY_MODULE_NAME, m)
         .value("Release", grafyte::Release)
         .export_values();
 
+    py::class_<grafyte::Camera, std::shared_ptr<grafyte::Camera>>(m, "Camera")
+        .def(py::init<>())
+        .def("move", [](grafyte::Camera& self, const float& offset_x, const float& offset_y)
+        {
+            self.move({offset_x, offset_y});
+        }, py::arg("offset_y"), py::arg("offset_x"))
+        .def("move_to", [](grafyte::Camera& self, const float& pos_x, const float& pos_y)
+            {
+                self.moveTo({pos_x, pos_y});
+            }, py::arg("pos_y"), py::arg("pos_x"))
+        .def("zoom", &grafyte::Camera::setZoom, py::arg("zoom"))
+        .def("follow", [](grafyte::Camera& self, const grafyte::Object& object)
+        {
+            self.follow(object.GetId());
+        }, py::arg("object"))
+        .def("follow_offset", [](grafyte::Camera& self, const float& offset_x, const float& offset_y)
+        {
+            self.setFollowOffset({offset_x, offset_y});
+        }, py::arg("offset_y"), py::arg("offset_x"));
+
     py::class_<grafyte::Object, std::shared_ptr<grafyte::Object>>(m, "Object")
         .def_property_readonly("scale", &grafyte::Object::GetScale)
         .def_property_readonly("pos", &grafyte::Object::GetPosition)
@@ -205,7 +225,10 @@ PYBIND11_MODULE(GRAFYTE_PY_MODULE_NAME, m)
             const float scale)
         {
             return self.spawnTextObject({x, y}, text, scale);
-        }, py::arg("pos_x"), py::arg("pos_y"), py::arg("text"), py::arg("scale"));
+        }, py::arg("pos_x"), py::arg("pos_y"), py::arg("text"), py::arg("scale"))
+        .def("get_camera",
+        py::overload_cast<>(&grafyte::Scene::camera),
+        py::return_value_policy::reference);
 
     py::class_<grafyte::TextObject, std::shared_ptr<grafyte::TextObject>>(m, "TextObject")
         .def("set_text", &grafyte::TextObject::SetText, py::arg("text"))

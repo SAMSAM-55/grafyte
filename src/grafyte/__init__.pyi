@@ -14,6 +14,7 @@ from __grafyte_internal import Scene as _NativeScene
 from __grafyte_internal import Direction as _NativeDirection
 from __grafyte_internal import AABB as _NativeAABB
 from __grafyte_internal import Hit as _NativeHit
+from __grafyte_internal import Camera as _NativeCamera
 
 class Key(_NativeKey): ...
 class InputTrigger(_NativeInputTrigger): ...
@@ -81,6 +82,23 @@ class RotProxy:
     def __isub__(self, other: float): ...
     def __imul__(self, other: float): ...
     def __itruediv__(self, other: float): ...
+
+class Camera:
+    __native: _NativeCamera
+    __pos_proxy: Vec2Proxy
+
+    def __init__(self): ...
+
+    @pos.setter
+    def pos(self, v: Vec2Like): ...
+
+    @follow.setter
+    def follow(self, v: Object): ...
+    @follow_offset.setter
+    def follow_offset(self, v: Vec2Like): ...
+
+    @zoom.setter
+    def zoom(self, v: float): ...
 
 class InputManager(_NativeInputManager):
     key: _KeyAccessor
@@ -186,7 +204,7 @@ class Application:
 class Scene:
     __native: _NativeScene
 
-    def __init__(self, native: _NativeScene): ...
+    def __init__(self, native_camera: _NativeCamera): ...
 
     def spawn_object(self,
                      pos: Vec2Like,
@@ -196,6 +214,9 @@ class Scene:
                      shader_source_path: str = "") -> Object: ...
 
     def spawn_text_object(self, pos: Vec2Like, text: str, scale: float = 12) -> TextObject: ...
+
+    @property
+    def camera(self) -> Camera: ...
 
 class TextObject:
     __native: _NativeTextObject
