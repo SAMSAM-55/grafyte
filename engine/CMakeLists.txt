@@ -55,6 +55,9 @@ add_library(grafyte_core STATIC
         src/Physics/Collisions/CollisionSolver.h
         src/Physics/Collisions/SpatialGrid.cpp
         src/Physics/Collisions/SpatialGrid.h
+        src/UI/UIManager.cpp
+        src/UI/UIManager.h
+        src/UI/UIManager.h
 )
 
 target_include_directories(grafyte_core PUBLIC

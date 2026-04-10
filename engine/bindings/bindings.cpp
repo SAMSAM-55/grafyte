@@ -95,6 +95,14 @@ PYBIND11_MODULE(GRAFYTE_PY_MODULE_NAME, m)
         .value("Left", grafyte::collision::Direction::Left)
         .export_values();
 
+    py::enum_<grafyte::ui::text::Anchor>(m, "Anchor")
+        .value("TopLeft", grafyte::ui::text::Anchor::TopLeft)
+        .value("BottomLeft", grafyte::ui::text::Anchor::BottomLeft)
+        .value("TopRight", grafyte::ui::text::Anchor::TopRight)
+        .value("BottomRight", grafyte::ui::text::Anchor::BottomRight)
+        .value("Center", grafyte::ui::text::Anchor::Center)
+        .export_values();
+
     py::class_<grafyte::collision::AABB>(m, "AABB")
         .def_readonly("pos", &grafyte::collision::AABB::pos)
         .def_readonly("width", &grafyte::collision::AABB::width)
@@ -276,6 +284,32 @@ PYBIND11_MODULE(GRAFYTE_PY_MODULE_NAME, m)
         "Return current input state"
     );
 
+    py::class_<grafyte::UIManager, std::shared_ptr<grafyte::UIManager>>(m, "UIManager")
+        .def("add_text", [](grafyte::UIManager& self,
+                                    const float pos_x, const float pos_y,
+                                    const std::string& text,
+                                    const float scale,
+                                    const grafyte::ui::text::Anchor& anchor)
+        {
+            return self.addText({pos_x, pos_y}, text, scale, anchor);
+        }, py::arg("pos_x"), py::arg("pos_y"), py::arg("text"), py::arg("scale"), py::arg("anchor"))
+        .def("remove_text", [](grafyte::UIManager& self, const grafyte::ui::text::Text& text)
+        {
+            self.removeText(text.getId());
+        }, py::arg("text"));
+
+    py::class_<grafyte::ui::text::Text, std::shared_ptr<grafyte::ui::text::Text>>(m, "Text")
+        .def("set_text", &grafyte::ui::text::Text::setText, py::arg("text"))
+        .def("set_color", [](grafyte::ui::text::Text& self,
+                                     const float color_r,
+                                     const float color_g,
+                                     const float color_b,
+                                     const float color_a)
+        {
+            self.setColor({color_r, color_g, color_b, color_a});
+        }, py::arg("color_r"), py::arg("color_g"), py::arg("color_b"), py::arg("color_a"))
+        .def("set_scale", &grafyte::ui::text::Text::setScale, py::arg("scale"));
+
     py::class_<grafyte::Application>(m, "Application")
         .def_property_readonly_static("input", [](const py::object& self) {
             return static_cast<grafyte::InputManager *>(nullptr);
@@ -325,7 +359,14 @@ PYBIND11_MODULE(GRAFYTE_PY_MODULE_NAME, m)
         .def(
             "make_new_scene",
             &grafyte::Application::makeNewScene,
-            "Sets the current renderer used by the application"
+            "Creates a new Scene"
+        )
+
+        // make_new_ui()
+        .def(
+            "make_new_ui",
+            &grafyte::Application::makeNewUI,
+            "Creates a new UI Manager"
         )
 
         // render()

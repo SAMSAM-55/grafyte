@@ -10,13 +10,13 @@ namespace grafyte {
 
     types::MeshAsset * MeshManager::asset(const types::MeshHandle& h) {
         const auto it = m_assets.find(h);
-        if (it == m_assets.end()) throw std::runtime_error("[Mesh Manager] Invalid MeshHandle provided.");
+        if (it == m_assets.end()) throw std::runtime_error("[Mesh Manager](asset) Invalid MeshHandle provided.");
         return it->second.get();
     }
 
     types::Mesh * MeshManager::mesh(const types::MeshHandle &h) {
         const auto it = m_meshes.find(h);
-        if (it == m_meshes.end()) throw std::runtime_error("[Mesh Manager] Invalid MeshHandle provided.");
+        if (it == m_meshes.end()) throw std::runtime_error("[Mesh Manager](mesh) Invalid MeshHandle provided.");
         return &it->second;
     }
 

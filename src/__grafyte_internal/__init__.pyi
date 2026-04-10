@@ -58,6 +58,13 @@ class Direction(IntEnum):
     Right = 2
     Left = 3
 
+class Anchor(IntEnum):
+    TopLeft = 0
+    TopRight = 1
+    BottomLeft = 2
+    BottomRight = 3
+    Center = 4
+
 class AABB:
     pos: Vec2
     width: float
@@ -96,6 +103,21 @@ class InputManager:
     @staticmethod
     def is_action_active(action: str) -> bool: ...
 
+class Text:
+    def set_text(self, text: str) -> None: ...
+    def set_color(self, color_r: float, color_g: float, color_b: float, color_a: float) -> None: ...
+    def set_scale(self, scale: float) -> None: ...
+
+class UIManager:
+    def add_text(self,
+                 pos_x: float,
+                 pos_y: float,
+                 text: str,
+                 scale: float = 12,
+                 anchor: Anchor = Anchor.TopLeft) -> Text: ...
+
+    def remove_text(self, text: Text) -> None: ...
+
 class Application:
     input: InputManager
 
@@ -106,6 +128,7 @@ class Application:
     def get_now(self) -> float: ...
     def get_delta_time(self) -> float: ...
     def make_new_scene(self) -> Scene: ...
+    def make_new_ui(self) -> UIManager: ...
     def render(self) -> None: ...
     def _native_add_text(self, text:str, scale: float, pos_x: float, pos_y: float) -> int: ...
     def set_text(self, id: int, text: str): ...

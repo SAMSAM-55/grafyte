@@ -1,14 +1,19 @@
 from __future__ import annotations
 
+import inspect
+from pathlib import Path
+
 from __grafyte_internal import Application as _NativeApplication
 from __grafyte_internal import InputManager as _NativeInputManager
-from __grafyte_internal import Key, InputTrigger, Direction
+from __grafyte_internal import Key, InputTrigger, Direction, Anchor
 from __grafyte_internal import Object as _NativeObject
 from __grafyte_internal import Scene as _NativeScene
 from __grafyte_internal import TextObject as _NativeTextObject
 from __grafyte_internal import Camera as _NativeCamera
+from __grafyte_internal import UIManager as _NativeUIManager
+from __grafyte_internal import Text as _NativeText
 
-from .__class_utils import _KeyAccessor, _KeyPressedAccessor, _KeyReleasedAccessor, Vec2Proxy, ColorProxy, TintProxy, RotProxy
+from .__class_utils import _KeyAccessor, _KeyPressedAccessor, _KeyReleasedAccessor, Vec2Proxy, ColorProxy, TintProxy, RotProxy, AssetResolver
 from .__converters import *
 
 
@@ -193,14 +198,16 @@ class TextObject:
             return self.__color
 
     def _set_color(self, value: Color | tuple[int, int, int, float], a: float = 1):
-        if isinstance(value, tuple) and len(value) == 4:
+        if isinstance(value, tuple) and len(value) == 2 and isinstance(value[0], (tuple, list)):
+            color, a = value[0], float(value[1])
+        elif isinstance(value, tuple) and len(value) == 4:
             color, a = value[:3], float(value[3])
         else:
             color = value
 
         n_color = ensure_color_normalize("TextObject.set_color(color=...)", color)
         self.__native.set_color(*n_color, a)
-        self.__color = (*ensure_color("TextObject.set_color(color=...)", color), float(a))
+        self.__color = (*n_color, float(a))
 
     @property
     def text(self):
@@ -226,6 +233,75 @@ class TextObject:
     def color(self, v: Color | tuple[int, int, int, float]):
         if v is self.__color_proxy: return
         self._set_color(v)
+
+class Text:
+    def __init__(self, native_text: _NativeText):
+        self.__native = native_text
+        self.__color = (255, 255, 255, 1.0)
+        self.__color_proxy = ColorProxy(
+            getter=self._get_color,
+            setter=self._set_color,
+        )
+
+    def _get_color(self):
+        try:
+            return self.__native.color
+        except AttributeError:
+            return self.__color
+
+    def _set_color(self, value: Color | tuple[int, int, int, float], a: float = 1):
+        if isinstance(value, tuple) and len(value) == 2 and isinstance(value[0], (tuple, list)):
+            color, a = value[0], float(value[1])
+        elif isinstance(value, tuple) and len(value) == 4:
+            color, a = value[:3], float(value[3])
+        else:
+            color = value
+
+        n_color = ensure_color_normalize("Text.set_color(color=...)", color)
+        self.__native.set_color(*n_color, a)
+        self.__color = (*n_color, float(a))
+
+    @property
+    def text(self):
+        raise AttributeError("Text.text is write-only")
+
+    @text.setter
+    def text(self, value: str):
+        self.__native.set_text(value)
+
+    @property
+    def scale(self):
+        raise AttributeError("Text.scale is write-only")
+
+    @scale.setter
+    def scale(self, value: float):
+        self.__native.set_scale(value)
+
+    @property
+    def color(self):
+        return self.__color_proxy
+
+    @color.setter
+    def color(self, v: Color | tuple[int, int, int, float]):
+        if v is self.__color_proxy: return
+        self._set_color(v)
+
+    def _get_native(self) -> _NativeText: return self.__native
+
+class UIManager:
+    def __init__(self, native_ui_manager: _NativeUIManager):
+        self.__native = native_ui_manager
+
+    def add_text(self,
+                 pos: Vec2Like,
+                 text: str,
+                 scale: float = 12,
+                 anchor: Anchor = Anchor.TopLeft) -> Text:
+        n_pos = ensure_vec2f("UIManager.add_text(pos=...)", pos)
+        return Text(self.__native.add_text(*n_pos, text, scale, anchor))
+
+    def remove_text(self, text: Text) -> None:
+        self.__native.remove_text(text._get_native())
 
 class Camera:
     def __init__(self, native_camera: _NativeCamera):
@@ -331,8 +407,17 @@ class Application(_NativeApplication):
         native_scene = super().make_new_scene()
         return Scene(native_scene)
 
-    def __init__(self, name: str, window_dimensions: Vec2Like):
-        super().__init__(name, "@embed/Fonts/Base")
+    def make_new_ui(self) -> UIManager:
+        native_ui = super().make_new_ui()
+        return UIManager(native_ui)
+
+    def __init__(self, name: str, window_dimensions: Vec2Like, font_path: str = "@embed/Fonts/Base"):
+        # We need to resolve the path of the script to allow for relative font import
+        frame = inspect.stack()[1]
+        called = Path(frame.filename).resolve().parent
+        resolver = AssetResolver(called)
+
+        super().__init__(name, resolver.resolve(font_path))
         n_window_dimensions = ensure_vec2i("Application(window_dimensions=...)", window_dimensions)
         self.__input = InputManager()
         super().init(*n_window_dimensions)

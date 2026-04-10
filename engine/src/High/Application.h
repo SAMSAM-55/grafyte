@@ -39,12 +39,14 @@ namespace grafyte
 		void setClearColor(float r, float g, float b, float a);
 
 		std::shared_ptr<Scene> makeNewScene();
+		std::shared_ptr<UIManager> makeNewUI();
 
 		void EndFrame() const;
 
 		static Application* s_appInstance;
 		std::shared_ptr<WorldContext> ctx;
 		std::shared_ptr<Scene> scene;
+		std::shared_ptr<UIManager> ui;
 	private:
 		void BeginFrame() const;
 		void computeCamera() const;

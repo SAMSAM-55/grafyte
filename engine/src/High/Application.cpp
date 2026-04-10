@@ -12,7 +12,7 @@ namespace grafyte
     Application* Application::s_appInstance = nullptr;
 
     Application::Application(std::string  name, std::string font)
-        : scene(nullptr), m_name(std::move(name)), m_textRenderer(nullptr),
+        : scene(nullptr), ui(nullptr), m_name(std::move(name)), m_textRenderer(nullptr),
           m_window(nullptr), m_winWidth(0), m_winHeight(0), m_clearColor({0, 0, 0, 0}),
           m_font(std::move(font))
     {
@@ -65,7 +65,7 @@ namespace grafyte
         InputManager::Init();
         ctx = std::make_shared<WorldContext>();
         ctx->init();
-        m_textRenderer = std::make_unique<TextRenderer>(m_font, 32);
+        m_textRenderer = std::make_unique<TextRenderer>(m_font, 64);
         m_textRenderer->SetDpi({96.0f, 96.0f});
         glfwSetKeyCallback(m_window, InputManager::on_key);
         glfwSwapInterval(1);
@@ -118,14 +118,16 @@ namespace grafyte
 
         // Render
         computeCamera();
-        std::vector<types::TextData> texts;
+        std::vector<types::TextData> textObjects;
+        std::vector<ui::text::Text> texts;
         auto& transforms = scene->GetTransforms();
         auto& colors = scene->GetColors();
         const auto& items = scene->getBatchedRenderList();
-        scene->GetTextRenderList(texts);
+        scene->GetTextRenderList(textObjects);
+        ui->getTexts(texts);
 
         ctx->renderer.Render(items, transforms, colors, ctx->camera);
-        m_textRenderer->Render(texts, &ctx->camera);
+        m_textRenderer->render(textObjects, texts, &ctx->camera, {m_winWidth * 1.0f, m_winHeight * 1.0f});
 
         EndFrame();
 
@@ -141,9 +143,7 @@ namespace grafyte
 	}
 
     std::shared_ptr<Scene> Application::makeNewScene() {
-        if (scene) {
-            scene->clear();
-        }
+        if (scene) scene->clear();
 
         // Ensure the context exists and is initialized
         if (!ctx) {
@@ -157,6 +157,23 @@ namespace grafyte
 
         scene = std::make_shared<Scene>(ctx);
         return scene;
+    }
+
+    std::shared_ptr<UIManager> Application::makeNewUI()
+    {
+        if (ui) ui->clear();
+
+        if (!ctx) {
+            ctx = std::make_shared<WorldContext>();
+            ctx->init();
+        } else {
+            ctx->meshes.clear();
+            ctx->materials.clear();
+            ctx->init(); // Re-init default textures if needed
+        }
+
+        ui = std::make_shared<UIManager>(ctx);
+        return ui;
     }
 
     void Application::EndFrame() const {

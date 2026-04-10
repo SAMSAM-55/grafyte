@@ -27,9 +27,12 @@ namespace grafyte
 
         FT_Set_Pixel_Sizes(face, 0, pixelSize);
 
-        font.atlasWidth = 1024;
-        font.atlasHeight = 1024;
+        font.atlasWidth = 2048;
+        font.atlasHeight = 2048;
         font.bakedRes = pixelSize;
+        font.ascent = face->size->metrics.ascender >> 6;
+        font.descent = face->size->metrics.descender >> 6;
+        font.lineHeight = face->size->metrics.height >> 6;
         std::vector<unsigned char> pixels(font.atlasWidth * font.atlasHeight, 0);
 
         int xOffset = 0;
@@ -131,9 +134,9 @@ namespace grafyte
     }
 
     void TextRenderer::DrawText(const std::string& text,
-        float x, float y,
-        float scale,
-        const glm::vec4& color,
+        float x, const float y,
+        const float scale,
+        const types::Color4& color,
         const types::Vec2& windowDimensions) const {
 
         const float finalScale = Font::TextScaleFromPt(scale, m_dpi.x, font.bakedRes);
@@ -146,7 +149,7 @@ namespace grafyte
         const glm::mat4 mvp = uiProj * uiView;
 
         shader.Bind();
-        shader.SetUniform4f("u_TextColor", color.r, color.g, color.b, color.a);
+        shader.SetUniform4f("u_TextColor", color.x, color.y, color.z, color.w);
         shader.SetUniformMat4f("u_MVP", mvp);
 
         glActiveTexture(GL_TEXTURE0);
@@ -185,8 +188,9 @@ namespace grafyte
         }
     }
 
-    void TextRenderer::DrawTextObject(const ::std::string &text, float x, float y, float scale, const types::Color4 & color,
-                                      Camera *camera
+    void TextRenderer::DrawTextObject(const ::std::string &text, float x, const float y, const float scale,
+                                      const types::Color4 & color,
+                                      const Camera *camera
     ) const {
 
         const glm::mat4 mvp = camera->projection * camera->view;
@@ -231,12 +235,11 @@ namespace grafyte
         }
     }
 
-    void TextRenderer::Render(const std::vector<types::TextData>& renderList, Camera* camera) const
+    void TextRenderer::RenderTextObjects(const std::vector<types::TextData>& renderList, Camera* camera) const
     {
         for (const auto& text: renderList)
         {
             const float finalScale = Font::TextScaleFromPt(text.transform.scale.x, m_dpi.x, font.bakedRes);
-            const float width = MeasureTextWidth(text.text, finalScale);
             DrawTextObject(
                 text.text,
                 text.transform.pos.x,
@@ -248,6 +251,22 @@ namespace grafyte
         }
     }
 
+    void TextRenderer::RenderTexts(const std::vector<ui::text::Text>& texts, const types::Vec2& windowDimensions) const
+    {
+        for (const auto& text: texts)
+        {
+            const types::Vec2 finalPos = getAnchoredPosition(text.pos, windowDimensions, text.anchor, text.text, text.scale);
+            DrawText(text.text, finalPos.x, finalPos.y, text.scale, text.color, windowDimensions);
+        }
+    }
+
+    void TextRenderer::render(const std::vector<types::TextData>& objects, const std::vector<ui::text::Text>& texts,
+                              Camera* camera, const types::Vec2& windowDimensions) const
+    {
+        RenderTextObjects(objects, camera);
+        RenderTexts(texts, windowDimensions);
+    }
+
     void TextRenderer::InitFaceFromSource(const std::string &idOrPath, const FT_Library& library, FT_Face* face) {
         const bool is_embedded = (
             idOrPath == "@embed/Font/Default"
@@ -257,15 +276,55 @@ namespace grafyte
             );
 
         if (is_embedded) {
-            if (const auto [data, size] = grafyte::embedded::baseFont;
+            if (const auto [data, size] = embedded::baseFont;
                 FT_New_Memory_Face(library, data, size, 0, face)) {
                 throw std::runtime_error("[Freetype Face] Could not initialize the freetype face");
             }
             return;
         }
 
-        if (FT_New_Face(library, idOrPath.c_str(), 0, face)) {
+        if (const FT_Error error = FT_New_Face(library, idOrPath.c_str(), 0, face)) {
+            std::cout << "FreeType error code: " << error << std::endl;
+            std::cout << "Font path was: " << idOrPath << std::endl;
             throw std::runtime_error("[Freetype Face] Could not initialize the freetype face");
+        }
+    }
+
+    types::Vec2 TextRenderer::getAnchoredPosition(
+    const types::Vec2& pos,
+    const types::Vec2& windowDimensions,
+    const ui::text::Anchor& anchor,
+    const std::string& text,
+    const float scale
+    ) const {
+        const float width  = MeasureTextWidth(text, scale);
+        const float height = font.MeasureTextHeight(scale, m_dpi.x, font.bakedRes);
+
+        switch (anchor)
+        {
+        case ui::text::Anchor::BottomLeft:
+            return { pos.x, pos.y };
+
+        case ui::text::Anchor::BottomRight:
+            return { windowDimensions.x - pos.x - width,
+                     pos.y };
+
+        case ui::text::Anchor::TopLeft:
+            return { pos.x,
+                     windowDimensions.y - pos.y - height};
+
+        case ui::text::Anchor::TopRight:
+            return { windowDimensions.x - pos.x - width,
+                     windowDimensions.y - pos.y - height};
+
+        case ui::text::Anchor::Center:
+            return {
+                (windowDimensions.x - width)  * 0.5f + pos.x,
+                (windowDimensions.y - height) * 0.5f + pos.y
+            };
+
+        default:
+            return pos;
         }
     }
 

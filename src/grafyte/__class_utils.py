@@ -1,3 +1,7 @@
+import inspect
+import os
+from pathlib import Path
+
 from __grafyte_internal import InputManager as _NativeInputManager, Key
 from .__converters import *
 
@@ -203,3 +207,21 @@ class _KeyPressedAccessor:
 class _KeyReleasedAccessor:
     def __getitem__(self, key: Key) -> bool:
         return _NativeInputManager.was_key_released(key)
+
+class AssetResolver:
+    def __init__(self, base_dir: Path):
+        self.base = base_dir
+
+    def resolve(self, path: str):
+        if path.startswith("@embed/"):
+            return path  # let C++ handle
+
+        p = Path(path)
+
+        if p.exists():
+            return str(p)
+
+        if (self.base / path).exists():
+            return str(self.base / path)
+
+        raise FileNotFoundError(path)
