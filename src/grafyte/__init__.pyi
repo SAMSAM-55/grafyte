@@ -19,73 +19,121 @@ from __grafyte_internal import UIManager as _NativeUIManager
 from __grafyte_internal import Text as _NativeText
 from __grafyte_internal import Anchor as _NativeAnchor
 
+
 class Key(_NativeKey): ...
+
+
 class InputTrigger(_NativeInputTrigger): ...
+
+
 class Vec2(_NativeVec2): ...
+
+
 class Direction(_NativeDirection): ...
+
+
 class AABB(_NativeAABB): ...
+
+
 class Hit(_NativeHit): ...
+
+
 class Anchor(_NativeAnchor): ...
+
+
 class Vec2Proxy:
     def __init__(self, getter, setter): ...
+
     def __iadd__(self, other: Vec2Like): ...
+
     def __isub__(self, other: Vec2Like): ...
+
     def __imul__(self, other: float): ...
+
     def __iter__(self): ...
 
     @property
     def x(self): ...
+
     @x.setter
     def x(self, value): ...
+
     @property
     def y(self): ...
+
     @y.setter
     def y(self, value): ...
+
 
 class ColorProxy:
     @property
     def r(self) -> int: ...
+
     @r.setter
     def r(self, value: int) -> None: ...
+
     @property
     def g(self) -> int: ...
+
     @g.setter
     def g(self, value: int) -> None: ...
+
     @property
     def b(self) -> int: ...
+
     @b.setter
     def b(self, value: int) -> None: ...
+
     @property
     def a(self) -> float: ...
+
     @a.setter
     def a(self, value: float) -> None: ...
+
     def __init__(self, getter, setter): ...
+
     def __iter__(self): ...
+
 
 class TintProxy(ColorProxy):
     @property
     def strength(self) -> float: ...
+
     @strength.setter
     def strength(self, value: float) -> None: ...
+
     @property
     def a(self) -> float: ...
+
     @a.setter
     def a(self, value: float) -> None: ...
+
     def __repr__(self) -> str: ...
+
 
 class RotProxy:
     @property
     def value(self) -> float: ...
+
     @value.setter
     def value(self, value: float) -> None: ...
+
     def set(self, value: float) -> RotProxy: ...
+
     def __init__(self, getter, setter): ...
+
     def __float__(self) -> float: ...
+
     def __int__(self) -> int: ...
+
     def __iadd__(self, other: float): ...
+
     def __isub__(self, other: float): ...
+
     def __imul__(self, other: float): ...
+
     def __itruediv__(self, other: float): ...
+
 
 class Camera:
     __native: _NativeCamera
@@ -98,11 +146,13 @@ class Camera:
 
     @follow.setter
     def follow(self, v: Object): ...
+
     @follow_offset.setter
     def follow_offset(self, v: Vec2Like): ...
 
     @zoom.setter
     def zoom(self, v: float): ...
+
 
 class InputManager(_NativeInputManager):
     key: _KeyAccessor
@@ -131,6 +181,7 @@ class InputManager(_NativeInputManager):
         """
         ...
 
+
 class Text:
     __native: _NativeText
     __color_proxy: ColorProxy
@@ -139,18 +190,22 @@ class Text:
 
     @property
     def text(self) -> None: ...
+
     @text.setter
     def text(self, value: str) -> None: ...
 
     @property
     def scale(self) -> None: ...
+
     @scale.setter
     def scale(self, value: float) -> None: ...
 
     @property
     def color(self) -> ColorProxy: ...
+
     @color.setter
     def color(self, v: Color | tuple[Color, float] | tuple[int, int, int, float]) -> None: ...
+
 
 class UIManager:
     __native: _NativeUIManager
@@ -164,6 +219,7 @@ class UIManager:
                  anchor: Anchor = Anchor.TopLeft) -> Text: ...
 
     def remove_text(self, text: Text) -> None: ...
+
 
 class Application:
     """
@@ -184,6 +240,7 @@ class Application:
         :param font_path: The path to the Application font, if omitted, an embedded font is used.
         """
         ...
+
     def should_close(self) -> bool:
         """
         Checks if the application window should close (e.g., if the close button was clicked).
@@ -192,16 +249,19 @@ class Application:
         :return: True if the window should close, False otherwise.
         """
         ...
+
     def quit(self) -> None:
         """
         Closes the application window and cleans up resources.
         """
         ...
+
     def render(self) -> None:
         """
         Renders all objects and text in the current frame.
         """
         ...
+
     def add_text(self, text: str, scale: float, pos: Vec2Like) -> int:
         """
         Adds text to be rendered in the application window.
@@ -212,7 +272,9 @@ class Application:
         :return: An integer ID for the added text, which can be used to remove it later.
         """
         ...
+
     def set_text(self, id: int, text: str): ...
+
     def remove_text(self, id: int):
         """
         Removes previously added text from the application.
@@ -220,6 +282,7 @@ class Application:
         :param id: The ID of the text to remove (returned by add_text).
         """
         ...
+
     def set_background_color(self, color: Color):
         """
         Sets the background (clear) color of the application window.
@@ -230,16 +293,20 @@ class Application:
 
     @property
     def background_color(self) -> None: ...
+
     @background_color.setter
     def background_color(self, color: Color) -> None: ...
 
     @property
     def now(self) -> float: ...
+
     @property
     def dt(self) -> float: ...
 
     def make_new_scene(self) -> Scene: ...
+
     def make_new_ui(self) -> UIManager: ...
+
 
 class Scene:
     __native: _NativeScene
@@ -258,6 +325,7 @@ class Scene:
     @property
     def camera(self) -> Camera: ...
 
+
 class TextObject:
     __native: _NativeTextObject
     __color_proxy: ColorProxy
@@ -266,18 +334,22 @@ class TextObject:
 
     @property
     def text(self) -> None: ...
+
     @text.setter
     def text(self, value: str) -> None: ...
 
     @property
     def scale(self) -> None: ...
+
     @scale.setter
     def scale(self, value: float) -> None: ...
 
     @property
     def color(self) -> ColorProxy: ...
+
     @color.setter
     def color(self, v: Color | tuple[Color, float] | tuple[int, int, int, float]) -> None: ...
+
 
 class Object:
     """
@@ -294,21 +366,27 @@ class Object:
     __color: tuple[int, int, int, float]
 
     def _get_pos(self): ...
+
     def _set_pos(self, value): ...
 
     def _get_scale(self): ...
+
     def _set_scale(self, value): ...
 
     def _get_rot(self): ...
+
     def _set_rot(self, value): ...
 
     def _get_color(self): ...
+
     def _set_color(self, value, a: float = 1): ...
 
     def _get_tint(self): ...
+
     def _set_tint(self, value, strength: float = 1): ...
 
     def __ensure_non_textured(self, attr: str): ...
+
     def __ensure_textured(self, attr: str): ...
 
     @property
@@ -354,10 +432,14 @@ class Object:
     def __init__(self, native: _NativeObject, has_texture: bool = False): ...
 
     def add_collision_box(self, pos: Vec2Like, size: Vec2Like): ...
+
     def collides_with(self, other: Object) -> Hit: ...
+
     def is_colliding(self) -> list[Hit]: ...
+
     @property
     def auto_collides(self) -> None: ...
+
     @auto_collides.setter
     def auto_collides(self, order: int) -> None: ...
 
@@ -369,3 +451,8 @@ class Object:
         :param path: The file path to the texture.
         """
         ...
+
+    def kill(self) -> None: ...
+
+    @property
+    def alive(self) -> bool: ...

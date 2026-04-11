@@ -48,6 +48,8 @@ class CollisionManager
         m_Colliding.clear();
     }
 
+    void removeObject(const types::ObjectId &objId);
+
   private:
     void buildGridFromDirty(Scene &scene);
 

@@ -31,6 +31,15 @@ class Scene : public std::enable_shared_from_this<Scene>
                                         const types::Vec2 &pos, const int &zIndex, types::PrimitiveGeometry geo);
     std::shared_ptr<TextObject> spawnTextObject(const types::Vec2 &pos, const std::string &text, const float &size);
 
+    [[nodiscard]] bool containsObject(const types::ObjectId &id) const
+    {
+        return m_Objects.contains(id);
+    }
+    [[nodiscard]] bool containsText(const types::ObjectId &id) const
+    {
+        return m_TextObjects.contains(id);
+    }
+
     types::Transform &transform(const types::ObjectId &id)
     {
         return m_Transforms.at(id);
@@ -101,6 +110,8 @@ class Scene : public std::enable_shared_from_this<Scene>
 
     void getTextRenderList(std::vector<types::TextData> &out) const;
     void clear();
+
+    void removeObject(const types::ObjectId &objId);
 
     Camera &camera()
     {

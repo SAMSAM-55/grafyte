@@ -152,6 +152,7 @@ PYBIND11_MODULE(GRAFYTE_PY_MODULE_NAME, m)
         .def_property_readonly("scale", &grafyte::Object::getScale)
         .def_property_readonly("pos", &grafyte::Object::getPosition)
         .def_property_readonly("rot", &grafyte::Object::getRotation)
+        .def_property_readonly("alive", &grafyte::Object::isAlive)
 
         // use_texture(texture_source_path, slot)
         .def("use_texture", &grafyte::Object::setTexture, py::arg("texture_source_path"), py::arg("slot"))
@@ -222,7 +223,10 @@ PYBIND11_MODULE(GRAFYTE_PY_MODULE_NAME, m)
 
         // set_scale(scale)
         .def("set_scale", py::overload_cast<grafyte::types::Vec2>(&grafyte::Object::setScale, py::const_),
-             py::arg("scale"));
+             py::arg("scale"))
+
+        // kill()
+        .def("kill", &grafyte::Object::kill);
 
     py::class_<grafyte::Scene, std::shared_ptr<grafyte::Scene>>(m, "Scene")
         // spawn_object(scale_x, scale_y, shader_source_path, pos_x, pos_y, has_texture, z_index) -> Object

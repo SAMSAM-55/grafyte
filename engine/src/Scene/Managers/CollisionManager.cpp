@@ -9,7 +9,7 @@
 #include "Physics/Collisions/CollisionSolver.h"
 
 grafyte::collision::Hit grafyte::CollisionManager::objectsCollide(const types::ObjectId &a, const types::ObjectId &b,
-                                                                   Scene &scene)
+                                                                  Scene &scene)
 {
     if (!(m_CollisionBounds.contains(a) && m_CollisionBounds.contains(b)))
     {
@@ -46,10 +46,12 @@ std::vector<grafyte::collision::Hit> grafyte::CollisionManager::isColliding(cons
         if (b == a)
             continue;
 
+        if (!(m_CollisionBounds.contains(b)))
+            continue;
+
         if (const auto hit = objectsCollide(a, b, scene))
         {
             m_Colliding[a].push_back(hit);
-            m_Colliding[b].push_back(hit);
         }
     }
 
@@ -106,7 +108,8 @@ grafyte::types::Vec2 grafyte::CollisionManager::pushBackOnMove(const types::Obje
         {
             for (const auto &bCollider : bounds)
             {
-                if (const auto translation = CollisionSolver::computePushBackTranslation(aCollider, bCollider, aPos, bPos))
+                if (const auto translation =
+                        CollisionSolver::computePushBackTranslation(aCollider, bCollider, aPos, bPos))
                 {
                     if (const float lenSq = translation->x * translation->x + translation->y * translation->y;
                         !found || lenSq < bestLenSq)
@@ -188,14 +191,24 @@ grafyte::collision::AABB grafyte::CollisionManager::computeObjectWorldBounds(con
     return {{centerX, centerY}, halfW, halfH};
 }
 
+void grafyte::CollisionManager::removeObject(const types::ObjectId &objId)
+{
+    m_AutoCollides.erase(objId);
+    m_Colliding.erase(objId);
+    m_CollisionBounds.erase(objId);
+    m_GridDirty.push_back(objId);
+}
+
 void grafyte::CollisionManager::buildGridFromDirty(Scene &scene)
 {
     m_Grid.cleanDirty(m_GridDirty);
 
     for (const auto &id : m_GridDirty)
     {
-        if (const auto &bounds = m_CollisionBounds[id]; bounds.empty())
+        const auto it = m_CollisionBounds.find(id);
+        if (it == m_CollisionBounds.end() || it->second.empty())
             continue;
+
         const auto worldBounds = computeObjectWorldBounds(id, scene);
         m_Grid.insert(id, worldBounds);
     }

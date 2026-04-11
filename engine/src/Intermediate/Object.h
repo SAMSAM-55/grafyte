@@ -58,6 +58,7 @@ class Object
     {
         return m_Scene.lock().get();
     };
+    [[nodiscard]] bool isAlive() const;
     [[nodiscard]] types::Vec2 getScale() const;
     [[nodiscard]] types::Vec2 getPosition() const;
     [[nodiscard]] float getRotation() const;
@@ -65,6 +66,8 @@ class Object
     /* Collisions */
     [[nodiscard]] bool collidesWith(const Object &other) const;
     [[nodiscard]] bool isColliding() const;
+
+    void kill();
 
   private:
     std::weak_ptr<Scene> m_Scene;
