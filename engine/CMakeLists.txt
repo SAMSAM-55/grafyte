@@ -1,13 +1,13 @@
 cmake_minimum_required(VERSION 3.20)
 project(Grafyte LANGUAGES C CXX)
 
-if(POLICY CMP0148)
+if (POLICY CMP0148)
     cmake_policy(SET CMP0148 NEW)
-endif()
+endif ()
 
 if (UNIX AND NOT APPLE)
     set(CMAKE_POSITION_INDEPENDENT_CODE ON)
-endif()
+endif ()
 
 set(PYBIND11_FINDPYTHON ON)
 set(Python_FIND_REGISTRY NEVER)
@@ -47,7 +47,6 @@ add_library(grafyte_core STATIC
         src/Scene/Scene.cpp
         src/Scene/Managers/MeshManager.cpp
         src/Scene/Managers/MaterialManager.cpp
-        src/World/World.cpp
         src/Scene/Text/TextObject.h
         src/Scene/Text/TextObject.cpp
         src/Physics/Collisions/CollisionSolver.cpp
@@ -102,13 +101,13 @@ if (WIN32)
             "${CMAKE_CURRENT_SOURCE_DIR}/../src/built-win"
             CACHE PATH "Destination folder for built modules"
     )
-else()
+else ()
     set(PY_EXT "so")
     set(GRAFYTE_INTERNAL_DIR
             "${CMAKE_CURRENT_SOURCE_DIR}/../src/built-linux"
             CACHE PATH "Destination folder for built modules"
     )
-endif()
+endif ()
 
 message(STATUS "Will copy .${PY_EXT} to: ${GRAFYTE_INTERNAL_DIR}")
 

@@ -2,9 +2,9 @@
 
 namespace grafyte
 {
-    inline bool& GlContextAlive()
-    {
-        static bool alive = false;
-        return alive;
-    }
+inline bool &glContextAlive()
+{
+    static bool s_Alive = false;
+    return s_Alive;
 }
+} // namespace grafyte

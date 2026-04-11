@@ -4,38 +4,28 @@
 
 namespace grafyte
 {
-	class VertexBufferLayout;
+class VertexBufferLayout;
 
-	class VertexArray
-	{
-	public:
-		VertexArray();
-		~VertexArray();
+class VertexArray
+{
+  public:
+    VertexArray();
+    ~VertexArray();
 
-		VertexArray(const VertexArray&) = delete;
-		VertexArray& operator=(const VertexArray&) = delete;
+    VertexArray(const VertexArray &) = delete;
+    VertexArray &operator=(const VertexArray &) = delete;
 
-		VertexArray(VertexArray&& other) noexcept : m_RendererID(other.m_RendererID) {
-			other.m_RendererID = 0;
-		}
+    VertexArray(VertexArray &&other) noexcept;
 
-		VertexArray& operator=(VertexArray&& other) noexcept {
-			if (this != &other) {
-				release();
-				m_RendererID = other.m_RendererID;
-				other.m_RendererID = 0;
-			}
-			return *this;
-		}
+    VertexArray &operator=(VertexArray &&other) noexcept;
 
-		void AddBuffer(const VertexBuffer& vb, const VertexBufferLayout& layout) const;
+    void addBuffer(const VertexBuffer &vb, const VertexBufferLayout &layout) const;
 
-		void Bind() const;
-		void Unbind() const;
-		void release();
+    void bind() const;
+    static void unbind() ;
 
-
-	private:
-		unsigned int m_RendererID = 0;
-	};
-}
+    void release();
+  private:
+    GLuint m_RendererID = 0;
+};
+} // namespace grafyte

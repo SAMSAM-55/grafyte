@@ -1,45 +1,37 @@
 #pragma once
 
+#include <cstdint>
+
 #include "glad/glad.h"
 
 namespace grafyte
 {
-	class IndexBuffer
-	{
-	public:
-		IndexBuffer(const unsigned int* data, unsigned int count, unsigned int usage = GL_STATIC_DRAW);
-		~IndexBuffer();
+class IndexBuffer
+{
+  public:
+    IndexBuffer(const uint32_t *data, uint32_t count, GLenum usage = GL_STATIC_DRAW);
+    ~IndexBuffer();
 
-		IndexBuffer(const IndexBuffer&) = delete;
-		IndexBuffer& operator=(const IndexBuffer&) = delete;
+    IndexBuffer(const IndexBuffer &) = delete;
+    IndexBuffer &operator=(const IndexBuffer &) = delete;
 
-		IndexBuffer(IndexBuffer&& other) noexcept : m_RendererID(other.m_RendererID), m_Count(other.m_Count) {
-			other.m_RendererID = 0;
-			other.m_Count = 0;
-		}
+    IndexBuffer(IndexBuffer &&other) noexcept;
+    IndexBuffer &operator=(IndexBuffer &&other) noexcept;
 
-		IndexBuffer& operator=(IndexBuffer&& other) noexcept {
-			if (this != &other) {
-				release();
-				m_RendererID = other.m_RendererID;
-				m_Count = other.m_Count;
-				other.m_RendererID = 0;
-				other.m_Count = 0;
-			}
-			return *this;
-		}
+    void updateData(const uint32_t *data, uint32_t count);
 
-		void UpdateData(const unsigned int* data, unsigned int count);
+    void bind() const;
+    static void unbind();
 
-		void Bind() const;
-		void Unbind() const;
-		void release();
+    [[nodiscard]] GLsizei getCount() const
+    {
+        return static_cast<GLsizei>(m_Count);
+    }
+    void release();
 
-		[[nodiscard]] unsigned int GetCount() const { return m_Count; }
-
-
-	private:
-		unsigned int m_RendererID = 0;
-		unsigned int m_Count;
-	};
-}
+  private:
+    GLuint m_RendererID = 0;
+    uint32_t m_Count = 0;
+    GLenum m_Usage;
+};
+} // namespace grafyte
