@@ -141,14 +141,46 @@ class Camera:
 
     def __init__(self): ...
 
+    @property
+    def pos(self) -> Vec2f:
+        """
+        The current position of the camera.
+        This property is write-only.
+        """
+        ...
+
     @pos.setter
     def pos(self, v: Vec2Like): ...
+
+    @property
+    def follow(self) -> Object:
+        """
+        The current object that the camera follows.
+        This property is write-only.
+        """
+        ...
 
     @follow.setter
     def follow(self, v: Object): ...
 
+    @property
+    def follow_offset(self) -> Vec2f:
+        """
+        The offset of the camera relative to the object it follows.
+        This property is write-only.
+        """
+        ...
+
     @follow_offset.setter
     def follow_offset(self, v: Vec2Like): ...
+
+    @property
+    def zoom(self) -> float:
+        """
+        The current zoom of the camera.
+        This property is write-only.
+        """
+        ...
 
     @zoom.setter
     def zoom(self, v: float): ...
@@ -161,7 +193,7 @@ class InputManager(_NativeInputManager):
 
     def __init__(self): ...
 
-    def __getitem__(self, action: str):
+    def __getitem__(self, action: str) -> bool:
         """
         Checks if a specific action is currently active.
 
@@ -175,7 +207,7 @@ class InputManager(_NativeInputManager):
         """
         Creates a new input action for the application.
 
-        :param trigger:
+        :param trigger: The trigger mode for the action (e.g., Press or Hold).
         :param name: The name of the action.
         :param key: The Key(s) to bind to the action.
         """
@@ -189,25 +221,42 @@ class Text:
     def __init__(self, native: _NativeText): ...
 
     @property
-    def text(self) -> None: ...
+    def text(self) -> str:
+        """
+        The current text displayed by the object.
+        This property is write-only.
+        """
+        ...
 
     @text.setter
     def text(self, value: str) -> None: ...
 
     @property
-    def scale(self) -> None: ...
+    def scale(self) -> float:
+        """
+        The current scale of the text.
+        This property is write-only.
+        """
+        ...
 
     @scale.setter
     def scale(self, value: float) -> None: ...
 
     @property
-    def color(self) -> ColorProxy: ...
+    def color(self) -> ColorProxy:
+        """
+        The current color of the text.
+        """
+        ...
 
     @color.setter
     def color(self, v: Color | tuple[Color, float] | tuple[int, int, int, float]) -> None: ...
 
 
 class UIManager:
+    """
+    The main class for managing screen space elements like text.
+    """
     __native: _NativeUIManager
 
     def __init__(self, native_ui_manager: _NativeUIManager): ...
@@ -216,9 +265,24 @@ class UIManager:
                  pos: Vec2Like,
                  text: str,
                  scale: float = 12,
-                 anchor: Anchor = Anchor.TopLeft) -> Text: ...
+                 anchor: Anchor = Anchor.TopLeft) -> Text:
+        """
+        Displays a new screen space text on the screen.
 
-    def remove_text(self, text: Text) -> None: ...
+        :param pos: The position of the text relative to its anchor in pixels.
+        :param text: The text to display on the screen.
+        :param scale: The scale of the text in pt (default = 12)
+        :param anchor: The position to anchor the text onto. (default = Anchor.TopLeft)
+        """
+        ...
+
+    def remove_text(self, text: Text) -> None:
+        """
+        Removes the given text from the screen.
+
+        :param text: The text to remove.
+        """
+        ...
 
 
 class Application:
@@ -229,14 +293,18 @@ class Application:
     __input: InputManager
 
     @property
-    def input(self) -> InputManager: ...
+    def input(self) -> InputManager:
+        """
+        The inputs system of the Application
+        """
+        ...
 
     def __init__(self, name: str, window_dimensions: Vec2Like, font_path: str = "@embed/Fonts/Base"):
         """
         Initializes the application window and rendering context.
 
         :param name: The title of the window.
-        :param window_dimensions: A Vec2d containing the width and height of the window.
+        :param window_dimensions: The width and height of the window.
         :param font_path: The path to the Application font, if omitted, an embedded font is used.
         """
         ...
@@ -262,68 +330,86 @@ class Application:
         """
         ...
 
-    def add_text(self, text: str, scale: float, pos: Vec2Like) -> int:
-        """
-        Adds text to be rendered in the application window.
-
-        :param text: The string of text to display.
-        :param scale: The scale/size of the text.
-        :param pos: A Vec2d representing the (x, y) position of the text.
-        :return: An integer ID for the added text, which can be used to remove it later.
-        """
-        ...
-
-    def set_text(self, id: int, text: str): ...
-
-    def remove_text(self, id: int):
-        """
-        Removes previously added text from the application.
-
-        :param id: The ID of the text to remove (returned by add_text).
-        """
-        ...
-
-    def set_background_color(self, color: Color):
-        """
-        Sets the background (clear) color of the application window.
-
-        :param color: A Color object (RGB) representing the new background color.
-        """
-        ...
-
     @property
-    def background_color(self) -> None: ...
+    def background_color(self) -> Color:
+        """
+        The background (clear) color of the application window.
+        This property is write-only.
+        """
+        ...
 
     @background_color.setter
     def background_color(self, color: Color) -> None: ...
 
     @property
-    def now(self) -> float: ...
+    def now(self) -> float:
+        """
+        The time the application has been running for in seconds.
+        """
+        ...
 
     @property
-    def dt(self) -> float: ...
+    def dt(self) -> float:
+        """
+        The elapsed time since the last frame was rendered (delta-time).
+        """
+        ...
 
-    def make_new_scene(self) -> Scene: ...
+    def make_new_scene(self) -> Scene:
+        """
+        Creates a new scene for the application.
+        :return: A new scene.
+        """
+        ...
 
-    def make_new_ui(self) -> UIManager: ...
+    def make_new_ui(self) -> UIManager:
+        """
+        Creates a new UI subsystem (manager) for the application.
+        :return: A new UI Manager.
+        """
+        ...
 
 
 class Scene:
     __native: _NativeScene
 
-    def __init__(self, native_camera: _NativeCamera): ...
+    def __init__(self, native_scene: _NativeScene): ...
 
     def spawn_object(self,
                      pos: Vec2Like,
                      size: Vec2Like,
                      layer: int = 0,
                      has_texture: bool = False,
-                     shader_source_path: str = "") -> Object: ...
+                     shader_source_path: str = "") -> Object:
+        """
+        Creates a new object and adds it to the scene.
 
-    def spawn_text_object(self, pos: Vec2Like, text: str, scale: float = 12) -> TextObject: ...
+        :param pos: The initial position of the object in world units.
+        :param size: The size of the object in world units.
+        :param layer: The layer (z-index) of the object.
+        :param has_texture: Whether the object uses a texture.
+        :param shader_source_path: The shader to use for this object, if omitted, the engine will use an embedded shader.
+        :return: The newly created object.
+        """
+        ...
+
+    def spawn_text_object(self, pos: Vec2Like, text: str, scale: float = 12) -> TextObject:
+        """
+        Creates a new text inside the world space and adds it to the scene.
+
+        :param pos: The initial position of the text in world units.
+        :param scale: The scale of the text in pt.
+        :param text: The text to display.
+        :return: The newly created text object.
+        """
+        ...
 
     @property
-    def camera(self) -> Camera: ...
+    def camera(self) -> Camera:
+        """
+        The camera of the scene.
+        """
+        ...
 
 
 class TextObject:
@@ -333,19 +419,33 @@ class TextObject:
     def __init__(self, native: _NativeTextObject): ...
 
     @property
-    def text(self) -> None: ...
+    def text(self) -> str:
+        """
+        The current text displayed.
+        This property is write-only.
+        """
+        ...
 
     @text.setter
     def text(self, value: str) -> None: ...
 
     @property
-    def scale(self) -> None: ...
+    def scale(self) -> float:
+        """
+        The current scale of the text in pt.
+        This property is write-only.
+        """
+        ...
 
     @scale.setter
     def scale(self, value: float) -> None: ...
 
     @property
-    def color(self) -> ColorProxy: ...
+    def color(self) -> ColorProxy:
+        """
+        The current color of the text.
+        """
+        ...
 
     @color.setter
     def color(self, v: Color | tuple[Color, float] | tuple[int, int, int, float]) -> None: ...
@@ -391,7 +491,9 @@ class Object:
 
     @property
     def pos(self) -> Vec2Proxy:
-        """The current position of the object."""
+        """
+        The current position of the object.
+        """
         ...
 
     @pos.setter
@@ -399,7 +501,9 @@ class Object:
 
     @property
     def rot(self) -> float:
-        """The current rotation of the object."""
+        """
+        The current rotation of the object.
+        """
         ...
 
     @rot.setter
@@ -407,7 +511,9 @@ class Object:
 
     @property
     def scale(self) -> Vec2Proxy:
-        """The current scale of the object."""
+        """
+        The current scale of the object.
+        """
         ...
 
     @scale.setter
@@ -415,7 +521,9 @@ class Object:
 
     @property
     def color(self) -> ColorProxy:
-        """The current color of the object."""
+        """
+        The current color of the object.
+        """
         ...
 
     @color.setter
@@ -423,7 +531,9 @@ class Object:
 
     @property
     def tint(self) -> TintProxy:
-        """The current tint of the object."""
+        """
+        The current tint of the object.
+        """
         ...
 
     @tint.setter
@@ -431,14 +541,38 @@ class Object:
 
     def __init__(self, native: _NativeObject, has_texture: bool = False): ...
 
-    def add_collision_box(self, pos: Vec2Like, size: Vec2Like): ...
+    def add_collision_box(self, pos: Vec2Like, size: Vec2Like):
+        """
+        Adds a new collision box to the object.
 
-    def collides_with(self, other: Object) -> Hit: ...
+        :param pos: The position of the collision box relative to the object's origin (center)
+        :param size: The size of the collision box.
+        """
+        ...
 
-    def is_colliding(self) -> list[Hit]: ...
+    def collides_with(self, other: Object) -> Hit:
+        """
+        Checks for collision between two objects.
+        :param other: The objects to check collision against.
+        :return: The result of the collision or a default Hit result if Hit.collision is false.
+        """
+        ...
+
+    def is_colliding(self) -> list[Hit]:
+        """
+        Checks for collision on the object.
+        :return: The list of collisions or an empty list if the object is not colliding.
+        """
+        ...
 
     @property
-    def auto_collides(self) -> None: ...
+    def auto_collides(self) -> int:
+        """
+        Sets the automatic collision resolution order on the current object.
+        Once this property is set, it cannot be unset.
+        This property is write-only.
+        """
+        ...
 
     @auto_collides.setter
     def auto_collides(self, order: int) -> None: ...
@@ -447,12 +581,20 @@ class Object:
         """
         Loads and applies a texture to the object.
 
-        :param slot: The slot to bind the texture to
+        :param slot: The slot to bind the texture to.
         :param path: The file path to the texture.
         """
         ...
 
-    def kill(self) -> None: ...
+    def kill(self) -> None:
+        """
+        Kills the object and removes it from the scene.
+        """
+        ...
 
     @property
-    def alive(self) -> bool: ...
+    def alive(self) -> bool:
+        """
+        Whether the object is alive.
+        """
+        ...
