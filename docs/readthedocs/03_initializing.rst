@@ -1,15 +1,38 @@
 Initializing the Application
 ============================
 
-The primary entry point for any Grafyte application is the ``Application`` class. It sets the window size and title:
+The ``Application`` class is the entry point for every Grafyte program.
 
 .. code-block:: python
 
    import grafyte
-   app = grafyte.Application("My First Game", (640, 240))
 
-.. note:: The window size of your application is not fixed. Users can always resize it and Grafyte will handle the maths to preserve the look of your game.
+   app = grafyte.Application("My First Game", (640, 360))
 
-The variable ``app`` represents the application and the window we see. It will be one of the most used variables.
+The first argument is the window title. The second is the initial window size as ``(width, height)``.
 
-You can now run this program and test it. At this moment it does very little. It opens a window and closes it immediately.
+Optional Font
+-------------
+
+``Application`` also accepts an optional ``font_path`` argument:
+
+.. code-block:: python
+
+   app = grafyte.Application(
+       "My First Game",
+       (640, 360),
+       font_path="@embed/Fonts/Base",
+   )
+
+If you omit it, Grafyte uses the embedded default font.
+
+Creating Your First Scene
+-------------------------
+
+Most applications create a scene immediately after creating the window:
+
+.. code-block:: python
+
+   scene = app.make_new_scene()
+
+At this point the program opens a window, but it still needs a main loop to stay alive and render frames.

@@ -1,48 +1,43 @@
-Explore a simple ball game
-==========================
+Explore a Simple Bouncing Square
+================================
 
-To show what Grafyte can do, here is a simple program which demonstrates a bouncing square.
-
-Bouncing Square Example
------------------------
+This example combines application setup, object spawning, colors, and delta-time movement.
 
 .. code-block:: python
 
-    import grafyte
+   import grafyte
 
-    window_size = (640, 320)
-    size = 20
+   window_size = (640, 320)
+   size = 20
 
-    app = grafyte.Application("Bouncing Square", window_size)
-    scene = app.make_new_scene()
+   app = grafyte.Application("Bouncing Square", window_size)
+   scene = app.make_new_scene()
+   app.background_color = (30, 120, 30)
 
-    # Spawn a square at (0, 0) with size (20, 20)
-    # Grafyte coordinates: (0, 0) is the center of the screen
-    square = scene.spawn_object((0, 0), (size, size))
-    square.set_color((255, 0, 0)) # red
+   square = scene.spawn_object((0, 0), (size, size))
+   square.color = (255, 0, 0)
 
-    speed = [65, 50] # Units per second with diagonal movement
+   velocity = [65.0, 50.0]
 
-    HALF_H = 100  # screen is always 200 units tall
-    aspect = window_size[0] / window_size[1]
-    HALF_W = HALF_H * aspect  # 200.0 for a 640x320 window
+   half_h = 100.0
+   aspect = window_size[0] / window_size[1]
+   half_w = half_h * aspect
 
-    app.set_background_color((0, 255, 0)) # green background
+   while not app.should_close():
+       square.pos += (velocity[0] * app.dt, velocity[1] * app.dt)
 
-    while not app.should_close():
-        dt = app.get_delta_time()
+       if not (-half_w + size / 2) <= square.pos.x <= (half_w - size / 2):
+           velocity[0] = -velocity[0]
+       if not (-half_h + size / 2) <= square.pos.y <= (half_h - size / 2):
+           velocity[1] = -velocity[1]
 
-        # Move the square
-        square.move((speed[0] * dt, speed[1] * dt))
+       app.render()
 
-        # Check for grafyte space boundaries this only works fine as long as the window preserves its original aspect-ratio
-        if not (-HALF_W + size / 2) <= square.pos.x <= (HALF_W - size / 2):
-            speed[0] = -speed[0]
-        if not (-HALF_H + size / 2) <= square.pos.y <= (HALF_H - size / 2):
-            speed[1] = -speed[1]
+   app.quit()
 
-        app.render()
+What this example shows:
 
-    app.quit()
-
-Try to understand what the program does. Then try to modify its parameters.
+- ``Application`` owns the window and timing.
+- ``Scene`` owns the square object.
+- ``square.pos += (...)`` updates the object each frame.
+- ``app.dt`` keeps movement frame-rate independent.

@@ -1,32 +1,39 @@
 Installation
 ============
 
-Before you start the tutorial, ensure Grafyte is installed.
+Grafyte targets Python 3.10 and newer and exposes a Python API backed by a native rendering engine.
 
-System Requirements
--------------------
+Requirements
+------------
 
-- **Python 3.10+**
-- **OpenGL 3.3+**
-- **Windows 10/11** or modern **Linux**.
+- Python 3.10+
+- A machine with working OpenGL drivers
+- Windows 10/11 or a modern Linux distribution
 
-Quick Install via pip
----------------------
+Install From PyPI
+-----------------
 
-The recommended way to install Grafyte is using ``pip``:
+The simplest installation path is ``pip``:
 
 .. code-block:: bash
 
-   pip install grafyte
+   python -m pip install grafyte
 
-Verifying the Installation
---------------------------
+Quick Verification
+------------------
 
-To verify your installation, run a simple Python script:
+Run the following snippet to confirm that the package imports correctly:
 
 .. code-block:: python
 
    import grafyte
-   print("Grafyte successfully installed!")
 
-If you see this message, you are ready to start building your first game!
+   app = grafyte.Application("Grafyte Check", (640, 360))
+   app.background_color = (30, 30, 30)
+
+   while not app.should_close():
+       app.render()
+
+   app.quit()
+
+If a window opens, the installation is working and you can continue with the tutorial.

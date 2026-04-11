@@ -1,19 +1,12 @@
 Representing Entities
 =====================
 
-In Grafyte, the main way to handle things in the game world is using the ``Scene`` and ``Object`` system.
+Grafyte organizes gameplay entities around scenes and objects.
 
-The Scene
----------
+Scenes
+------
 
-A ``Scene`` represents a single level or a distinct part of your game (like a menu, or a specific level). You create a scene using ``app.make_new_scene()``.
-
-The Object
-----------
-
-An ``Object`` is anything that exists in the scene. This could be a player, an enemy, a bullet, or a background image.
-
-To create an object, you use the ``spawn_object`` method on a scene:
+Create a scene with ``app.make_new_scene()``:
 
 .. code-block:: python
 
@@ -22,49 +15,60 @@ To create an object, you use the ``spawn_object`` method on a scene:
    app = grafyte.Application("Entities Example", (800, 600))
    scene = app.make_new_scene()
 
-   # Spawn an object at position (0, 0) with size (50, 50)
-   player = scene.spawn_object((0, 0), (50, 50))
+Objects
+-------
 
-   # Set its color (RGB) -> green
-   player.set_color((0, 255, 0))
+Spawn a rectangle with ``scene.spawn_object(position, size)``:
+
+.. code-block:: python
+
+   player = scene.spawn_object((0, 0), (20, 20))
+   player.color = (0, 255, 0)
+
+Objects expose a small set of mutable properties:
+
+- ``pos`` for position
+- ``scale`` for size scaling
+- ``rot`` for rotation
+- ``color`` for non-textured objects
+- ``tint`` for textured objects
+
+Example movement:
+
+.. code-block:: python
 
    while not app.should_close():
-       # Move the player object
-       player.move((0.1, 0))
-       
+       player.pos += (25 * app.dt, 0)
        app.render()
-
-   app.quit()
 
 Coordinate System
 -----------------
 
-In Grafyte, the coordinate ``(0, 0)`` is the **center of the screen**.
+The point ``(0, 0)`` is at the center of the world view.
 
-- **X** increases towards the right.
-- **Y** increases towards the top.
+- X increases to the right
+- Y increases upward
 
-Grafyte also has a custom coordinate system unit. In Grafyte - as the window is resizable -, the units used to define objects' size and position
-is completely unrelated to pixels. The way Grafyte handles coordinate is that the part of the scene shown on the window will measure exactly 200 units
-in height, then the width is recalculated when the window dimensions change to maintain the fixed height. As a result, your users will be able
-to resize your application without the objects looking smaller on bigger screens.
+Grafyte keeps the visible world height fixed at 200 units. The visible width changes with the window aspect ratio, which lets the window resize without changing the apparent scale of the world.
 
-Layering with Z-Index
----------------------
+Layers
+------
 
-When multiple objects overlap, you can control which one appears on top using the ``layer`` parameter of ``spawn_object``.
-
-Objects with a **higher** z-index are drawn **in front of** objects with a lower one. The z-index is an integer and can be negative.
+Use the ``layer`` argument to control draw order:
 
 .. code-block:: python
 
-   # Background sits behind everything else
    background = scene.spawn_object((0, 0), (200, 200), layer=0)
+   player = scene.spawn_object((0, 0), (20, 20), layer=1)
 
-   # Player renders on top of the background
-   player = scene.spawn_object((0, 0), (20, 20), 1) # layer is the third parameter of the method so its name can be omitted
+Higher layers render in front of lower ones.
 
-.. note::
+Text Objects
+------------
 
-   Objects sharing the same z-index have no guaranteed draw order relative to each other.
-   If two objects must reliably overlap, always assign them distinct z-index values.
+Use ``spawn_text_object`` for text placed inside the world:
+
+.. code-block:: python
+
+   title = scene.spawn_text_object((0, 60), "Grafyte", scale=18)
+   title.color = (255, 255, 255)

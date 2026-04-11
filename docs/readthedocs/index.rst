@@ -1,27 +1,26 @@
-Welcome to Grafyte's Documentation!
-====================================
+Welcome to Grafyte's Documentation
+==================================
 
 .. image:: ../grafyte_demo.gif
    :alt: Grafyte Engine Demo
    :align: center
 
-Grafyte is a high-performance 2D game engine built for Python. It combines a powerful C++ rendering core with a simple, developer-friendly Python interface, allowing you to create stunning 2D games with ease.
+Grafyte is a Python-first 2D engine backed by a native C++ and OpenGL core. This guide walks through the current high-level API: creating an application, building scenes, handling input, drawing objects, and using textures, collisions, camera control, and UI text.
 
-Key Highlights:
----------------
+Highlights
+----------
 
-- **High Performance**: C++ core for efficient rendering and physics.
-- **Python-First API**: Designed to feel natural and intuitive for Python developers.
-- **Action-Based Input**: Easily map keys to game actions.
-- **Built-in Systems**: Integrated support for sprites, text, and collision detection.
-- **Quick Installation**: Get started in minutes with ``pip install grafyte``.
+- Native rendering core with a small Python API
+- Scene and object workflow for 2D games
+- Raw key input and action-based input helpers
+- Built-in text, textured sprites, camera, and collision primitives
 
-Documentation Sections:
------------------------
+Contents
+--------
 
 .. toctree::
    :maxdepth: 2
-   :caption: Contents:
+   :caption: Tutorial
 
    01_installation
    02_introduction
