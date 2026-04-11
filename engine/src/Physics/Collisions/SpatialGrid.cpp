@@ -1,5 +1,6 @@
 #include "SpatialGrid.h"
 
+#include <algorithm>
 #include <ranges>
 #include <unordered_set>
 
@@ -70,7 +71,7 @@ void SpatialGrid::cleanDirty(const std::vector<types::ObjectId> &dirty)
         {
             std::vector<types::ObjectId> &vec = ids;
             // Remove all instances of the id
-            const auto newEnd = std::remove(vec.begin(), vec.end(), idToRemove);
+            const auto newEnd = std::ranges::remove(vec, idToRemove).begin();
             vec.erase(newEnd, vec.end());
         }
     }
