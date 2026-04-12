@@ -9,10 +9,10 @@ namespace grafyte::embedded {
         std::size_t size;
     };
     // Helpers “assets”
-    extern const EmbeddedAsset basicShader;
-    extern const EmbeddedAsset textureShader;
-    extern const EmbeddedAsset textShader;
-    extern const EmbeddedAsset baseFont;
-    extern const EmbeddedAsset noTexture;
+    extern const EmbeddedAsset BasicShader;
+    extern const EmbeddedAsset TextureShader;
+    extern const EmbeddedAsset TextShader;
+    extern const EmbeddedAsset BaseFont;
+    extern const EmbeddedAsset NoTexture;
 
 } // namespace grafyte::embedded

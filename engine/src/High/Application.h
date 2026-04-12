@@ -1,6 +1,7 @@
 #pragma once
 
-#include "glad/glad.h"
+#include "glad/glad.h" // required for glfw3
+
 #include "GLFW/glfw3.h"
 #include <memory>
 
@@ -11,55 +12,78 @@
 
 namespace grafyte
 {
-	class Application
-	{
-	public:
-		explicit Application(std::string  name, std::string font);
-		explicit Application(std::string  name);
-		~Application();
+class Application
+{
+  public:
+    explicit Application(std::string name, std::string font);
+    explicit Application(std::string name);
+    ~Application();
 
-		int init(int winWidth, int winHeight);
-		[[nodiscard]] bool shouldClose() const;
-		void quit();
+    int init(int winWidth, int winHeight);
+    [[nodiscard]] bool shouldClose() const;
+    void quit();
 
-		[[nodiscard]] double getNow() const {return m_now;}
-		[[nodiscard]] double getDeltaTime() const {return m_deltaTime;}
+    [[nodiscard]] double getNow() const
+    {
+        return m_Now;
+    }
+    [[nodiscard]] double getDeltaTime() const
+    {
+        return m_DeltaTime;
+    }
 
-		void render();
+    void render();
 
-		static bool isKeyDown(const Key& key) {return InputManager::isKeyDown(key);};
-		static bool wasKeyPressed(const Key& key) {return InputManager::wasKeyPressed(key);};
-		static bool wasKeyReleased(const Key& key) {return InputManager::wasKeyReleased(key);};
+    static bool isKeyDown(const Key &key)
+    {
+        return InputManager::isKeyDown(key);
+    };
+    static bool wasKeyPressed(const Key &key)
+    {
+        return InputManager::wasKeyPressed(key);
+    };
+    static bool wasKeyReleased(const Key &key)
+    {
+        return InputManager::wasKeyReleased(key);
+    };
 
-		static bool isActionActive(const std::string& name) {return InputManager::isActionActive(name);};
-		static void createInputAction(const std::string &name, const Keys &keys, const InputTrigger& trigger) {
-			InputManager::createAction(name, keys, trigger);
-		}
-		
-		void setClearColor(float r, float g, float b, float a);
+    static bool isActionActive(const std::string &name)
+    {
+        return InputManager::isActionActive(name);
+    };
+    static void createInputAction(const std::string &name, const Keys &keys, const InputTrigger &trigger)
+    {
+        InputManager::createAction(name, keys, trigger);
+    }
 
-		std::shared_ptr<Scene> makeNewScene();
+    void setClearColor(float r, float g, float b, float a);
 
-		static Application* s_appInstance;
-		std::shared_ptr<WorldContext> ctx;
-		std::shared_ptr<Scene> scene;
-	private:
-		static void BeginFrame();
-		void computeProjection();
+    std::shared_ptr<Scene> makeNewScene();
+    std::shared_ptr<UIManager> makeNewUI();
 
-		const std::string m_name;
-		std::unique_ptr<TextRenderer> m_textRenderer;
+    void endFrame() const;
 
-		GLFWwindow* m_window;
-		int m_winWidth, m_winHeight;
-		types::Color4 m_clearColor;
+    static Application *sAppInstance;
+    std::shared_ptr<WorldContext> ctx;
+    std::shared_ptr<Scene> scene;
+    std::shared_ptr<UIManager> ui;
 
-		std::string m_font;
-		int m_nextTextId = 0;
+  private:
+    void beginFrame() const;
+    void computeCamera() const;
 
-		double m_now = 0.0f;
-		double m_lastFrame = 0.0f;
-		double m_deltaTime = 0.0f;
+    const std::string m_Name;
+    std::unique_ptr<TextRenderer> m_TextRenderer;
 
-	};
-}
+    GLFWwindow *m_Window;
+    int m_WinWidth, m_WinHeight;
+    types::Color4 m_ClearColor;
+
+    std::string m_Font;
+    int m_NextTextId = 0;
+
+    double m_Now = 0.0f;
+    double m_LastFrame = 0.0f;
+    double m_DeltaTime = 0.0f;
+};
+} // namespace grafyte

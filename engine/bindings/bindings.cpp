@@ -1,18 +1,16 @@
-// grafyte_bindings.cpp
+#include "glad/glad.h"
 
-#include <glad/glad.h>
-
+#include <pybind11/numpy.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
-#include <pybind11/numpy.h>
 
 #include "High/Application.h"
 #include "Intermediate/Object.h"
 
 #include "Inputs/InputManager.h"
 
-#include "Scene/Scene.h"
 #include "Scene/Managers/CollisionManager.h"
+#include "Scene/Scene.h"
 
 namespace py = pybind11;
 
@@ -30,9 +28,9 @@ PYBIND11_MODULE(GRAFYTE_PY_MODULE_NAME, m)
     // Expose Vec2 as a Python type that can be built from a tuple
     py::class_<grafyte::types::Vec2>(m, "Vec2")
         .def(py::init<float, float>(), py::arg("x") = 0.0f, py::arg("y") = 0.0f)
-        .def(py::init([](const py::sequence& seq)
-        {
-            if (py::len(seq) != 2) throw std::runtime_error("Vec2 must have exactly two elements");
+        .def(py::init([](const py::sequence &seq) {
+            if (py::len(seq) != 2)
+                throw std::runtime_error("Vec2 must have exactly two elements");
             return grafyte::types::Vec2{seq[0].cast<float>(), seq[1].cast<float>()};
         }))
         .def_readonly("x", &grafyte::types::Vec2::x)
@@ -95,6 +93,14 @@ PYBIND11_MODULE(GRAFYTE_PY_MODULE_NAME, m)
         .value("Left", grafyte::collision::Direction::Left)
         .export_values();
 
+    py::enum_<grafyte::ui::text::Anchor>(m, "Anchor")
+        .value("TopLeft", grafyte::ui::text::Anchor::TopLeft)
+        .value("BottomLeft", grafyte::ui::text::Anchor::BottomLeft)
+        .value("TopRight", grafyte::ui::text::Anchor::TopRight)
+        .value("BottomRight", grafyte::ui::text::Anchor::BottomRight)
+        .value("Center", grafyte::ui::text::Anchor::Center)
+        .export_values();
+
     py::class_<grafyte::collision::AABB>(m, "AABB")
         .def_readonly("pos", &grafyte::collision::AABB::pos)
         .def_readonly("width", &grafyte::collision::AABB::width)
@@ -105,7 +111,7 @@ PYBIND11_MODULE(GRAFYTE_PY_MODULE_NAME, m)
         .def_readonly("B", &grafyte::collision::Hit::B)
         .def_readonly("collision", &grafyte::collision::Hit::collision)
         .def_readonly("direction", &grafyte::collision::Hit::direction)
-        .def("__bool__", [](const grafyte::collision::Hit& self) { return self.collision; });
+        .def("__bool__", [](const grafyte::collision::Hit &self) { return self.collision; });
 
     py::enum_<grafyte::InputTrigger>(m, "InputTrigger")
         .value("Press", grafyte::Press)
@@ -113,243 +119,247 @@ PYBIND11_MODULE(GRAFYTE_PY_MODULE_NAME, m)
         .value("Release", grafyte::Release)
         .export_values();
 
+    py::class_<grafyte::Camera, std::shared_ptr<grafyte::Camera>>(m, "Camera")
+        .def(py::init<>())
+
+        // move(offset_x, offset_y)
+        .def(
+            "move",
+            [](grafyte::Camera &self, const float &offsetX, const float &offsetY) { self.move({offsetX, offsetY}); },
+            py::arg("offset_y"), py::arg("offset_x"))
+        // move_to(pos_x, pos_y)
+        .def(
+            "move_to", [](grafyte::Camera &self, const float &posX, const float &posY) { self.moveTo({posX, posY}); },
+            py::arg("pos_y"), py::arg("pos_x"))
+
+        // zoom(zoom)
+        .def("zoom", &grafyte::Camera::setZoom, py::arg("zoom"))
+
+        // follow(object)
+        .def(
+            "follow", [](grafyte::Camera &self, const grafyte::Object &object) { self.follow(object.getId()); },
+            py::arg("object"))
+
+        // follow_offset(offset_x, offset_y)
+        .def(
+            "follow_offset",
+            [](grafyte::Camera &self, const float &offsetX, const float &offsetY) {
+                self.setFollowOffset({offsetX, offsetY});
+            },
+            py::arg("offset_y"), py::arg("offset_x"));
+
     py::class_<grafyte::Object, std::shared_ptr<grafyte::Object>>(m, "Object")
-        .def_property_readonly("scale", &grafyte::Object::GetScale)
-        .def_property_readonly("pos", &grafyte::Object::GetPosition)
-        .def_property_readonly("rot", &grafyte::Object::GetRotation)
+        .def_property_readonly("scale", &grafyte::Object::getScale)
+        .def_property_readonly("pos", &grafyte::Object::getPosition)
+        .def_property_readonly("rot", &grafyte::Object::getRotation)
+        .def_property_readonly("alive", &grafyte::Object::isAlive)
 
-        .def("use_texture", &grafyte::Object::SetTexture, py::arg("texture_source_path"), py::arg("slot"))
+        // use_texture(texture_source_path, slot)
+        .def("use_texture", &grafyte::Object::setTexture, py::arg("texture_source_path"), py::arg("slot"))
 
-        .def("set_tint", [](const grafyte::Object& self, const float& r, const float& g, const float& b, const float& strength)
-        {
-            self.SetTint({r, g, b, strength});
-        }, py::arg("tint_r"), py::arg("tint_g"), py::arg("tint_b"), py::arg("strength"))
-        .def("set_color", [](const grafyte::Object& self, const float& r, const float& g, const float& b, const float& a)
-        {
-            self.SetColor({r, g, b, a});
-        }, py::arg("color_r"), py::arg("color_g"), py::arg("color_b"), py::arg("color_a"))
+        // set_color(color_r, color_g, color_b, color_a)
+        .def(
+            "set_color",
+            [](const grafyte::Object &self, const float &r, const float &g, const float &b, const float &a) {
+                self.setColor({r, g, b, a});
+            },
+            py::arg("color_r"), py::arg("color_g"), py::arg("color_b"), py::arg("color_a"))
 
-        .def("add_collision_box", [](const grafyte::Object& self, const float& pos_x, const float& pos_y,
-                                     const float& size_x, const float& size_y)
-        {
-            auto box = grafyte::collision::AABB{{pos_x, pos_y}, size_x, size_y};
-            self.AddCollisionBox(box);
-        }, py::arg("size_x"), py::arg("size_y"), py::arg("scale_x"), py::arg("scale_y"))
-        .def("collides_with", &grafyte::Object::CollidesWith, py::arg("other"))
-        .def("is_colliding", [](const grafyte::Object& self)
-        {
-            auto* scene = self.GetScene();
-            if (!scene) {
-                return grafyte::collision::Hit{grafyte::collision::AABB{}, grafyte::collision::AABB{}, false, grafyte::collision::Top};
-            }
-            return scene->collisions().IsColliding(self.GetId(), *scene);
-        })
-        .def("enable_auto_collides", &grafyte::Object::EnableAutoCollides)
+        // add_collision_box(pos_x, pos_y, size_x, size_y)
+        .def(
+            "add_collision_box",
+            [](const grafyte::Object &self, const float &posX, const float &posY, const float &sizeX,
+               const float &sizeY) {
+                auto box = grafyte::collision::AABB{{posX, posY}, sizeX, sizeY};
+                self.addCollisionBox(box);
+            },
+            py::arg("pos_x"), py::arg("pos_y"), py::arg("size_x"), py::arg("size_y"))
 
-        .def("move", [](const grafyte::Object& self, const float& offset_x, const float& offset_y)
-        {
-            self.Move({offset_x, offset_y});
-        }, py::arg("offset_x"), py::arg("offset_y"))
-        .def("move_to", [](const grafyte::Object& self, const float& pos_x, const float& pos_y)
-        {
-            self.MoveTo({pos_x, pos_y});
-        }, py::arg("pos_x"), py::arg("pos_y"))
-        .def("rotate", &grafyte::Object::Rotate, py::arg("angle"))
-        .def("set_rotation", &grafyte::Object::SetRotation, py::arg("angle"))
-        .def("set_scale", py::overload_cast<float>(&grafyte::Object::SetScale, py::const_), py::arg("scale"))
-        .def("set_scale", py::overload_cast<grafyte::types::Vec2>(&grafyte::Object::SetScale, py::const_), py::arg("scale"));
+        // collides_with(other) -> Hit
+        .def("collides_with", &grafyte::Object::collidesWith, py::arg("other"))
 
+        // is_colliding() -> list[Hit]
+        .def("is_colliding",
+             [](const grafyte::Object &self) -> std::vector<grafyte::collision::Hit> {
+                 auto *scene = self.getScene();
+                 if (!scene)
+                 {
+                     return {grafyte::collision::Hit{grafyte::collision::AABB{}, grafyte::collision::AABB{}, false,
+                                                     grafyte::collision::Top}};
+                 }
+                 return scene->collisions().isColliding(self.getId(), *scene);
+             })
+
+        // enable_auto_collides(order)
+        .def("enable_auto_collides", &grafyte::Object::enableAutoCollides, py::arg("order"))
+
+        // move(offset_x, offset_y)
+        .def(
+            "move",
+            [](const grafyte::Object &self, const float &offsetX, const float &offsetY) {
+                self.move({offsetX, offsetY});
+            },
+            py::arg("offset_x"), py::arg("offset_y"))
+
+        // move_to(pos_x, pos_y)
+        .def(
+            "move_to",
+            [](const grafyte::Object &self, const float &posX, const float &posY) { self.moveTo({posX, posY}); },
+            py::arg("pos_x"), py::arg("pos_y"))
+
+        // rotate(angle)
+        .def("rotate", &grafyte::Object::rotate, py::arg("angle"))
+
+        // set_rotation(angle)
+        .def("set_rotation", &grafyte::Object::setRotation, py::arg("angle"))
+
+        // set_scale(scale_x, scale_y)
+        .def(
+            "set_scale",
+            [](const grafyte::Object &self, const float &scaleX, const float &scaleY) {
+                self.setScale({scaleX, scaleY});
+            },
+            py::arg("scale_x"), py::arg("scale_y"))
+
+        // set_scale(scale)
+        .def("set_scale", py::overload_cast<grafyte::types::Vec2>(&grafyte::Object::setScale, py::const_),
+             py::arg("scale"))
+
+        // kill()
+        .def("kill", &grafyte::Object::kill);
 
     py::class_<grafyte::Scene, std::shared_ptr<grafyte::Scene>>(m, "Scene")
-        .def("spawn_object", [](grafyte::Scene& self,
-                            const float sx, const float sy,
-                            const std::string& shaderSourcePath,
-                            const float x, const float y,
-                            const bool hasTexture,
-                            const int zIndex) {
-            grafyte::types::MeshAsset mesh;
+        // spawn_object(scale_x, scale_y, shader_source_path, pos_x, pos_y, has_texture, z_index) -> Object
+        .def(
+            "spawn_object",
+            [](grafyte::Scene &self, const float sx, const float sy, const std::string &shaderSourcePath, const float x,
+               const float y, const bool hasTexture, const int zIndex) {
+                grafyte::types::MeshAsset mesh;
 
-            mesh.layoutSlots = {
-                grafyte::types::LayoutSlot{grafyte::types::AttribType::Float, 2}, // pos
-                grafyte::types::LayoutSlot{grafyte::types::AttribType::Float, 2}, // uv
-                grafyte::types::LayoutSlot{grafyte::types::AttribType::Float, 4}, // color
-            };
+                mesh.layoutSlots = {
+                    grafyte::types::LayoutSlot{grafyte::types::AttribType::Float, 2}, // pos
+                    grafyte::types::LayoutSlot{grafyte::types::AttribType::Float, 2}, // uv
+                    grafyte::types::LayoutSlot{grafyte::types::AttribType::Float, 4}, // color
+                };
 
-            mesh.geo = grafyte::types::QUAD;
-            mesh.scale = {sx, sy};
-            mesh.indices = {
-                0, 1, 2,
-                2, 3, 0
-            };
+                mesh.geo = grafyte::types::QUAD;
+                mesh.scale = {sx, sy};
+                mesh.indices = {0, 1, 2, 2, 3, 0};
 
-            grafyte::types::MaterialAsset mat;
-            mat.shaderSourcePath = shaderSourcePath;
-            mat.hasTexture = hasTexture;
+                grafyte::types::MaterialAsset mat;
+                mat.shaderSourcePath = shaderSourcePath;
+                mat.hasTexture = hasTexture;
 
-            if (hasTexture)
-            {
-                mat.textureSlot = 1;
-                mat.textureSourcePath = "@embed/Textures/Default";
-            }
+                if (hasTexture)
+                {
+                    mat.textureSlot = 1;
+                    mat.textureSourcePath = "@embed/Textures/Default";
+                }
 
-            const grafyte::types::Vec2 pos{x, y};
-            return self.spawnObject(mesh, mat, pos, zIndex, grafyte::types::QUAD);
-        }, py::arg("scale_x"), py::arg("scale_y"), py::arg("shader_source_path"), py::arg("pos_x"),
-        py::arg("pos_y"), py::arg("has_texture"), py::arg("z_index"))
-        .def("spawn_text_object", [](grafyte::Scene& self,
-            const float x,  const float y,
-            const std::string& text,
-            const float scale)
-        {
-            return self.spawnTextObject({x, y}, text, scale);
-        }, py::arg("pos_x"), py::arg("pos_y"), py::arg("text"), py::arg("scale"));
+                const grafyte::types::Vec2 pos{x, y};
+                return self.spawnObject(mesh, mat, pos, zIndex, grafyte::types::QUAD);
+            },
+            py::arg("scale_x"), py::arg("scale_y"), py::arg("shader_source_path"), py::arg("pos_x"), py::arg("pos_y"),
+            py::arg("has_texture"), py::arg("z_index"))
+
+        // spawn_text_object(pos_x, pos_y, text, scale) -> TextObject
+        .def(
+            "spawn_text_object",
+            [](grafyte::Scene &self, const float x, const float y, const std::string &text, const float scale) {
+                return self.spawnTextObject({x, y}, text, scale);
+            },
+            py::arg("pos_x"), py::arg("pos_y"), py::arg("text"), py::arg("scale"))
+
+        // get_camera() -> Camera
+        .def("get_camera", py::overload_cast<>(&grafyte::Scene::camera), py::return_value_policy::reference);
 
     py::class_<grafyte::TextObject, std::shared_ptr<grafyte::TextObject>>(m, "TextObject")
-        .def("set_text", &grafyte::TextObject::SetText, py::arg("text"))
-        .def("set_scale", &grafyte::TextObject::SetScale, py::arg("scale"))
-        .def("set_color", [](const grafyte::TextObject& self, const float& r, const float& g, const float& b, const float& a)
-        {
-            self.SetColor({r, g, b, a});
-        }, py::arg("color_r"), py::arg("color_g"), py::arg("color_b"), py::arg("color_a"));
+        // set_text(text)
+        .def("set_text", &grafyte::TextObject::setText, py::arg("text"))
+
+        // set_scale(scale)
+        .def("set_scale", &grafyte::TextObject::setScale, py::arg("scale"))
+
+        // set_color(color_r, color_g, color_b, color_a)
+        .def(
+            "set_color",
+            [](const grafyte::TextObject &self, const float &r, const float &g, const float &b, const float &a) {
+                self.setColor({r, g, b, a});
+            },
+            py::arg("color_r"), py::arg("color_g"), py::arg("color_b"), py::arg("color_a"));
 
     py::class_<grafyte::InputManager>(m, "InputManager")
-    // inputs
-    .def_static(
-        "is_key_down",
-        &grafyte::InputManager::isKeyDown,
-        py::arg("key"),
-        "Return current input state"
-    )
-    .def_static(
-        "was_key_pressed",
-        &grafyte::InputManager::wasKeyPressed,
-        py::arg("key"),
-        "Return current input state"
-    )
-    .def_static(
-        "was_key_released",
-        &grafyte::InputManager::wasKeyReleased,
-        py::arg("key"),
-        "Return current input state"
-    )
-
-    .def_static(
-        "create_action",
-        &grafyte::InputManager::createAction,
-        py::arg("name"),
-        py::arg("keys"),
-        py::arg("trigger"),
-        "Creates a new input action for the current application"
-    )
-    .def_static(
-        "is_action_active",
-        &grafyte::InputManager::isActionActive,
-        py::arg("action"),
-        "Return current input state"
-    );
-
-    py::class_<grafyte::Application>(m, "Application")
-        .def_property_readonly_static("input", [](const py::object& self) {
-            return static_cast<grafyte::InputManager *>(nullptr);
-        })
-
-        .def(py::init<const std::string&, const std::string&>(), py::arg("name"), py::arg("font"))
-        .def(py::init<const std::string&>(), py::arg("name"))
-
-        // init(winWidth, winHeight) -> int
-        .def(
-            "init",
-            &grafyte::Application::init,
-            py::arg("win_width"),
-            py::arg("win_height"),
-            "Initialize GLFW, OpenGL and ImGui for this application"
-        )
-
-        // shouldClose() -> bool
-        .def(
-            "should_close",
-            &grafyte::Application::shouldClose,
-            "Return True if the window should close and update timing"
-        )
-
-        // quit()
-        .def(
-            "quit",
-            &grafyte::Application::quit,
-            "Exit and kills the application"
-        )
-
-        // getNow() -> float
-        .def(
-            "get_now",
-            &grafyte::Application::getNow,
-            "Get the current time (glfwGetTime)"
-        )
-
-        // get_delta_time() -> float
-        .def(
-            "get_delta_time",
-            &grafyte::Application::getDeltaTime,
-            "Get the interval between last and current frame"
-        )
-
-        // make_new_scene()
-        .def(
-            "make_new_scene",
-            &grafyte::Application::makeNewScene,
-            "Sets the current renderer used by the application"
-        )
-
-        // render()
-        .def(
-            "render",
-            &grafyte::Application::render,
-            "Render all objects using the internal renderer"
-        )
+        .def(py::init())
 
         // inputs
-        .def_static(
-            "is_key_down",
-            &grafyte::Application::isKeyDown,
-            py::arg("key"),
-            "Return current input state"
-        )
-        .def_static(
-            "was_key_pressed",
-            &grafyte::Application::wasKeyPressed,
-            py::arg("key"),
-            "Return current input state"
-        )
-        .def_static(
-            "was_key_released",
-            &grafyte::Application::wasKeyReleased,
-            py::arg("key"),
-            "Return current input state"
-        )
+        .def_static("is_key_down", &grafyte::InputManager::isKeyDown, py::arg("key"))
+        .def_static("was_key_pressed", &grafyte::InputManager::wasKeyPressed, py::arg("key"))
+        .def_static("was_key_released", &grafyte::InputManager::wasKeyReleased, py::arg("key"))
 
-        .def_static(
-            "create_input_action",
-            &grafyte::Application::createInputAction,
-            py::arg("name"),
-            py::arg("key"),
-            py::arg("trigger"),
-            "Creates a new input action for the current application"
-        )
-        .def_static(
-            "is_action_active",
-            &grafyte::Application::isActionActive,
-            py::arg("action"),
-            "Return current input state"
-        )
+        .def_static("create_action", &grafyte::InputManager::createAction, py::arg("name"), py::arg("keys"),
+                    py::arg("trigger"), "Creates a new input action for the current application")
+        .def_static("is_action_active", &grafyte::InputManager::isActionActive, py::arg("action"));
 
-        // setClearColor()
+    py::class_<grafyte::UIManager, std::shared_ptr<grafyte::UIManager>>(m, "UIManager")
+        // add_text(pos_x, pos_y, text, scale)
         .def(
-            "set_clear_color",
-            &grafyte::Application::setClearColor,
-            py::arg("r"),
-            py::arg("g"),
-            py::arg("b"),
-            py::arg("a"),
-            "Set clear color (currently no-op in C++ implementation)"
-        );
+            "add_text",
+            [](grafyte::UIManager &self, const float posX, const float posY, const std::string &text, const float scale,
+               const grafyte::ui::text::Anchor &anchor) { return self.addText({posX, posY}, text, scale, anchor); },
+            py::arg("pos_x"), py::arg("pos_y"), py::arg("text"), py::arg("scale"), py::arg("anchor"))
+
+        // remove_text(text)
+        .def(
+            "remove_text",
+            [](grafyte::UIManager &self, const grafyte::ui::text::Text &text) { self.removeText(text.getId()); },
+            py::arg("text"));
+
+    py::class_<grafyte::ui::text::Text, std::shared_ptr<grafyte::ui::text::Text>>(m, "Text")
+        // set_text(text)
+        .def("set_text", &grafyte::ui::text::Text::setText, py::arg("text"))
+
+        // set_color(color_r, color_g, color_b, color_a)
+        .def(
+            "set_color",
+            [](grafyte::ui::text::Text &self, const float colorR, const float colorG, const float colorB,
+               const float colorA) { self.setColor({colorR, colorG, colorB, colorA}); },
+            py::arg("color_r"), py::arg("color_g"), py::arg("color_b"), py::arg("color_a"))
+
+        // set_scale(scale)
+        .def("set_scale", &grafyte::ui::text::Text::setScale, py::arg("scale"));
+
+    py::class_<grafyte::Application>(m, "Application")
+        .def_property_readonly_static(
+            "input", [](const py::object &self) { return static_cast<grafyte::InputManager *>(nullptr); })
+
+        .def(py::init<const std::string &, const std::string &>(), py::arg("name"), py::arg("font"))
+        .def(py::init<const std::string &>(), py::arg("name"))
+
+        // init(win_width, win_height) -> int
+        .def("init", &grafyte::Application::init, py::arg("win_width"), py::arg("win_height"))
+
+        // shouldClose() -> bool
+        .def("should_close", &grafyte::Application::shouldClose)
+
+        // quit()
+        .def("quit", &grafyte::Application::quit)
+
+        // getNow() -> float
+        .def("get_now", &grafyte::Application::getNow)
+
+        // get_delta_time() -> float
+        .def("get_delta_time", &grafyte::Application::getDeltaTime)
+
+        // make_new_scene()
+        .def("make_new_scene", &grafyte::Application::makeNewScene)
+
+        // make_new_ui()
+        .def("make_new_ui", &grafyte::Application::makeNewUI)
+
+        // render()
+        .def("render", &grafyte::Application::render)
+
+        // set_clear_color(r, g, b, a)
+        .def("set_clear_color", &grafyte::Application::setClearColor, py::arg("r"), py::arg("g"), py::arg("b"),
+             py::arg("a"));
 }

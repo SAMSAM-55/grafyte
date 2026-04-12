@@ -1,36 +1,40 @@
 Handling Input
 ==============
 
-Grafyte provides an ``InputManager`` accessed via ``app.input``. We can check if a key was pressed using ``app.input.was_key_pressed(Key)``.
-Below is an example program that allows you to switch the color of the background based on keyboard inputs.
+Grafyte exposes input through ``app.input``.
 
-Switch the background color
----------------------------
+Raw Key States
+--------------
 
-The following example switches the background color when the 'R' or 'G' keys are pressed.
+The input manager provides three accessors:
+
+- ``app.input.key[Key.X]`` for keys currently held down
+- ``app.input.key_pressed[Key.X]`` for the frame a key was pressed
+- ``app.input.key_released[Key.X]`` for the frame a key was released
+
+Example:
 
 .. code-block:: python
 
    import grafyte
    from grafyte import Key
 
-   app = grafyte.Application("My Game", (640, 240))
+   app = grafyte.Application("Input Example", (640, 360))
 
-   GRAY = (127, 127, 127)
    RED = (255, 0, 0)
    GREEN = (0, 255, 0)
+   GRAY = (127, 127, 127)
 
-   background = GRAY
+   app.background_color = GRAY
 
    while not app.should_close():
-       if app.input.was_key_pressed(Key.R):
-           background = RED
-       elif app.input.was_key_pressed(Key.G):
-           background = GREEN
-           
-       app.set_background_color(background)
+       if app.input.key_pressed[Key.R]:
+           app.background_color = RED
+       elif app.input.key_pressed[Key.G]:
+           app.background_color = GREEN
+
        app.render()
 
    app.quit()
 
-Test the program. Pressing the R and G keys allows you to switch the background color.
+Use ``key_pressed`` for one-frame actions such as toggles, and ``key`` for continuous movement.

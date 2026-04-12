@@ -1,55 +1,100 @@
 Advanced Concepts
 =================
 
-In this section, we'll explore some advanced features of Grafyte that allow you to create more visually complex and dynamic games, including textures, tinting, and precise time-based movement.
+This chapter covers textured objects, camera control, collision helpers, and UI text.
 
-Textures and Tinting
---------------------
+Textured Objects and Tint
+-------------------------
 
-While solid colors are great for prototyping, most games use textures (images) for their entities. Grafyte makes it easy to load and apply textures to your objects.
-
-To use a texture, you must set the ``has_texture`` parameter to ``True`` when spawning the object. Then, you can use the ``use_texture(path, slot)`` method.
+To use a texture, create the object with ``has_texture=True`` and then load the texture:
 
 .. code-block:: python
 
-   # Spawn an object that supports textures
-   player = scene.spawn_object((0, 0), (64, 64), has_texture=True)
-   
-   # Load and use a texture file
+   player = scene.spawn_object((0, 0), (32, 32), has_texture=True)
    player.use_texture("res/textures/player.png", 0)
 
-You can also apply a **tint** to a textured object. This multiplies the texture's colors by the tint color, allowing you to create effects like damage flashes, status effects, or simple color variations of the same sprite.
-
-The ``set_tint(color, strength)`` method takes an RGB tuple and a strength value from 0.0 to 1.0.
+Textured objects use ``tint`` instead of ``color``:
 
 .. code-block:: python
 
-   # Apply a red tint (e.g., when taking damage)
-   # (255, 0, 0) is RED, strength 0.5 makes it half-red
-   player.set_tint((255, 0, 0), 0.5)
-   
-   # Clear the tint
-   player.set_tint((0, 0, 0), 0.0)
+   player.tint = (255, 0, 0, 0.5)
 
-Delta Time and Smooth Movement
-------------------------------
+The fourth component is the tint strength from ``0.0`` to ``1.0``.
 
-In previous examples, we moved objects by a fixed number of units each frame. However, frame rates can vary between different computers. To ensure your game runs at the same speed regardless of the FPS (frames per second), we use **Delta Time** (``dt``).
+Camera
+------
 
-Delta Time is the amount of time that passed since the last frame. By multiplying your speeds by ``dt``, you convert your movement from "units per frame" to "units per second".
-
-In Grafyte, you get the delta time using ``app.get_delta_time()``.
+Each scene exposes a camera object:
 
 .. code-block:: python
 
-   speed = 25 # Units per second
-   
-   while not app.should_close():
-       dt = app.get_delta_time()
-       
-       # Move the player 25 units per second to the right
-       player.move((speed * dt, 0))
-       
-       app.render()
+   camera = scene.camera
+   camera.follow = player
+   camera.follow_offset = (0, 15)
+   camera.zoom = 1.1
 
-Using ``dt`` is essential for consistent gameplay across all hardware.
+You can also place the camera manually with ``camera.pos = (x, y)``.
+
+Collisions
+----------
+
+Attach collision boxes to objects and query the results:
+
+.. code-block:: python
+
+   wall = scene.spawn_object((40, 0), (20, 60))
+   wall.color = (180, 180, 180)
+   wall.add_collision_box((0, 0), (20, 60))
+
+   player.add_collision_box((0, 0), (20, 20))
+
+   hit = player.collides_with(wall)
+   if hit:
+       print(hit.direction)
+
+For automatic collision resolution order, set ``player.auto_collides`` to an integer priority.
+
+For exemple, if you want the player to be blocked automatically by many walls:
+
+.. code-block:: python
+
+   wall = scene.spawn_object((40, 0), (20, 60))
+   wall.color = (180, 180, 180)
+   wall.add_collision_box((0, 0), (20, 60))
+
+   wall2 = scene.spawn_object((0, -10), (40, 10))
+   wall2.color = (180, 180, 180)
+   wall2.add_collision_box((0, 0), (40, 10))
+
+   # wall3 etc.
+
+   player.add_collision_box((0, 0), (20, 20))
+   player.auto_collides = 1 # This will handle collision automatically
+
+Alternatively, if you want multiple objects to collide in a predictable way, you must use higher orders.
+In grafyte, a higher order object will push the objects with a lower resolution order:
+
+.. code-block:: python
+
+   player.auto_collides = 1
+   # ...
+   ball.auto_collides = 2
+
+In the above exemple, the ball will always push back the player when the two objects are colliding.
+Please note that if two objects have the same order, their collisions can be unpredictable when coding (but
+deterministic at runtime)
+
+UI Text
+-------
+
+For screen-space overlays, create a UI manager:
+
+.. code-block:: python
+
+   from grafyte import Anchor
+
+   ui = app.make_new_ui()
+   score = ui.add_text((10, 10), "Score: 0", scale=18, anchor=Anchor.TopLeft)
+   score.color = (255, 255, 255)
+
+UI text stays attached to the screen instead of moving with the world camera.

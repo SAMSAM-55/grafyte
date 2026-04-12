@@ -7,16 +7,16 @@
 #include "default_texture.embed"
 
 namespace grafyte::embedded {
-    constexpr std::size_t basicShader_size   = sizeof(basicShader_embed);
-    constexpr std::size_t textureShader_size = sizeof(textureShader_embed);
-    constexpr std::size_t textShader_size    = sizeof(textShader_embed);
-    constexpr std::size_t interFont_size     = sizeof(interFont_embed);
-    constexpr std::size_t noTexture_size     = sizeof(defaultTexture_embed);
+    constexpr std::size_t BasicShaderSize   = sizeof(basicShader_embed);
+    constexpr std::size_t TextureShaderSize = sizeof(textureShader_embed);
+    constexpr std::size_t TextShaderSize    = sizeof(textShader_embed);
+    constexpr std::size_t InterFontSize     = sizeof(interFont_embed);
+    constexpr std::size_t NoTextureSize     = sizeof(defaultTexture_embed);
 
-    const EmbeddedAsset basicShader   = { basicShader_embed,   basicShader_size };
-    const EmbeddedAsset textureShader = { textureShader_embed, textureShader_size };
-    const EmbeddedAsset textShader    = { textShader_embed,    textShader_size };
-    const EmbeddedAsset baseFont      = { interFont_embed,     interFont_size };
-    const EmbeddedAsset noTexture     = {defaultTexture_embed, noTexture_size};
+    const EmbeddedAsset BasicShader   = { basicShader_embed,   BasicShaderSize };
+    const EmbeddedAsset TextureShader = { textureShader_embed, TextureShaderSize };
+    const EmbeddedAsset TextShader    = { textShader_embed,    TextShaderSize };
+    const EmbeddedAsset BaseFont      = { interFont_embed,     InterFontSize };
+    const EmbeddedAsset NoTexture     = {defaultTexture_embed, NoTextureSize};
 
 }

@@ -1,24 +1,27 @@
 #pragma once
 
-#include <string>
 #include <memory>
+#include <string>
 
 #include "types.h"
-namespace grafyte {
-    class Scene;
 
-    class TextObject {
-    public:
-        explicit TextObject(std::shared_ptr<Scene> scene, const types::ObjectId& id);
-        ~TextObject();
+namespace grafyte
+{
+class Scene;
 
-        void SetText(const std::string& text) const;
-        void SetScale(const float& scale) const;
-        void SetColor(const types::Color4& color) const;
-        void Remove() const;
+class TextObject
+{
+  public:
+    explicit TextObject(const std::shared_ptr<Scene> &scene, const types::ObjectId &id);
+    ~TextObject();
 
-    private:
-        std::weak_ptr<Scene> m_scene;
-        types::ObjectId m_id;
-    };
-}
+    void setText(const std::string &text) const;
+    void setScale(const float &scale) const;
+    void setColor(const types::Color4 &color) const;
+    void remove() const;
+
+  private:
+    std::weak_ptr<Scene> m_Scene;
+    types::ObjectId m_Id;
+};
+} // namespace grafyte

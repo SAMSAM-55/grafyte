@@ -7,33 +7,22 @@ namespace grafyte
 	class VertexBuffer
 	{
 	public:
-		VertexBuffer(const void* data, unsigned int size, unsigned int usage = GL_STATIC_DRAW);
+		VertexBuffer(const void* data, GLuint size, GLenum usage = GL_STATIC_DRAW);
 		~VertexBuffer();
 
 		VertexBuffer(const VertexBuffer&) = delete;
 		VertexBuffer& operator=(const VertexBuffer&) = delete;
 
-		VertexBuffer(VertexBuffer&& other) noexcept : m_RendererID(other.m_RendererID) {
-			other.m_RendererID = 0;
-		}
+		VertexBuffer(VertexBuffer&& other) noexcept;
 
-		VertexBuffer& operator=(VertexBuffer&& other) noexcept {
-			if (this != &other) {
-				release();
-				m_RendererID = other.m_RendererID;
-				other.m_RendererID = 0;
-			}
-			return *this;
-		}
+		VertexBuffer& operator=(VertexBuffer&& other) noexcept;
+		void updateData(const void* data, GLuint size) const;
 
-		void UpdateData(const void* data, unsigned int size) const;
+		void bind() const;
+        static void unbind();
 
-		void Bind() const;
-		void Unbind() const;
 		void release();
-
-
 	private:
-		unsigned int m_RendererID = 0;
+		GLuint m_RendererID = 0;
 	};
 }

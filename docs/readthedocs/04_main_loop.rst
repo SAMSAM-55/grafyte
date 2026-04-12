@@ -1,24 +1,40 @@
 The Main Loop
 =============
 
-The most essential part of any interactive application is the main loop.
-
-In Grafyte, we use ``app.should_close()`` to check if the user wants to quit:
+Grafyte applications run inside a frame loop:
 
 .. code-block:: python
 
    import grafyte
 
-   app = grafyte.Application("My Game", (640, 240))
+   app = grafyte.Application("My Game", (640, 360))
+   scene = app.make_new_scene()
 
    while not app.should_close():
        app.render()
 
    app.quit()
 
-The ``app.render()`` function is responsible for drawing everything and handling system events. Without it, the window will not respond.
+``app.should_close()`` returns ``True`` when the user requests to close the window. ``app.render()`` processes window events and draws the current frame, so it must be called every iteration.
 
-Quit the application properly
------------------------------
+Frame Timing
+------------
 
-In Grafyte, the ``Application`` class handles the window close button automatically. When you click the close button, ``app.should_close()`` returns ``True``, and the loop ends. We then call ``app.quit()`` to shut down correctly.
+Grafyte exposes frame timing as properties:
+
+- ``app.dt``: elapsed time since the previous frame, in seconds
+- ``app.now``: current engine time, in seconds
+
+Example:
+
+.. code-block:: python
+
+   while not app.should_close():
+       elapsed = app.now
+       delta = app.dt
+       app.render()
+
+Shutdown
+--------
+
+Call ``app.quit()`` once the loop ends so native resources are released cleanly.
