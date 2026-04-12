@@ -130,14 +130,6 @@ grafyte::types::Vec2 grafyte::CollisionManager::pushBackOnMove(const types::Obje
     return bestTranslation;
 }
 
-void grafyte::CollisionManager::resolveAutoCollides(Scene &scene)
-{
-    for (const auto &id : m_AutoCollides | std::views::keys)
-    {
-        pushBackOnMove(id, {0.0f, 0.0f}, scene);
-    }
-}
-
 void grafyte::CollisionManager::rebuildGrid(Scene &scene)
 {
     if (m_Built)

@@ -200,8 +200,6 @@ std::shared_ptr<UIManager> Application::makeNewUI()
 
 void Application::endFrame() const
 {
-    if (scene)
-        ctx->collisions.resolveAutoCollides(*scene);
 }
 
 void Application::beginFrame() const
