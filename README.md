@@ -6,7 +6,7 @@ aims to provide a fast and easy-to-use interface for creating 2D games and inter
 ## Features
 
 - **Simple API**: Designed for ease of use with a straightforward Pythonic interface.
-- **Fast Rendering**: Core engine written in C++ utilizing OpenGL.
+- **Fast Rendering**: Core engine written in C++ using OpenGL.
 - **2D Sprites**: Support for textures and colored objects.
 - **Text Rendering**: Easy text display with scale and color control.
 - **Simple Collision System**: Integrated AABB-based collision detection with automatic resolution.
@@ -15,7 +15,7 @@ aims to provide a fast and easy-to-use interface for creating 2D games and inter
 
 ## Installation
 
-To install grafyte , simply run the following command in your terminal:
+To install grafyte, run the following command in your terminal:
 
 ```bash
 python -m pip install grafyte
@@ -84,7 +84,7 @@ player.color = (0, 255, 0), 1.0
 app.input.create_action("move_right", InputTrigger.Hold, Key.D)
 
 while not app.should_close():
-    dt = app.get_delta_time()
+    dt = app.dt
 
     # Handle input
     if app.input["move_right"]:
