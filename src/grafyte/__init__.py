@@ -232,7 +232,7 @@ class Object:
 class TextObject:
     def __init__(self, native_object: _NativeTextObject):
         self.__native = native_object
-        self.__color = (255, 255, 255, 1.0)
+        self.__color = (0, 0, 0, 1.0)
         self.__color_proxy = ColorProxy(
             getter=self._get_color,
             setter=self._set_color,
@@ -285,7 +285,7 @@ class TextObject:
 class Text:
     def __init__(self, native_text: _NativeText):
         self.__native = native_text
-        self.__color = (255, 255, 255, 1.0)
+        self.__color = (0, 0, 0, 1.0)
         self.__color_proxy = ColorProxy(
             getter=self._get_color,
             setter=self._set_color,
