@@ -1,83 +1,101 @@
 #include "CollisionManager.h"
 #include "Scene/Scene.h"
 
-#include <stdexcept>
+#include <cmath>
 #include <iostream>
 #include <ranges>
-#include <cmath>
+#include <stdexcept>
 
 #include "Physics/Collisions/CollisionSolver.h"
 
-grafyte::collision::Hit grafyte::CollisionManager::ObjectsCollides(const types::ObjectId& A, const types::ObjectId& B, Scene& scene) {
-    if (!(m_collisionBounds.contains(A) && m_collisionBounds.contains(B))) {
+grafyte::collision::Hit grafyte::CollisionManager::objectsCollide(const types::ObjectId &a, const types::ObjectId &b,
+                                                                  Scene &scene)
+{
+    if (!(m_CollisionBounds.contains(a) && m_CollisionBounds.contains(b)))
+    {
         throw std::runtime_error("[Collision Manager] Cannot check for collision between the two objects, at least one "
                                  "has no collision bounds");
     }
 
-    const std::vector<collision::AABB>& AColliders = m_collisionBounds[A];
-    const std::vector<collision::AABB>& BColliders = m_collisionBounds[B];
+    const std::vector<collision::AABB> &aColliders = m_CollisionBounds[a];
+    const std::vector<collision::AABB> &bColliders = m_CollisionBounds[b];
 
-    const types::Vec2 aPos = scene.transform(A).pos;
-    const types::Vec2 bPos = scene.transform(B).pos;
+    const types::Vec2 aPos = scene.transform(a).pos;
+    const types::Vec2 bPos = scene.transform(b).pos;
 
-    for (const auto& a: AColliders)
+    for (const auto &a : aColliders)
     {
         const auto aWorld = collision::AABB{a.pos + aPos, a.width, a.height};
-        for (const auto& b: BColliders)
+        for (const auto &b : bColliders)
         {
             const auto bWorld = collision::AABB{b.pos + bPos, b.width, b.height};
-            if (const auto hit = CollisionSolver::Intersects(aWorld, bWorld)) return hit;
+            if (const auto hit = CollisionSolver::intersects(aWorld, bWorld))
+                return hit;
         }
     }
 
     return collision::Hit{collision::AABB{}, collision::AABB{}, false, collision::Top};
 }
 
-std::vector<grafyte::collision::Hit> grafyte::CollisionManager::IsColliding(const types::ObjectId &A, Scene &scene)
+std::vector<grafyte::collision::Hit> grafyte::CollisionManager::isColliding(const types::ObjectId &a, Scene &scene)
 {
-    const auto worldBounds = ComputeObjectWorldBounds(A, scene);
-    const auto queryCandidates = m_grid.queryCandidates(worldBounds);
+    const auto worldBounds = computeObjectWorldBounds(a, scene);
 
-    for (const auto& B : queryCandidates)
+    for (const auto queryCandidates = m_Grid.queryCandidates(worldBounds); const auto &b : queryCandidates)
     {
-        if (B == A) continue;
+        if (b == a)
+            continue;
 
-        if (const auto hit = ObjectsCollides(A, B, scene))
+        if (!(m_CollisionBounds.contains(b)))
+            continue;
+
+        if (const auto hit = objectsCollide(a, b, scene))
         {
-            m_colliding[A].push_back(hit);
-            m_colliding[B].push_back(hit);
+            m_Colliding[a].push_back(hit);
         }
     }
 
-    if (!m_colliding[A].empty()) return m_colliding[A];
+    if (!m_Colliding[a].empty())
+        return m_Colliding[a];
 
     return {collision::Hit{collision::AABB{}, collision::AABB{}, false, collision::Top}};
 }
 
-grafyte::types::Vec2 grafyte::CollisionManager::PushBackOnMove(const types::ObjectId& objId, const types::Vec2& v, Scene& scene)
-{
-    if (v.x == 0 && v.y == 0) return {0.0f, 0.0f};
+// ==================================================
+// [SECTION] Auto collisions
+// ==================================================
 
-    if (!m_collisionBounds.contains(objId)) return {0.0f, 0.0f};
+grafyte::types::Vec2 grafyte::CollisionManager::pushBackOnMove(const types::ObjectId &objId, const types::Vec2 &mov,
+                                                               Scene &scene)
+{
+    if (mov.x == 0 && mov.y == 0)
+        return {0.0f, 0.0f};
+
+    if (!m_CollisionBounds.contains(objId))
+        return {0.0f, 0.0f};
 
     const types::Vec2 aPos = scene.transform(objId).pos;
-    const std::vector<collision::AABB> colliders = m_collisionBounds[objId];
+    const std::vector<collision::AABB> colliders = m_CollisionBounds[objId];
 
     bool found = false;
     types::Vec2 bestTranslation{0.0f, 0.0f};
     float bestLenSq = INFINITY;
 
-    for (const auto&[id, bounds]: m_collisionBounds)
+    for (const auto &[id, bounds] : m_CollisionBounds)
     {
-        if (id == objId) {
+        if (id == objId)
+        {
             // Skip self-collision
             continue;
         }
 
-        if (m_autoCollides.contains(id) && m_autoCollides.contains(objId)) {
-            if (m_autoCollides.at(id) < m_autoCollides.at(objId)) {
-                const types::Vec2 opposite = PushBackOnMove(id, -v, scene);
-                if (opposite.x != 0.0f || opposite.y != 0.0f) {
+        if (m_AutoCollides.contains(id) && m_AutoCollides.contains(objId))
+        {
+            if (m_AutoCollides.at(id) < m_AutoCollides.at(objId))
+            {
+                if (const types::Vec2 opposite = pushBackOnMove(id, -mov, scene);
+                    opposite.x != 0.0f || opposite.y != 0.0f)
+                {
                     scene.transform(id).pos += opposite;
                     return {0.0f, 0.0f};
                 }
@@ -86,13 +104,16 @@ grafyte::types::Vec2 grafyte::CollisionManager::PushBackOnMove(const types::Obje
 
         const types::Vec2 bPos = scene.transform(id).pos;
 
-        for (const auto& A: colliders)
+        for (const auto &aCollider : colliders)
         {
-            for (const auto& B: bounds)
+            for (const auto &bCollider : bounds)
             {
-                if (const auto translation = CollisionSolver::ComputePushBackTranslation(A, B, aPos, bPos)) {
-                    const float lenSq = translation->x * translation->x + translation->y * translation->y;
-                    if (!found || lenSq < bestLenSq) {
+                if (const auto translation =
+                        CollisionSolver::computePushBackTranslation(aCollider, bCollider, aPos, bPos))
+                {
+                    if (const float lenSq = translation->x * translation->x + translation->y * translation->y;
+                        !found || lenSq < bestLenSq)
+                    {
                         found = true;
                         bestLenSq = lenSq;
                         bestTranslation = *translation;
@@ -101,38 +122,47 @@ grafyte::types::Vec2 grafyte::CollisionManager::PushBackOnMove(const types::Obje
             }
         }
     }
-    if (!found) {
+    if (!found)
+    {
         return {0, 0};
     }
 
     return bestTranslation;
 }
 
-void grafyte::CollisionManager::resolveAutoCollides(Scene& scene) {
-    for (const auto& id: m_autoCollides | std::views::keys) {
-        PushBackOnMove(id, {0.0f, 0.0f}, scene);
+void grafyte::CollisionManager::resolveAutoCollides(Scene &scene)
+{
+    for (const auto &id : m_AutoCollides | std::views::keys)
+    {
+        pushBackOnMove(id, {0.0f, 0.0f}, scene);
     }
 }
 
-void grafyte::CollisionManager::RebuildGrid(Scene &scene) {
-    if (built) {
+void grafyte::CollisionManager::rebuildGrid(Scene &scene)
+{
+    if (m_Built)
+    {
         buildGridFromDirty(scene);
         return;
     }
 
-    m_grid.clear();
+    m_Grid.clear();
 
-    for (const auto& [id, bounds] : m_collisionBounds) {
-        if (bounds.empty()) continue;
-        const auto worldBounds = ComputeObjectWorldBounds(id, scene);
-        m_grid.insert(id, worldBounds);
+    for (const auto &[id, bounds] : m_CollisionBounds)
+    {
+        if (bounds.empty())
+            continue;
+        const auto worldBounds = computeObjectWorldBounds(id, scene);
+        m_Grid.insert(id, worldBounds);
     }
 
-    built = true;
+    m_Built = true;
 }
 
-grafyte::collision::AABB grafyte::CollisionManager::ComputeObjectWorldBounds(const types::ObjectId& id, Scene& scene) const {
-    const auto& colliders = m_collisionBounds.at(id);
+grafyte::collision::AABB grafyte::CollisionManager::computeObjectWorldBounds(const types::ObjectId &id,
+                                                                             Scene &scene) const
+{
+    const auto &colliders = m_CollisionBounds.at(id);
     const auto objPos = scene.transform(id).pos;
 
     float minX = INFINITY;
@@ -140,7 +170,8 @@ grafyte::collision::AABB grafyte::CollisionManager::ComputeObjectWorldBounds(con
     float maxX = -INFINITY;
     float maxY = -INFINITY;
 
-    for (const auto& c : colliders) {
+    for (const auto &c : colliders)
+    {
         const float cMinX = objPos.x + c.pos.x - c.width;
         const float cMaxX = objPos.x + c.pos.x + c.width;
         const float cMinY = objPos.y + c.pos.y - c.height;
@@ -160,15 +191,27 @@ grafyte::collision::AABB grafyte::CollisionManager::ComputeObjectWorldBounds(con
     return {{centerX, centerY}, halfW, halfH};
 }
 
-void grafyte::CollisionManager::buildGridFromDirty(Scene &scene) {
-    m_grid.cleanDirty(m_gridDirty);
+void grafyte::CollisionManager::removeObject(const types::ObjectId &objId)
+{
+    m_AutoCollides.erase(objId);
+    m_Colliding.erase(objId);
+    m_CollisionBounds.erase(objId);
+    m_GridDirty.push_back(objId);
+}
 
-    for (const auto& id : m_gridDirty) {
-        const auto& bounds = m_collisionBounds[id];
-        if (bounds.empty()) continue;
-        const auto worldBounds = ComputeObjectWorldBounds(id, scene);
-        m_grid.insert(id, worldBounds);
+void grafyte::CollisionManager::buildGridFromDirty(Scene &scene)
+{
+    m_Grid.cleanDirty(m_GridDirty);
+
+    for (const auto &id : m_GridDirty)
+    {
+        const auto it = m_CollisionBounds.find(id);
+        if (it == m_CollisionBounds.end() || it->second.empty())
+            continue;
+
+        const auto worldBounds = computeObjectWorldBounds(id, scene);
+        m_Grid.insert(id, worldBounds);
     }
 
-    m_gridDirty.clear();
+    m_GridDirty.clear();
 }

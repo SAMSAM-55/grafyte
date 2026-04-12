@@ -6,23 +6,34 @@
 
 struct Glyph
 {
-	float u0, v0, u1, v1; // Atlas uv
-	int width, height;
-	int bearingX, bearingY;
-	int advance;
+    float u0, v0, u1, v1; // Atlas uv
+    int width, height;
+    int bearingX, bearingY;
+    int advance;
 };
 
-class Font 
+class Font
 {
-public:
-	GLuint textureID = 0;
-	int bakedRes = 0;
-	int atlasWidth = 0, atlasHeight = 0;
-	std::unordered_map<char, Glyph> glyphs;
+  public:
+    GLuint textureID = 0;
+    int bakedRes = 0;
+    int atlasWidth = 0, atlasHeight = 0;
+    std::unordered_map<char, Glyph> glyphs;
 
-	static float TextScaleFromPt(const float pt, const float dpi, const int baked)
-	{
-		const float desired = pt * dpi / 72.0f;
-		return desired / static_cast<float>(baked);
-	}
+    // font metrics (FreeType)
+    int ascent = 0;
+    int descent = 0;
+    int lineHeight = 0;
+
+    static float textScaleFromPt(const float pt, const float dpi, const int baked)
+    {
+        const float desired = pt * dpi / 72.0f;
+        return desired / static_cast<float>(baked);
+    }
+
+    [[nodiscard]] float measureTextHeight(const float scale, const float dpi, const int baked) const
+    {
+        const float finalScale = Font::textScaleFromPt(scale, dpi, baked);
+        return static_cast<float>(lineHeight) * finalScale;
+    }
 };

@@ -1,9 +1,7 @@
 Colors
-=============
+======
 
-Colors in Grafyte are defined as tuples of the base colors red, green and blue (RGB). Each base color is represented as a number between 0 and 255.
-
-Here are some examples of colors and their RGB codes (red, green and blue values).
+Grafyte colors use integer RGB values from ``0`` to ``255``. Some APIs also accept an alpha or tint-strength value as a fourth component.
 
 .. code-block:: python
 
@@ -15,8 +13,34 @@ Here are some examples of colors and their RGB codes (red, green and blue values
    BLUE = (0, 0, 255)
    YELLOW = (255, 255, 0)
 
-To change the background color of the window, use ``app.set_background_color(color)``:
+Background Color
+----------------
+
+Set the window clear color through the ``background_color`` property:
 
 .. code-block:: python
 
-   app.set_background_color(YELLOW) # or (255, 255, 0)
+   app.background_color = YELLOW
+
+Object Color
+------------
+
+Non-textured objects use the ``color`` property:
+
+.. code-block:: python
+
+   square = scene.spawn_object((0, 0), (20, 20))
+   square.color = GREEN
+   square.color = (255, 255, 255, 0.5)
+
+The 4-value form sets RGB plus alpha.
+
+Text Color
+----------
+
+Scene text and UI text expose the same property:
+
+.. code-block:: python
+
+   label = scene.spawn_text_object((0, 30), "Hello")
+   label.color = RED

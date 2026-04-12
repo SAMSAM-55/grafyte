@@ -9,38 +9,50 @@
 #include FT_FREETYPE_H
 
 #include "GL-Core/Shader.h"
-#include "glm/glm.hpp"
+#include "UI/UIManager.h"
 #include "World/Camera.h"
+#include "glm/glm.hpp"
 
 namespace grafyte
 {
-	constexpr int PAD = 1;
+constexpr int PAD = 1;
 
-	class TextRenderer
-	{
-	public:
-		TextRenderer(const std::string& fontPath, int pixelSize);
-		~TextRenderer();
+class TextRenderer
+{
+  public:
+    TextRenderer(const std::string &fontPath, int pixelSize);
+    ~TextRenderer();
 
-		void SetDpi(const types::Vec2& dpi) {m_dpi = dpi;};
+    void setDpi(const types::Vec2 &dpi)
+    {
+        m_Dpi = dpi;
+    };
 
-		const Font& GetFont();
+    const Font &getFont();
 
-		float MeasureTextWidth(const std::string& text, float scale) const;
+    float measureTextWidth(const std::string &text, float scale) const;
 
-		void DrawText(const std::string& text, float x, float y, float scale,
-		              const glm::vec4& color, const types::Vec2& windowDimensions) const;
+    void drawText(const std::string &text, float x, float y, float scale, const types::Color4 &color,
+                  const types::Vec2 &windowDimensions) const;
 
-		void DrawTextObject(const std::string &text, float x, float y, float scale,
-		                    const types::Color4 &color, Camera *camera) const;
+    void drawTextObject(const std::string &text, float x, float y, float scale, const types::Color4 &color,
+                        const Camera *camera) const;
 
-		void Render(const std::vector<types::TextData>& renderList, Camera* camera) const;
-	private:
-		Font font;
-		Shader shader;
-		unsigned int vao, vbo;
-		types::Vec2 m_dpi = {0.0f, 0.0f};
+    void renderTextObjects(const std::vector<types::TextData> &renderList, const Camera *camera) const;
+    void renderTexts(const std::vector<ui::text::Text> &texts, const types::Vec2 &windowDimensions) const;
 
-		static void InitFaceFromSource(const std::string& idOrPath, const FT_Library& library, FT_Face* face);
-	};
-}
+    void render(const std::vector<types::TextData> &objects, const std::vector<ui::text::Text> &texts,
+                const Camera *camera, const types::Vec2 &windowDimensions) const;
+
+  private:
+    Font m_Font;
+    Shader m_Shader;
+    GLuint m_Vao, m_Vbo;
+    types::Vec2 m_Dpi = {0.0f, 0.0f};
+
+    static void initFaceFromSource(const std::string &idOrPath, const FT_Library &library, FT_Face *face);
+    types::Vec2 getAnchoredPosition(const types::Vec2 &pos, const types::Vec2 &windowDimensions,
+                                    const ui::text::Anchor &anchor, const std::string &text, float scale) const;
+    void draw(const std::string& text, float x, float y, float scale) const;
+};
+} // namespace grafyte
