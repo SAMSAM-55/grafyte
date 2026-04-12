@@ -7,15 +7,15 @@ universal = 0
 
 [project]
 name = "grafyte"
-version = "0.2.4"
+version = "0.3.0"
 description = "A simple rendering engine with some game engine features made with OpenGL for Python"
 readme = "README.md"
 requires-python = ">=3.10"
 license = { text = "MIT" }
 authors = [
-  { name = "Saubion Sami", email = "sami.saubion@gmail.com" }
+    { name = "Saubion Sami", email = "sami.saubion@gmail.com" }
 ]
 classifiers = [
-  "Programming Language :: Python :: 3",
-  "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Operating System :: OS Independent",
 ]
