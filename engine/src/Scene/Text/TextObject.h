@@ -16,7 +16,9 @@ class TextObject
     ~TextObject();
 
     void setText(const std::string &text) const;
+    [[nodiscard]] std::string getText() const;
     void setScale(const float &scale) const;
+    [[nodiscard]] float getScale() const;
     void setColor(const types::Color4 &color) const;
     void remove() const;
 

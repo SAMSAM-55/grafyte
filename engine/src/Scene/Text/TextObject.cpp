@@ -14,6 +14,18 @@ void TextObject::setText(const std::string &text) const
     if (const auto scene = m_Scene.lock())
         scene->text(m_Id).text = text;
 }
+std::string TextObject::getText() const
+{
+    if (const auto scene = m_Scene.lock())
+        return scene->text(m_Id).text;
+    return "";
+}
+float TextObject::getScale() const
+{
+    if (const auto scene = m_Scene.lock())
+        return scene->text(m_Id).transform.scale.x;
+    return 0.0f;
+}
 
 void TextObject::setScale(const float &scale) const
 {
