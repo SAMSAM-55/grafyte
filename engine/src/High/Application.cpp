@@ -121,26 +121,31 @@ void Application::render()
     glfwGetFramebufferSize(m_Window, &m_WinWidth, &m_WinHeight);
     glViewport(0, 0, m_WinWidth, m_WinHeight);
 
-    // Render
-    computeCamera();
     std::vector<types::TextData> textObjects;
     std::vector<ui::text::Text> texts;
-    const auto &transforms = scene->getTransforms();
-    const auto &colors = scene->getColors();
-    const auto &items = scene->getBatchedRenderList();
-    scene->getTextRenderList(textObjects);
-    ui->getTexts(texts);
 
-    ctx->renderer.render(items, transforms, colors, ctx->camera);
-    m_TextRenderer->render(textObjects, texts, &ctx->camera,
-                           {static_cast<float>(m_WinWidth) * 1.0f, static_cast<float>(m_WinHeight) * 1.0f});
+    if (scene)
+    {
+        computeCamera();
+
+        const auto &transforms = scene->getTransforms();
+        const auto &colors = scene->getColors();
+        const auto &items = scene->getBatchedRenderList();
+        scene->getTextRenderList(textObjects);
+
+        ctx->renderer.render(items, transforms, colors, ctx->camera);
+    }
+
+    if (ui)
+    {
+        ui->getTexts(texts);
+    }
+
+    m_TextRenderer->render(textObjects, texts, scene ? &ctx->camera : nullptr,
+                           {static_cast<float>(m_WinWidth), static_cast<float>(m_WinHeight)});
 
     endFrame();
-
-    /* Swap front and back buffers */
     glfwSwapBuffers(m_Window);
-
-    /* Poll for and process events */
     glfwPollEvents();
 }
 
@@ -208,6 +213,9 @@ void Application::beginFrame() const
 
 void Application::computeCamera() const
 {
+    if (!scene)
+        return;
+
     const double aspect = static_cast<double>(m_WinWidth) / m_WinHeight;
     constexpr float worldHeight = 200.0f;
     const float worldWidth = worldHeight * static_cast<float>(aspect);
