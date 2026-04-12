@@ -5,11 +5,6 @@ import inspect
 import sys
 import types
 from enum import Enum, auto
-from pathlib import Path
-
-
-ROOT = Path(__file__).resolve().parents[1]
-SRC = ROOT / "src"
 
 
 class Vec2:
@@ -267,9 +262,6 @@ def _make_internal_module() -> types.ModuleType:
 
 
 def load_grafyte():
-    if str(SRC) not in sys.path:
-        sys.path.insert(0, str(SRC))
-
     sys.modules["__grafyte_internal"] = _make_internal_module()
     for name in list(sys.modules):
         if name == "grafyte" or name.startswith("grafyte."):

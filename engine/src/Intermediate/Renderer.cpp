@@ -38,7 +38,7 @@ void Renderer::draw(const types::BatchGroup &group,
         if (!mesh || !asset)
             continue;
 
-        if (!inCamera(transform.pos, asset->scale, camera))
+        if (!inCamera(transform.pos, transform.scale, asset->scale, camera))
             continue;
 
         const auto vertexOffset = static_cast<uint32_t>(m_VertexScratch.size());
@@ -82,7 +82,7 @@ glm::mat4 Renderer::computeModel(const types::Transform &t)
 
     return model;
 }
-bool Renderer::inCamera(const types::Vec2 &pos, const types::Vec2 &size, const Camera &camera)
+bool Renderer::inCamera(const types::Vec2 &pos, const types::Vec2 &scale, const types::Vec2 &size, const Camera &camera)
 {
     const float halfWidth = (camera.right - camera.left) * 0.5f / camera.zoom;
     const float halfHeight = (camera.top - camera.bottom) * 0.5f / camera.zoom;
@@ -92,10 +92,10 @@ bool Renderer::inCamera(const types::Vec2 &pos, const types::Vec2 &size, const C
     const float camBottom = camera.pos.y - halfHeight;
     const float camTop = camera.pos.y + halfHeight;
 
-    const float objLeft = pos.x - size.x;
-    const float objRight = pos.x + size.x;
-    const float objBottom = pos.y - size.y;
-    const float objTop = pos.y + size.y;
+    const float objLeft = pos.x - (size.x * scale.x);
+    const float objRight = pos.x + (size.x * scale.x);
+    const float objBottom = pos.y - (size.y * scale.y);
+    const float objTop = pos.y + (size.y * scale.y);
 
     return objRight >= camLeft && objLeft <= camRight && objTop >= camBottom && objBottom <= camTop;
 }
