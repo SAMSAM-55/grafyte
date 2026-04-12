@@ -4,6 +4,7 @@
 #include <utility>
 
 #include "GlContextState.h"
+#include "macros.hpp"
 
 namespace grafyte
 {
@@ -56,9 +57,9 @@ int Application::init(const int winWidth, const int winHeight)
         throw std::runtime_error("Could not load glad.");
     }
 
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    glBlendEquation(GL_FUNC_ADD);
+    GL_CALL(glEnable(GL_BLEND));
+    GL_CALL(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
+    GL_CALL(glBlendEquation(GL_FUNC_ADD));
 
     sAppInstance = this;
     InputManager::init();
@@ -115,11 +116,11 @@ void Application::render()
     m_DeltaTime = m_Now - m_LastFrame;
     m_LastFrame = m_Now;
 
-    glClearColor(m_ClearColor.x, m_ClearColor.y, m_ClearColor.z, m_ClearColor.w);
+    GL_CALL(glClearColor(m_ClearColor.x, m_ClearColor.y, m_ClearColor.z, m_ClearColor.w));
     Renderer::clearScreen();
 
     glfwGetFramebufferSize(m_Window, &m_WinWidth, &m_WinHeight);
-    glViewport(0, 0, m_WinWidth, m_WinHeight);
+    GL_CALL(glViewport(0, 0, m_WinWidth, m_WinHeight));
 
     std::vector<types::TextData> textObjects;
     std::vector<ui::text::Text> texts;

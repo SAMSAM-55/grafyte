@@ -2,14 +2,15 @@
 
 #include "GlContextState.h"
 #include "glad/glad.h"
+#include "macros.hpp"
 
 namespace grafyte
 {
 VertexBuffer::VertexBuffer(const void *data, GLuint size, GLenum usage)
 {
-    glGenBuffers(1, &m_RendererID);
-    glBindBuffer(GL_ARRAY_BUFFER, m_RendererID);
-    glBufferData(GL_ARRAY_BUFFER, size, data, usage);
+    GL_CALL(glGenBuffers(1, &m_RendererID));
+    GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, m_RendererID));
+    GL_CALL(glBufferData(GL_ARRAY_BUFFER, size, data, usage));
 }
 
 VertexBuffer::~VertexBuffer()
@@ -22,7 +23,7 @@ void VertexBuffer::release()
     // Guard to avoid deleting the shader without a valid OpenGL context
     if (m_RendererID && glContextAlive())
     {
-        glDeleteBuffers(1, &m_RendererID);
+        GL_CALL(glDeleteBuffers(1, &m_RendererID));
         m_RendererID = 0;
     }
 }
@@ -44,18 +45,18 @@ VertexBuffer &VertexBuffer::operator=(VertexBuffer &&other) noexcept
 
 void VertexBuffer::updateData(const void *data, GLuint size) const
 {
-    glBindBuffer(GL_ARRAY_BUFFER, m_RendererID);
-    glBufferData(GL_ARRAY_BUFFER, size, nullptr, GL_DYNAMIC_DRAW);
-    glBufferData(GL_ARRAY_BUFFER, size, data, GL_DYNAMIC_DRAW);
+    GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, m_RendererID));
+    GL_CALL(glBufferData(GL_ARRAY_BUFFER, size, nullptr, GL_DYNAMIC_DRAW));
+    GL_CALL(glBufferData(GL_ARRAY_BUFFER, size, data, GL_DYNAMIC_DRAW));
 }
 
 void VertexBuffer::bind() const
 {
-    glBindBuffer(GL_ARRAY_BUFFER, m_RendererID);
+    GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, m_RendererID));
 }
 
 void VertexBuffer::unbind()
 {
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, 0));
 }
 } // namespace grafyte

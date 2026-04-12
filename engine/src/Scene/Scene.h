@@ -123,7 +123,6 @@ class Scene : public std::enable_shared_from_this<Scene>
     };
 
     void computeCamera(const float &worldWidth, const float &worldHeight, const float &dt);
-    bool inCamera(const types::ObjectId &id, const types::MeshHandle &mesh);
 
     bool itemsDirty = false;
 
