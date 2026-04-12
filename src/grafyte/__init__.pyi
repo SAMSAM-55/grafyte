@@ -1,7 +1,5 @@
-from typing import overload, Union
-
 from .__converters import Vec2f, Color, Vec2Like
-from .__class_utils import _KeyAccessor, _KeyPressedAccessor, _KeyReleasedAccessor, _ActionAccessor
+from .__class_utils import _KeyAccessor, _KeyPressedAccessor, _KeyReleasedAccessor
 
 from __grafyte_internal import Key as _NativeKey
 from __grafyte_internal import InputTrigger as _NativeInputTrigger
