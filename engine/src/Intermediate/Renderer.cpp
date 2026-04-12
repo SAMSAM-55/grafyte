@@ -22,7 +22,7 @@ Renderer::Renderer(MeshManager &meshes, MaterialManager &materials)
 
 void Renderer::draw(const types::BatchGroup &group,
                     const std::unordered_map<types::ObjectId, types::Transform> &transforms,
-                    const std::unordered_map<types::ObjectId, types::Color4> &colors)
+                    const std::unordered_map<types::ObjectId, types::Color4> &colors, const Camera &camera)
 {
     m_VertexScratch.clear();
     m_IndexScratch.clear();
@@ -32,19 +32,24 @@ void Renderer::draw(const types::BatchGroup &group,
     for (auto &item : group.second)
     {
         const auto *mesh = m_Meshes.mesh(item.mesh);
-        if (!mesh)
+        const auto *asset = m_Meshes.asset(item.mesh);
+        const auto &transform = transforms.at(item.objectId);
+
+        if (!mesh || !asset)
+            continue;
+
+        if (!inCamera(transform.pos, transform.scale, asset->scale, camera))
             continue;
 
         const auto vertexOffset = static_cast<uint32_t>(m_VertexScratch.size());
-        const auto &transform = transforms.at(item.objectId);
-        const auto &color = colors.at(item.objectId);
+        const auto &[cr, cg, cb, ca] = colors.at(item.objectId);
         glm::mat4 model = computeModel(transform);
 
         // Add transformed vertices
         for (const auto &[pos, texPos] : mesh->vertices)
         {
             const glm::vec4 worldPos = model * glm::vec4(pos.x, pos.y, 0.0f, 1.0f);
-            m_VertexScratch.push_back({{worldPos.x, worldPos.y}, texPos, {color.x, color.y, color.z, color.w}});
+            m_VertexScratch.push_back({{worldPos.x, worldPos.y}, texPos, {cr, cg, cb, ca}});
         }
 
         // Add m_indexScratch with offset
@@ -57,7 +62,7 @@ void Renderer::draw(const types::BatchGroup &group,
     if (m_VertexScratch.empty() || m_IndexScratch.empty())
         return;
 
-    // Setup OpenGL objects
+    // Set up OpenGL objects
     m_Vb.updateData(m_VertexScratch.data(),
                     static_cast<unsigned int>(m_VertexScratch.size() * sizeof(types::BatchedVertex)));
     m_Ib.updateData(m_IndexScratch.data(), static_cast<unsigned int>(m_IndexScratch.size()));
@@ -65,7 +70,7 @@ void Renderer::draw(const types::BatchGroup &group,
     m_Va.bind();
     m_Ib.bind();
 
-    glDrawElements(GL_TRIANGLES, m_Ib.getCount(), GL_UNSIGNED_INT, nullptr);
+    GL_CALL(glDrawElements(GL_TRIANGLES, m_Ib.getCount(), GL_UNSIGNED_INT, nullptr));
 }
 
 glm::mat4 Renderer::computeModel(const types::Transform &t)
@@ -77,6 +82,23 @@ glm::mat4 Renderer::computeModel(const types::Transform &t)
 
     return model;
 }
+bool Renderer::inCamera(const types::Vec2 &pos, const types::Vec2 &scale, const types::Vec2 &size, const Camera &camera)
+{
+    const float halfWidth = (camera.right - camera.left) * 0.5f / camera.zoom;
+    const float halfHeight = (camera.top - camera.bottom) * 0.5f / camera.zoom;
+
+    const float camLeft = camera.pos.x - halfWidth;
+    const float camRight = camera.pos.x + halfWidth;
+    const float camBottom = camera.pos.y - halfHeight;
+    const float camTop = camera.pos.y + halfHeight;
+
+    const float objLeft = pos.x - (size.x * scale.x);
+    const float objRight = pos.x + (size.x * scale.x);
+    const float objBottom = pos.y - (size.y * scale.y);
+    const float objTop = pos.y + (size.y * scale.y);
+
+    return objRight >= camLeft && objLeft <= camRight && objTop >= camBottom && objBottom <= camTop;
+}
 
 void Renderer::render(const std::vector<types::BatchGroup> &groups,
                       const std::unordered_map<types::ObjectId, types::Transform> &transforms,
@@ -85,29 +107,41 @@ void Renderer::render(const std::vector<types::BatchGroup> &groups,
 
     for (const auto &group : groups)
     {
+        if (group.second.empty())
+            continue;
+
         const types::DrawItem &first = group.second[0];
         const auto *mat = m_Materials.mat(first.material);
         const auto *matA = m_Materials.asset(first.material);
-        const Shader *shader = m_Materials.shader(mat->shader);
-        const Texture *texture = m_Materials.texture(mat->texture);
 
+        if (!mat || !matA)
+            continue;
+
+        const Shader *shader = m_Materials.shader(mat->shader);
+        if (!shader)
+            continue;
         shader->bind();
-        texture->bind(matA->textureSlot);
+
+        if (matA->hasTexture)
+        {
+            const Texture *texture = m_Materials.texture(mat->texture);
+            if (!texture)
+                continue;
+            texture->bind(matA->textureSlot);
+            shader->setUniform1i("u_Texture", static_cast<int>(matA->textureSlot));
+        }
 
         const glm::mat4 vp = camera.projection * camera.view;
         shader->setUniformMat4f("u_MVP", vp);
         shader->setUniform4f("u_Color", 1.0f, 1.0f, 1.0f, 1.0f);
 
-        if (matA->hasTexture)
-            shader->setUniform1i("u_Texture", static_cast<int>(matA->textureSlot));
-
-        draw(group, transforms, colors);
+        draw(group, transforms, colors, camera);
     }
 }
 
 void Renderer::clearScreen()
 {
-    glClear(GL_COLOR_BUFFER_BIT);
+    GL_CALL(glClear(GL_COLOR_BUFFER_BIT));
 }
 
 void Renderer::clear()

@@ -138,36 +138,31 @@ class RotProxy:
 class Camera:
     __native: _NativeCamera
     __pos_proxy: Vec2Proxy
+    __follow_offset_proxy: Vec2Proxy
 
     def __init__(self): ...
 
     @property
-    def pos(self) -> Vec2f:
+    def pos(self) -> Vec2Proxy:
         """
         The current position of the camera.
-        This property is write-only.
         """
         ...
 
     @pos.setter
     def pos(self, v: Vec2Like): ...
 
-    @property
-    def follow(self) -> Object:
+    def follow(self, object: Object) -> None:
         """
-        The current object that the camera follows.
-        This property is write-only.
+        Sets the current object that the camera follows.
+        :param object: The object to follow.
         """
         ...
 
-    @follow.setter
-    def follow(self, v: Object): ...
-
     @property
-    def follow_offset(self) -> Vec2f:
+    def follow_offset(self) -> Vec2Proxy:
         """
         The offset of the camera relative to the object it follows.
-        This property is write-only.
         """
         ...
 
@@ -178,7 +173,6 @@ class Camera:
     def zoom(self) -> float:
         """
         The current zoom of the camera.
-        This property is write-only.
         """
         ...
 

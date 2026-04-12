@@ -93,6 +93,10 @@ class InputTrigger(IntEnum):
 
 
 class Camera:
+    pos_v: Vec2
+    follow_offset_v: Vec2
+    zoom_v: float
+
     def move(self, offset_x: float, offset_y: float) -> None: ...
 
     def move_to(self, pos_x: float, pos_y: float) -> None: ...
@@ -124,6 +128,9 @@ class InputManager:
 
 
 class Text:
+    text: str
+    scale: float
+
     def set_text(self, text: str) -> None: ...
 
     def set_color(self, color_r: float, color_g: float, color_b: float, color_a: float) -> None: ...
@@ -173,6 +180,9 @@ class Application:
 
 
 class TextObject:
+    text: str
+    scale: float
+
     def set_text(self, text: str): ...
 
     def set_scale(self, scale: float): ...

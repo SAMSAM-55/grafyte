@@ -28,9 +28,23 @@ struct Camera
         pos = nPos;
     }
 
+    [[nodiscard]] types::Vec2 getPos() const
+    {
+        return pos;
+    }
+
     void setZoom(const float &nZoom)
     {
         zoom = nZoom;
+    }
+
+    [[nodiscard]] float getZoom() const
+    {
+        return zoom;
+    }
+    [[nodiscard]] types::Vec2 getFollowOffset() const
+    {
+        return followOffset;
     }
 
     void follow(const types::ObjectId &id)

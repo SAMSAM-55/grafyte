@@ -37,9 +37,17 @@ struct Text
     {
         text = nText;
     }
+    [[nodiscard]] std::string getText() const
+    {
+        return text;
+    }
     void setScale(const float &nScale)
     {
         scale = nScale;
+    }
+    [[nodiscard]] float getScale() const
+    {
+        return scale;
     }
     void setColor(const types::Color4 &nColor)
     {

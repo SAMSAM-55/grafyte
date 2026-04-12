@@ -232,7 +232,7 @@ class Object:
 class TextObject:
     def __init__(self, native_object: _NativeTextObject):
         self.__native = native_object
-        self.__color = (255, 255, 255, 1.0)
+        self.__color = (0, 0, 0, 1.0)
         self.__color_proxy = ColorProxy(
             getter=self._get_color,
             setter=self._set_color,
@@ -258,7 +258,7 @@ class TextObject:
 
     @property
     def text(self):
-        raise AttributeError("TextObject.text is write-only")
+        return self.__native.text
 
     @text.setter
     def text(self, value: str):
@@ -266,7 +266,7 @@ class TextObject:
 
     @property
     def scale(self):
-        raise AttributeError("TextObject.scale is write-only")
+        return self.__native.scale
 
     @scale.setter
     def scale(self, value: float):
@@ -285,7 +285,7 @@ class TextObject:
 class Text:
     def __init__(self, native_text: _NativeText):
         self.__native = native_text
-        self.__color = (255, 255, 255, 1.0)
+        self.__color = (0, 0, 0, 1.0)
         self.__color_proxy = ColorProxy(
             getter=self._get_color,
             setter=self._set_color,
@@ -311,7 +311,7 @@ class Text:
 
     @property
     def text(self):
-        raise AttributeError("Text.text is write-only")
+        return self.__native.text
 
     @text.setter
     def text(self, value: str):
@@ -319,7 +319,7 @@ class Text:
 
     @property
     def scale(self):
-        raise AttributeError("Text.scale is write-only")
+        return self.__native.scale
 
     @scale.setter
     def scale(self, value: float):
@@ -358,43 +358,52 @@ class Camera:
     def __init__(self, native_camera: _NativeCamera):
         self.__native = native_camera
         self.__pos_proxy = Vec2Proxy(
-            getter=(),
+            getter=self._get_pos,
             setter=self._set_pos
         )
+        self.__follow_offset_proxy = Vec2Proxy(
+            getter=self._get_follow_offset,
+            setter=self._set_follow_offset
+        )
+
+    def _get_pos(self) -> Vec2:
+        return self.__native.pos_v
 
     def _set_pos(self, value: Vec2Like):
         n_value = ensure_vec2f("Object.__set_pos(value=...)", value)
         self.__native.move_to(*n_value)
 
+    def _get_follow_offset(self) -> Vec2:
+        return self.__native.follow_offset_v
+
+    def _set_follow_offset(self, value: Vec2Like):
+        n_value = ensure_vec2f("Object.__set_pos(value=...)", value)
+        self.__native.follow_offset(*n_value)
+
     @property
     def pos(self):
-        raise AttributeError("Camera.pos is write-only")
+        return self.__pos_proxy
 
     @pos.setter
     def pos(self, v: Vec2Like):
         if v is self.__pos_proxy: return
         self._set_pos(v)
 
-    @property
-    def follow(self):
-        raise AttributeError("Camera.follow is write-only")
-
-    @follow.setter
-    def follow(self, v: Object):
-        self.__native.follow(v._get_native())
+    def follow(self, obj: Object):
+        self.__native.follow(obj._get_native())
 
     @property
     def follow_offset(self):
-        raise AttributeError("Camera.follow_offset is write-only")
+        return self.__follow_offset_proxy
 
     @follow_offset.setter
     def follow_offset(self, v: Vec2Like):
-        n_v = ensure_vec2f("Camera.follow_offset = ...", v)
-        self.__native.follow_offset(*n_v)
+        if v is self.__follow_offset_proxy: return
+        self._set_follow_offset(v)
 
     @property
     def zoom(self):
-        raise AttributeError("Camera.zoom is write-only")
+        return self.__native.zoom_v
 
     @zoom.setter
     def zoom(self, v: float):

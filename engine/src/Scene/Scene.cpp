@@ -50,9 +50,6 @@ const std::vector<types::DrawItem> &Scene::buildRenderList()
 
         for (const auto &[id, rc] : m_Renderables)
         {
-            if (!inCamera(id, rc.mesh))
-                continue;
-
             m_Items.push_back(types::DrawItem{.objectId = id,
                                               .mesh = rc.mesh,
                                               .material = rc.mat,
@@ -151,14 +148,5 @@ void Scene::computeCamera(const float &worldWidth, const float &worldHeight, con
 
     m_Ctx->camera.view = glm::scale(glm::mat4(1.0f), glm::vec3(m_Ctx->camera.zoom)) *
                          glm::translate(glm::mat4(1.0f), -glm::vec3(m_Ctx->camera.pos.x, m_Ctx->camera.pos.y, 0.0f));
-}
-
-bool Scene::inCamera(const types::ObjectId &id, const types::MeshHandle &mesh)
-{
-    const types::Vec2 &pos = transform(id).pos;
-    const types::Vec2 &size = m_Ctx->meshes.asset(mesh)->scale;
-
-    return pos.x - size.x >= m_Ctx->camera.left || pos.x + size.x <= m_Ctx->camera.right ||
-           pos.y - size.y >= m_Ctx->camera.bottom || pos.y + size.y <= m_Ctx->camera.top;
 }
 } // namespace grafyte

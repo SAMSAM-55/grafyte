@@ -10,6 +10,7 @@
 #include "GlContextState.h"
 #include "High/Application.h"
 #include "embedd/EmbeddedAsset.h"
+#include "macros.hpp"
 
 namespace grafyte
 {
@@ -96,32 +97,33 @@ TextRenderer::TextRenderer(const std::string &fontPath, const int pixelSize)
     }
 
     // Upload atlas
-    glGenTextures(1, &m_Font.textureID);
-    glBindTexture(GL_TEXTURE_2D, m_Font.textureID);
-    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+    GL_CALL(glGenTextures(1, &m_Font.textureID));
+    GL_CALL(glBindTexture(GL_TEXTURE_2D, m_Font.textureID));
+    GL_CALL(glPixelStorei(GL_UNPACK_ALIGNMENT, 1));
 
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, m_Font.atlasWidth, m_Font.atlasHeight, 0, GL_RED, GL_UNSIGNED_BYTE,
-                 pixels.data());
+    GL_CALL(glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, m_Font.atlasWidth, m_Font.atlasHeight, 0, GL_RED, GL_UNSIGNED_BYTE,
+                         pixels.data()));
 
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    GL_CALL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR));
+    GL_CALL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
 
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    GL_CALL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE));
+    GL_CALL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE));
 
     // Setup VAO/VBO for quads
-    glGenVertexArrays(1, &m_Vao);
-    glGenBuffers(1, &m_Vbo);
+    GL_CALL(glGenVertexArrays(1, &m_Vao));
+    GL_CALL(glGenBuffers(1, &m_Vbo));
 
-    glBindVertexArray(m_Vao);
-    glBindBuffer(GL_ARRAY_BUFFER, m_Vbo);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 6 * 4, nullptr, GL_DYNAMIC_DRAW);
+    GL_CALL(glBindVertexArray(m_Vao));
+    GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, m_Vbo));
+    GL_CALL(glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 6 * 4, nullptr, GL_DYNAMIC_DRAW));
 
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 4, static_cast<void *>(nullptr));
+    GL_CALL(glEnableVertexAttribArray(0));
+    GL_CALL(glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 4, static_cast<void *>(nullptr)));
 
-    glEnableVertexAttribArray(1);
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 4, reinterpret_cast<void *>(sizeof(float) * 2));
+    GL_CALL(glEnableVertexAttribArray(1));
+    GL_CALL(glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 4,
+                                  reinterpret_cast<void *>(sizeof(float) * 2)));
 
     FT_Done_Face(face);
     FT_Done_FreeType(ft);
@@ -132,11 +134,17 @@ TextRenderer::~TextRenderer()
     if (glContextAlive())
     {
         if (m_Font.textureID)
-            glDeleteTextures(1, &m_Font.textureID);
+        {
+            GL_CALL(glDeleteTextures(1, &m_Font.textureID));
+        }
         if (m_Vbo)
-            glDeleteBuffers(1, &m_Vbo);
+        {
+            GL_CALL(glDeleteBuffers(1, &m_Vbo));
+        }
         if (m_Vao)
-            glDeleteVertexArrays(1, &m_Vao);
+        {
+            GL_CALL(glDeleteVertexArrays(1, &m_Vao));
+        }
     }
 }
 
@@ -163,12 +171,12 @@ void TextRenderer::drawText(const std::string &text, const float x, const float 
     m_Shader.setUniform4f("u_TextColor", color.x, color.y, color.z, color.w);
     m_Shader.setUniformMat4f("u_MVP", mvp);
 
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, m_Font.textureID);
+    GL_CALL(glActiveTexture(GL_TEXTURE0));
+    GL_CALL(glBindTexture(GL_TEXTURE_2D, m_Font.textureID));
     m_Shader.setUniform1i("u_TextTexture", 0);
 
-    glBindVertexArray(m_Vao);
-    glBindBuffer(GL_ARRAY_BUFFER, m_Vbo);
+    GL_CALL(glBindVertexArray(m_Vao));
+    GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, m_Vbo));
 
     draw(text, x, y, finalScale);
 }
@@ -183,12 +191,12 @@ void TextRenderer::drawTextObject(const ::std::string &text, float x, const floa
     m_Shader.setUniform4f("u_TextColor", color.x, color.y, color.z, color.w);
     m_Shader.setUniformMat4f("u_MVP", mvp);
 
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, m_Font.textureID);
+    GL_CALL(glActiveTexture(GL_TEXTURE0));
+    GL_CALL(glBindTexture(GL_TEXTURE_2D, m_Font.textureID));
     m_Shader.setUniform1i("u_TextTexture", 0);
 
-    glBindVertexArray(m_Vao);
-    glBindBuffer(GL_ARRAY_BUFFER, m_Vbo);
+    GL_CALL(glBindVertexArray(m_Vao));
+    GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, m_Vbo));
 
     draw(text, x, y, scale);
 }
@@ -298,8 +306,8 @@ void TextRenderer::draw(const std::string &text, float x, float y, float scale) 
             xPos, yPos + h, g.u0, g.v1, xPos,     yPos, g.u0, g.v0, xPos + w, yPos,     g.u1, g.v0,
         };
 
-        glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices);
-        glDrawArrays(GL_TRIANGLES, 0, 6);
+        GL_CALL(glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices));
+        GL_CALL(glDrawArrays(GL_TRIANGLES, 0, 6));
 
         x += static_cast<float>(g.advance) * scale; // Move cursor
     }
