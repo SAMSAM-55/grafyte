@@ -49,6 +49,10 @@ struct Text
     {
         return scale;
     }
+    [[nodiscard]] types::Color4 getColor() const
+    {
+        return color;
+    }
     void setColor(const types::Color4 &nColor)
     {
         color = nColor;

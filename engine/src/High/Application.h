@@ -53,7 +53,7 @@ class Application
     };
     static void createInputAction(const std::string &name, const Keys &keys, const InputTrigger &trigger)
     {
-        InputManager::createAction(name, keys, trigger);
+        InputManager::createAction(name, trigger, keys);
     }
 
     void setClearColor(float r, float g, float b, float a);

@@ -232,17 +232,17 @@ class Object:
 class TextObject:
     def __init__(self, native_object: _NativeTextObject):
         self.__native = native_object
-        self.__color = (0, 0, 0, 1.0)
+        self.__color = (255, 255, 255, 1.0)
         self.__color_proxy = ColorProxy(
             getter=self._get_color,
             setter=self._set_color,
         )
 
     def _get_color(self):
-        try:
-            return self.__native.color
-        except AttributeError:
-            return self.__color
+        r = int(self.__native.color[0] * 255)
+        g = int(self.__native.color[1] * 255)
+        b = int(self.__native.color[2] * 255)
+        return r, g, b, self.__native.color[3]
 
     def _set_color(self, value: Color | tuple[int, int, int, float], a: float = 1):
         if isinstance(value, tuple) and len(value) == 2 and isinstance(value[0], (tuple, list)):
@@ -285,17 +285,17 @@ class TextObject:
 class Text:
     def __init__(self, native_text: _NativeText):
         self.__native = native_text
-        self.__color = (0, 0, 0, 1.0)
+        self.__color = (255, 255, 255, 1.0)
         self.__color_proxy = ColorProxy(
             getter=self._get_color,
             setter=self._set_color,
         )
 
     def _get_color(self):
-        try:
-            return self.__native.color
-        except AttributeError:
-            return self.__color
+        r = int(self.__native.color[0] * 255)
+        g = int(self.__native.color[1] * 255)
+        b = int(self.__native.color[2] * 255)
+        return r, g, b, self.__native.color[3]
 
     def _set_color(self, value: Color | tuple[int, int, int, float], a: float = 1):
         if isinstance(value, tuple) and len(value) == 2 and isinstance(value[0], (tuple, list)):
@@ -431,7 +431,7 @@ class Scene:
         else:
             shader_source = shader_source_path
 
-        native_obj = self.__native.spawn_object(*n_size, shader_source, *n_pos, has_texture, layer)
+        native_obj = self.__native.spawn_object(*n_pos, *n_size, shader_source, has_texture, layer)
         return Object(native_obj, has_texture=has_texture)
 
     def spawn_text_object(self, pos: Vec2Like, text: str, scale: float = 12) -> TextObject:
@@ -455,7 +455,7 @@ class InputManager(_NativeInputManager):
 
     @staticmethod
     def create_action(name: str, trigger: InputTrigger, *key: Key) -> None:
-        _NativeInputManager.create_action(name, [*key], trigger)
+        _NativeInputManager.create_action(name, trigger, [*key])
 
     def __getitem__(self, action: str) -> bool:
         return _NativeInputManager.is_action_active(action)

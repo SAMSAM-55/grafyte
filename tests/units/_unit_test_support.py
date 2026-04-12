@@ -189,8 +189,8 @@ class InputManager:
         pass
 
     @staticmethod
-    def create_action(name, keys, trigger):
-        InputManager.actions[name] = (list(keys), trigger)
+    def create_action(name, trigger, keys):
+        InputManager.actions[name] = (trigger, list(keys))
 
     @staticmethod
     def is_action_active(name):
