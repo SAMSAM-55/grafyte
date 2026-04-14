@@ -20,11 +20,16 @@ void SpatialGrid::insert(const types::ObjectId &id, const AABB &aabb)
     const int cellMinY = toCell(minY);
     const int cellMaxY = toCell(maxY);
 
+    auto &objectCells = m_ObjectsCells[id];
+    objectCells.clear();
+    objectCells.reserve(static_cast<std::size_t>((cellMaxX - cellMinX + 1) * (cellMaxY - cellMinY + 1)));
+
     for (int y = cellMinY; y <= cellMaxY; y++)
     {
         for (int x = cellMinX; x <= cellMaxX; x++)
         {
             m_Cells[{x, y}].push_back(id);
+            objectCells.push_back({x, y});
         }
     }
 }
@@ -67,13 +72,23 @@ void SpatialGrid::cleanDirty(const std::vector<types::ObjectId> &dirty)
 {
     for (const auto &idToRemove : dirty)
     {
-        for (auto &ids : m_Cells | std::views::values)
+        const auto cellsIt = m_ObjectsCells.find(idToRemove);
+        if (cellsIt == m_ObjectsCells.end())
+            continue;
+
+        for (const auto &ids : cellsIt->second)
         {
-            std::vector<types::ObjectId> &vec = ids;
-            // Remove all instances of the id
+            const auto cellIt = m_Cells.find(ids);
+            if (cellIt == m_Cells.end())
+                continue;
+
+            // Remove all instances of the id from the affected cell only.
+            auto &vec = cellIt->second;
             const auto newEnd = std::ranges::remove(vec, idToRemove).begin();
             vec.erase(newEnd, vec.end());
         }
+
+        m_ObjectsCells.erase(cellsIt);
     }
 }
 } // namespace grafyte::collision
