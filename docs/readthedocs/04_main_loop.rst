@@ -9,6 +9,7 @@ Grafyte applications run inside a frame loop:
 
    app = grafyte.Application("My Game", (640, 360))
    scene = app.make_new_scene()
+   ui = app.make_new_ui()
 
    while not app.should_close():
        app.render()
@@ -16,6 +17,8 @@ Grafyte applications run inside a frame loop:
    app.quit()
 
 ``app.should_close()`` returns ``True`` when the user requests to close the window. ``app.render()`` processes window events and draws the current frame, so it must be called every iteration.
+
+If your game uses more than one scene, keep the currently active scene in sync with your game state before rendering. The UI manager is rendered separately as screen-space overlay content, so it is a good fit for HUDs, menus, and score text.
 
 Frame Timing
 ------------

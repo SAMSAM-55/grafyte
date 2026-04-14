@@ -5,15 +5,15 @@ Welcome to Grafyte's Documentation
    :alt: Grafyte Engine Demo
    :align: center
 
-Grafyte is a Python-first 2D engine backed by a native C++ and OpenGL core. This guide walks through the current high-level API: creating an application, building scenes, handling input, drawing objects, and using textures, collisions, camera control, and UI text.
+Grafyte is a Python-first 2D engine backed by a native C++ and OpenGL core. This guide walks through the current high-level API: creating an application, managing multiple scenes, handling input, drawing objects, and using textures, collisions, camera control, and UI text.
 
 Highlights
 ----------
 
 - Native rendering core with a small Python API
-- Scene and object workflow for 2D games
+- Multi-scene workflow with an active scene model
 - Raw key input and action-based input helpers
-- Built-in text, textured sprites, camera, and collision primitives
+- Built-in text, UI overlays, textured sprites, camera, and collision primitives
 
 Contents
 --------
