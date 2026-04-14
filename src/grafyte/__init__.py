@@ -414,6 +414,9 @@ class Scene:
     def __init__(self, native_scene: _NativeScene):
         self.__native = native_scene
 
+    def get_native(self) -> _NativeScene:
+        return self.__native
+
     def spawn_object(self,
                      pos: Vec2Like,
                      size: Vec2Like,
@@ -462,18 +465,6 @@ class InputManager(_NativeInputManager):
 
 
 class Application(_NativeApplication):
-    @property
-    def input(self) -> InputManager:
-        return self.__input
-
-    def make_new_scene(self) -> Scene:
-        native_scene = super().make_new_scene()
-        return Scene(native_scene)
-
-    def make_new_ui(self) -> UIManager:
-        native_ui = super().make_new_ui()
-        return UIManager(native_ui)
-
     def __init__(self, name: str, window_dimensions: Vec2Like, font_path: str = "@embed/Fonts/Base"):
         # We need to resolve the path of the script to allow for relative font import
         frame = inspect.stack()[1]
@@ -484,6 +475,37 @@ class Application(_NativeApplication):
         n_window_dimensions = ensure_vec2i("Application(window_dimensions=...)", window_dimensions)
         self.__input = InputManager()
         super().init(*n_window_dimensions)
+
+        self.__scene_cache = {}
+        self.__active_scene = None
+
+    @property
+    def input(self) -> InputManager:
+        return self.__input
+
+    def make_new_scene(self) -> Scene:
+        native_scene = super().make_new_scene()
+        n_scene = Scene(native_scene)
+        self.__scene_cache[id(native_scene)] = n_scene
+        self.__active_scene = n_scene
+        return n_scene
+
+    @property
+    def scene(self) -> Scene:
+        native_scene = super().get_active_scene()
+        key = id(native_scene)
+        if key not in self.__scene_cache:
+            self.__scene_cache[key] = Scene(native_scene)
+        return self.__scene_cache[key]
+
+    @scene.setter
+    def scene(self, value: Scene):
+        super().set_active_scene(value.get_native())
+        self.__active_scene = value
+
+    def make_new_ui(self) -> UIManager:
+        native_ui = super().make_new_ui()
+        return UIManager(native_ui)
 
     @property
     def now(self) -> float:

@@ -9,6 +9,7 @@
 #include "Scene/Scene.h"
 #include "Text/TextRenderer.h"
 #include "World/World.h"
+#include "types.h"
 
 namespace grafyte
 {
@@ -59,6 +60,12 @@ class Application
     void setClearColor(float r, float g, float b, float a);
 
     std::shared_ptr<Scene> makeNewScene();
+    void setActiveScene(const types::SceneId &id);
+    void freezeScenes();
+    [[nodiscard]] std::shared_ptr<Scene> getActiveScene() const
+    {
+        return scene;
+    }
     std::shared_ptr<UIManager> makeNewUI();
 
     void endFrame() const;
@@ -74,6 +81,8 @@ class Application
 
     const std::string m_Name;
     std::unique_ptr<TextRenderer> m_TextRenderer;
+    std::unordered_map<types::SceneId, std::shared_ptr<Scene>> m_Scenes;
+    types::SceneId m_NextSceneId = 0;
 
     GLFWwindow *m_Window;
     int m_WinWidth, m_WinHeight;

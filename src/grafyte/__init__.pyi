@@ -283,6 +283,8 @@ class Application:
     """
 
     __input: InputManager
+    __active_scene: Scene | None
+    __scene_cache: dict[int, Scene]
 
     @property
     def input(self) -> InputManager:
@@ -352,6 +354,17 @@ class Application:
         Creates a new scene for the application.
         :return: A new scene.
         """
+        ...
+
+    @property
+    def scene(self) -> Scene:
+        """
+        The active scene of the Application.
+        """
+        ...
+
+    @scene.setter
+    def scene(self, value: Scene):
         ...
 
     def make_new_ui(self) -> UIManager:

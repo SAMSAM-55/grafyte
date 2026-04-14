@@ -46,6 +46,16 @@ class CollisionManager
         m_Colliding.clear();
     }
 
+    void clear()
+    {
+        m_CollisionBounds.clear();
+        m_AutoCollides.clear();
+        m_Colliding.clear();
+        m_Grid.clear();
+        m_GridDirty.clear();
+        m_Built = false;
+    }
+
     void removeObject(const types::ObjectId &objId);
 
   private:

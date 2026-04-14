@@ -26,6 +26,15 @@ void bindApplication(const py::module_ &m)
         // make_new_scene() -> Scene
         .def("make_new_scene", &grafyte::Application::makeNewScene)
 
+        // set_active_scene(scene)
+        .def(
+            "set_active_scene",
+            [](grafyte::Application &self, const grafyte::Scene &scene) { self.setActiveScene(scene.getId()); },
+            py::arg("scene"))
+
+        // get_active_scene() -> Scene
+        .def("get_active_scene", &grafyte::Application::getActiveScene)
+
         // make_new_ui() -> UIManager
         .def("make_new_ui", &grafyte::Application::makeNewUI)
 
