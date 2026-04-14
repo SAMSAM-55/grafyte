@@ -6,6 +6,7 @@
     "glfw3",
     "glad",
     "glm",
-    "freetype"
+    "freetype",
+    "doctest"
   ]
 }
