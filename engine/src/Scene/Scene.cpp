@@ -8,7 +8,7 @@
 
 namespace grafyte
 {
-Scene::Scene(std::shared_ptr<WorldContext> ctx) : m_Ctx(std::move(ctx))
+Scene::Scene(std::shared_ptr<WorldContext> ctx, const types::SceneId &id) : m_Id(id), m_Ctx(std::move(ctx))
 {
 }
 
@@ -43,7 +43,7 @@ std::shared_ptr<TextObject> Scene::spawnTextObject(const types::Vec2 &pos, const
 
 const std::vector<types::DrawItem> &Scene::buildRenderList()
 {
-    if (itemsDirty)
+    if (itemsDirty && !frozen)
     {
         m_Items.clear();
         m_Items.reserve(m_Renderables.size());
@@ -101,8 +101,10 @@ void Scene::clear()
     m_Colors.clear();
     m_Items.clear();
     m_Texts.clear();
-    if (m_Ctx->camera.followObject != -1)
-        m_Ctx->camera.followObject = -1;
+    m_Collisions.clear();
+    if (m_Camera.followObject != static_cast<types::ObjectId>(-1))
+        m_Camera.followObject = static_cast<types::ObjectId>(-1);
+    itemsDirty = false;
 }
 
 void Scene::removeObject(const types::ObjectId &objId)
@@ -114,8 +116,8 @@ void Scene::removeObject(const types::ObjectId &objId)
     m_Transforms.erase(objId);
     m_Colors.erase(objId);
     m_Objects.erase(objId);
-    if (m_Ctx->camera.followObject == objId)
-        m_Ctx->camera.followObject = -1;
+    if (m_Camera.followObject == objId)
+        m_Camera.followObject = static_cast<types::ObjectId>(-1);
 
     collisions().removeObject(objId);
 
@@ -124,29 +126,31 @@ void Scene::removeObject(const types::ObjectId &objId)
 
 void Scene::computeCamera(const float &worldWidth, const float &worldHeight, const float &dt)
 {
-    m_Ctx->camera.right = worldWidth / 2.0f;
-    m_Ctx->camera.left = -worldWidth / 2.0f;
-    m_Ctx->camera.top = worldHeight / 2.0f;
-    m_Ctx->camera.bottom = -worldHeight / 2.0f;
+    if (frozen)
+        return;
 
-    m_Ctx->camera.projection =
-        glm::ortho(m_Ctx->camera.left, m_Ctx->camera.right, m_Ctx->camera.bottom, m_Ctx->camera.top, -1.0f, 1.0f);
+    m_Camera.right = worldWidth / 2.0f;
+    m_Camera.left = -worldWidth / 2.0f;
+    m_Camera.top = worldHeight / 2.0f;
+    m_Camera.bottom = -worldHeight / 2.0f;
 
-    if (m_Ctx->camera.followObject != -1)
+    m_Camera.projection = glm::ortho(m_Camera.left, m_Camera.right, m_Camera.bottom, m_Camera.top, -1.0f, 1.0f);
+
+    if (m_Camera.followObject != static_cast<types::ObjectId>(-1))
     {
-        if (!containsObject(m_Ctx->camera.followObject))
+        if (!containsObject(m_Camera.followObject))
         {
-            m_Ctx->camera.followObject = -1;
+            m_Camera.followObject = static_cast<types::ObjectId>(-1);
             return;
         }
-        const float t = 1.0f - std::exp(-m_Ctx->camera.followSpeed * dt);
-        const auto [followX, followY] = transform(m_Ctx->camera.followObject).pos + m_Ctx->camera.followOffset;
+        const float t = 1.0f - std::exp(-m_Camera.followSpeed * dt);
+        const auto [followX, followY] = transform(m_Camera.followObject).pos + m_Camera.followOffset;
 
-        m_Ctx->camera.pos.x = std::lerp(m_Ctx->camera.pos.x, followX, t);
-        m_Ctx->camera.pos.y = std::lerp(m_Ctx->camera.pos.y, followY, t);
+        m_Camera.pos.x = std::lerp(m_Camera.pos.x, followX, t);
+        m_Camera.pos.y = std::lerp(m_Camera.pos.y, followY, t);
     }
 
-    m_Ctx->camera.view = glm::scale(glm::mat4(1.0f), glm::vec3(m_Ctx->camera.zoom)) *
-                         glm::translate(glm::mat4(1.0f), -glm::vec3(m_Ctx->camera.pos.x, m_Ctx->camera.pos.y, 0.0f));
+    m_Camera.view = glm::scale(glm::mat4(1.0f), glm::vec3(m_Camera.zoom)) *
+                    glm::translate(glm::mat4(1.0f), -glm::vec3(m_Camera.pos.x, m_Camera.pos.y, 0.0f));
 }
 } // namespace grafyte

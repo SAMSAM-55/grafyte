@@ -21,7 +21,7 @@ class WrapperTests(unittest.TestCase):
         obj = scene.spawn_object((1, 2), (3, 4), layer=5)
 
         native_scene = scene._Scene__native
-        width, height, shader_source, x, y, has_texture, layer, native_obj = native_scene.spawn_calls[-1]
+        x, y, width, height, shader_source, has_texture, layer, native_obj = native_scene.spawn_calls[-1]
         self.assertIs(obj._get_native(), native_obj)
         self.assertEqual((width, height), (3.0, 4.0))
         self.assertEqual((x, y), (1.0, 2.0))
@@ -34,7 +34,7 @@ class WrapperTests(unittest.TestCase):
 
         scene.spawn_object((0, 0), (10, 10), has_texture=True)
 
-        shader_source = scene._Scene__native.spawn_calls[-1][2]
+        shader_source = scene._Scene__native.spawn_calls[-1][4]
         self.assertEqual(shader_source, "@embed/Shaders/Texture")
 
     def test_non_textured_object_color_normalizes_before_forwarding(self):
@@ -98,8 +98,8 @@ class WrapperTests(unittest.TestCase):
 
         manager.create_action("jump", grafyte.InputTrigger.Press, grafyte.Key.Space, grafyte.Key.J)
 
-        self.assertEqual(grafyte._NativeInputManager.actions["jump"][0], [grafyte.Key.Space, grafyte.Key.J])
-        self.assertEqual(grafyte._NativeInputManager.actions["jump"][1], grafyte.InputTrigger.Press)
+        self.assertEqual(grafyte._NativeInputManager.actions["jump"][0], grafyte.InputTrigger.Press)
+        self.assertEqual(grafyte._NativeInputManager.actions["jump"][1], [grafyte.Key.Space, grafyte.Key.J])
         self.assertTrue(manager["jump"])
 
 

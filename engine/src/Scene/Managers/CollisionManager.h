@@ -33,8 +33,6 @@ class CollisionManager
     std::vector<collision::Hit> isColliding(const types::ObjectId &a, Scene &scene);
     types::Vec2 pushBackOnMove(const types::ObjectId &objId, const types::Vec2 &mov, Scene &scene);
 
-    void resolveAutoCollides(Scene &scene);
-
     void rebuildGrid(Scene &scene);
     collision::AABB computeObjectWorldBounds(const types::ObjectId &id, Scene &scene) const;
 
@@ -46,6 +44,16 @@ class CollisionManager
     void reset()
     {
         m_Colliding.clear();
+    }
+
+    void clear()
+    {
+        m_CollisionBounds.clear();
+        m_AutoCollides.clear();
+        m_Colliding.clear();
+        m_Grid.clear();
+        m_GridDirty.clear();
+        m_Built = false;
     }
 
     void removeObject(const types::ObjectId &objId);

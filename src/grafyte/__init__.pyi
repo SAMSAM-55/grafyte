@@ -1,7 +1,5 @@
-from typing import overload, Union
-
 from .__converters import Vec2f, Color, Vec2Like
-from .__class_utils import _KeyAccessor, _KeyPressedAccessor, _KeyReleasedAccessor, _ActionAccessor
+from .__class_utils import _KeyAccessor, _KeyPressedAccessor, _KeyReleasedAccessor
 
 from __grafyte_internal import Key as _NativeKey
 from __grafyte_internal import InputTrigger as _NativeInputTrigger
@@ -285,6 +283,10 @@ class Application:
     """
 
     __input: InputManager
+    __active_scene: Scene | None
+    __scene_cache: dict[int, Scene]
+    __active_ui: UIManager | None
+    __ui_cache: dict[int, UIManager]
 
     @property
     def input(self) -> InputManager:
@@ -356,11 +358,33 @@ class Application:
         """
         ...
 
+    @property
+    def scene(self) -> Scene:
+        """
+        The active scene of the Application.
+        """
+        ...
+
+    @scene.setter
+    def scene(self, value: Scene):
+        ...
+
     def make_new_ui(self) -> UIManager:
         """
         Creates a new UI subsystem (manager) for the application.
         :return: A new UI Manager.
         """
+        ...
+
+    @property
+    def ui(self) -> UIManager:
+        """
+        The active UI of the Application.
+        """
+        ...
+
+    @ui.setter
+    def ui(self, value: UIManager):
         ...
 
 

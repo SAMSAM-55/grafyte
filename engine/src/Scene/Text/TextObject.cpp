@@ -27,6 +27,13 @@ float TextObject::getScale() const
     return 0.0f;
 }
 
+types::Color4 TextObject::getColor() const
+{
+    if (const auto scene = m_Scene.lock())
+        return scene->text(m_Id).color;
+    return {0.0f, 0.0f, 0.0f, 0.0f};
+}
+
 void TextObject::setScale(const float &scale) const
 {
     if (const auto scene = m_Scene.lock())

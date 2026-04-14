@@ -29,7 +29,7 @@ Each scene exposes a camera object:
 .. code-block:: python
 
    camera = scene.camera
-   camera.follow = player
+   camera.follow(player)
    camera.follow_offset = (0, 15)
    camera.zoom = 1.1
 

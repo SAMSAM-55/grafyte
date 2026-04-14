@@ -49,6 +49,10 @@ struct Text
     {
         return scale;
     }
+    [[nodiscard]] types::Color4 getColor() const
+    {
+        return color;
+    }
     void setColor(const types::Color4 &nColor)
     {
         color = nColor;
@@ -59,7 +63,7 @@ struct Text
 class UIManager
 {
   public:
-    explicit UIManager(std::shared_ptr<WorldContext> ctx);
+    explicit UIManager(std::shared_ptr<WorldContext> ctx, const types::UIId &id);
 
     std::shared_ptr<ui::text::Text> addText(const types::Vec2 &pos, const std::string &text, const float &scale = 1.0f,
                                             const ui::text::Anchor &anchor = ui::text::Anchor::TopLeft,
@@ -70,7 +74,19 @@ class UIManager
 
     void clear();
 
+    [[nodiscard]] types::UIId getId() const
+    {
+        return m_Id;
+    }
+
   private:
+    [[nodiscard]] TextId composeObjectId(const TextId localId) const
+    {
+        // allows for up to 255 UIs with roughly 16e6 texts each
+        return (m_Id << 24U) | (localId & 0xFFFFFFU);
+    }
+
+    types::UIId m_Id = 0;
     std::unordered_map<TextId, std::shared_ptr<ui::text::Text>> m_Texts;
     TextId m_NextTextId = 0;
     std::shared_ptr<WorldContext> m_Ctx;

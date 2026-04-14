@@ -47,7 +47,7 @@ class InputManager
         return it != map.end() ? it->second : false;
     }
 
-    static void createAction(const std::string &name, const Keys &keys, const InputTrigger &trigger)
+    static void createAction(const std::string &name, const InputTrigger &trigger, const Keys &keys)
     {
         mInputActions().insert_or_assign(name, InputAction{keys, trigger});
     }

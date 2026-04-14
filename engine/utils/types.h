@@ -10,6 +10,8 @@ namespace grafyte::types
 {
 
 using ObjectId = uint32_t;
+using SceneId = uint32_t;
+using UIId = uint32_t;
 
 struct Float4
 {

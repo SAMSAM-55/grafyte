@@ -232,17 +232,17 @@ class Object:
 class TextObject:
     def __init__(self, native_object: _NativeTextObject):
         self.__native = native_object
-        self.__color = (0, 0, 0, 1.0)
+        self.__color = (255, 255, 255, 1.0)
         self.__color_proxy = ColorProxy(
             getter=self._get_color,
             setter=self._set_color,
         )
 
     def _get_color(self):
-        try:
-            return self.__native.color
-        except AttributeError:
-            return self.__color
+        r = int(self.__native.color[0] * 255)
+        g = int(self.__native.color[1] * 255)
+        b = int(self.__native.color[2] * 255)
+        return r, g, b, self.__native.color[3]
 
     def _set_color(self, value: Color | tuple[int, int, int, float], a: float = 1):
         if isinstance(value, tuple) and len(value) == 2 and isinstance(value[0], (tuple, list)):
@@ -285,17 +285,17 @@ class TextObject:
 class Text:
     def __init__(self, native_text: _NativeText):
         self.__native = native_text
-        self.__color = (0, 0, 0, 1.0)
+        self.__color = (255, 255, 255, 1.0)
         self.__color_proxy = ColorProxy(
             getter=self._get_color,
             setter=self._set_color,
         )
 
     def _get_color(self):
-        try:
-            return self.__native.color
-        except AttributeError:
-            return self.__color
+        r = int(self.__native.color[0] * 255)
+        g = int(self.__native.color[1] * 255)
+        b = int(self.__native.color[2] * 255)
+        return r, g, b, self.__native.color[3]
 
     def _set_color(self, value: Color | tuple[int, int, int, float], a: float = 1):
         if isinstance(value, tuple) and len(value) == 2 and isinstance(value[0], (tuple, list)):
@@ -341,6 +341,9 @@ class Text:
 class UIManager:
     def __init__(self, native_ui_manager: _NativeUIManager):
         self.__native = native_ui_manager
+
+    def get_native(self) -> _NativeUIManager:
+        return self.__native
 
     def add_text(self,
                  pos: Vec2Like,
@@ -414,6 +417,9 @@ class Scene:
     def __init__(self, native_scene: _NativeScene):
         self.__native = native_scene
 
+    def get_native(self) -> _NativeScene:
+        return self.__native
+
     def spawn_object(self,
                      pos: Vec2Like,
                      size: Vec2Like,
@@ -431,7 +437,7 @@ class Scene:
         else:
             shader_source = shader_source_path
 
-        native_obj = self.__native.spawn_object(*n_size, shader_source, *n_pos, has_texture, layer)
+        native_obj = self.__native.spawn_object(*n_pos, *n_size, shader_source, has_texture, layer)
         return Object(native_obj, has_texture=has_texture)
 
     def spawn_text_object(self, pos: Vec2Like, text: str, scale: float = 12) -> TextObject:
@@ -455,25 +461,13 @@ class InputManager(_NativeInputManager):
 
     @staticmethod
     def create_action(name: str, trigger: InputTrigger, *key: Key) -> None:
-        _NativeInputManager.create_action(name, [*key], trigger)
+        _NativeInputManager.create_action(name, trigger, [*key])
 
     def __getitem__(self, action: str) -> bool:
         return _NativeInputManager.is_action_active(action)
 
 
 class Application(_NativeApplication):
-    @property
-    def input(self) -> InputManager:
-        return self.__input
-
-    def make_new_scene(self) -> Scene:
-        native_scene = super().make_new_scene()
-        return Scene(native_scene)
-
-    def make_new_ui(self) -> UIManager:
-        native_ui = super().make_new_ui()
-        return UIManager(native_ui)
-
     def __init__(self, name: str, window_dimensions: Vec2Like, font_path: str = "@embed/Fonts/Base"):
         # We need to resolve the path of the script to allow for relative font import
         frame = inspect.stack()[1]
@@ -484,6 +478,55 @@ class Application(_NativeApplication):
         n_window_dimensions = ensure_vec2i("Application(window_dimensions=...)", window_dimensions)
         self.__input = InputManager()
         super().init(*n_window_dimensions)
+
+        self.__scene_cache = {}
+        self.__active_scene = None
+        self.__ui_cache = {}
+        self.__active_ui = None
+
+    @property
+    def input(self) -> InputManager:
+        return self.__input
+
+    def make_new_scene(self) -> Scene:
+        native_scene = super().make_new_scene()
+        n_scene = Scene(native_scene)
+        self.__scene_cache[id(native_scene)] = n_scene
+        self.__active_scene = n_scene
+        return n_scene
+
+    @property
+    def scene(self) -> Scene:
+        native_scene = super().get_active_scene()
+        key = id(native_scene)
+        if key not in self.__scene_cache:
+            self.__scene_cache[key] = Scene(native_scene)
+        return self.__scene_cache[key]
+
+    @scene.setter
+    def scene(self, value: Scene):
+        super().set_active_scene(value.get_native())
+        self.__active_scene = value
+
+    def make_new_ui(self) -> UIManager:
+        native_ui = super().make_new_ui()
+        n_ui = UIManager(native_ui)
+        self.__ui_cache[id(native_ui)] = n_ui
+        self.__active_ui = n_ui
+        return n_ui
+
+    @property
+    def ui(self) -> UIManager:
+        native_ui = super().get_active_ui()
+        key = id(native_ui)
+        if key not in self.__ui_cache:
+            self.__ui_cache[key] = UIManager(native_ui)
+        return self.__ui_cache[key]
+
+    @ui.setter
+    def ui(self, value: UIManager):
+        super().set_active_ui(value.get_native())
+        self.__active_ui = value
 
     @property
     def now(self) -> float:

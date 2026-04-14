@@ -96,7 +96,9 @@ grafyte::types::Vec2 grafyte::CollisionManager::pushBackOnMove(const types::Obje
                 if (const types::Vec2 opposite = pushBackOnMove(id, -mov, scene);
                     opposite.x != 0.0f || opposite.y != 0.0f)
                 {
-                    scene.transform(id).pos += opposite;
+                    auto t = scene.transform(id);
+                    t.pos += opposite;
+                    scene.setTransform(id, t);
                     return {0.0f, 0.0f};
                 }
             }
@@ -128,14 +130,6 @@ grafyte::types::Vec2 grafyte::CollisionManager::pushBackOnMove(const types::Obje
     }
 
     return bestTranslation;
-}
-
-void grafyte::CollisionManager::resolveAutoCollides(Scene &scene)
-{
-    for (const auto &id : m_AutoCollides | std::views::keys)
-    {
-        pushBackOnMove(id, {0.0f, 0.0f}, scene);
-    }
 }
 
 void grafyte::CollisionManager::rebuildGrid(Scene &scene)
