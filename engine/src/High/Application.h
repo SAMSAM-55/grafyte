@@ -61,12 +61,17 @@ class Application
 
     std::shared_ptr<Scene> makeNewScene();
     void setActiveScene(const types::SceneId &id);
-    void freezeScenes();
     [[nodiscard]] std::shared_ptr<Scene> getActiveScene() const
     {
         return scene;
     }
+    void freezeScenes();
     std::shared_ptr<UIManager> makeNewUI();
+    void setActiveUI(const types::UIId &id);
+    [[nodiscard]] std::shared_ptr<UIManager> getActiveUI() const
+    {
+        return ui;
+    }
 
     void endFrame() const;
 
@@ -82,7 +87,9 @@ class Application
     const std::string m_Name;
     std::unique_ptr<TextRenderer> m_TextRenderer;
     std::unordered_map<types::SceneId, std::shared_ptr<Scene>> m_Scenes;
+    std::unordered_map<types::UIId, std::shared_ptr<UIManager>> m_UIs;
     types::SceneId m_NextSceneId = 0;
+    types::UIId m_NextUIId = 0;
 
     GLFWwindow *m_Window;
     int m_WinWidth, m_WinHeight;

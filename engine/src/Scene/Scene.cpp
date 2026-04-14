@@ -8,7 +8,7 @@
 
 namespace grafyte
 {
-Scene::Scene(std::shared_ptr<WorldContext> ctx, types::SceneId id) : m_Id(id), m_Ctx(std::move(ctx))
+Scene::Scene(std::shared_ptr<WorldContext> ctx, const types::SceneId &id) : m_Id(id), m_Ctx(std::move(ctx))
 {
 }
 

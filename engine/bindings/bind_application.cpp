@@ -38,6 +38,15 @@ void bindApplication(const py::module_ &m)
         // make_new_ui() -> UIManager
         .def("make_new_ui", &grafyte::Application::makeNewUI)
 
+        // set_active_ui(ui)
+        .def(
+            "set_active_ui",
+            [](grafyte::Application &self, const grafyte::UIManager &ui) { self.setActiveUI(ui.getId()); },
+            py::arg("ui"))
+
+        // get_active_ui() -> UI
+        .def("get_active_ui", &grafyte::Application::getActiveUI)
+
         // render()
         .def("render", &grafyte::Application::render)
 

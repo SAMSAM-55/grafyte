@@ -84,13 +84,22 @@ void Application::quit()
         return;
     }
 
-    for (auto &sceneEntry : m_Scenes)
+    for (auto &sceneEntry : m_Scenes | std::views::values)
     {
-        if (sceneEntry.second)
-            sceneEntry.second->clear();
+        if (sceneEntry)
+            sceneEntry->clear();
     }
     m_Scenes.clear();
     scene.reset();
+
+    for (auto &uiEntry : m_UIs | std::views::values)
+    {
+        if (uiEntry)
+            uiEntry->clear();
+    }
+    m_UIs.clear();
+    ui.reset();
+
     if (ctx)
     {
         ctx->meshes.clear();
@@ -194,17 +203,23 @@ void Application::freezeScenes()
 
 std::shared_ptr<UIManager> Application::makeNewUI()
 {
-    if (ui)
-        ui->clear();
-
     if (!ctx)
     {
         ctx = std::make_shared<WorldContext>();
         ctx->init();
     }
 
-    ui = std::make_shared<UIManager>(ctx);
+    const auto id = m_NextUIId++;
+    ui = std::make_shared<UIManager>(ctx, id);
+    m_UIs.insert_or_assign(id, ui);
     return ui;
+}
+void Application::setActiveUI(const types::UIId &id)
+{
+    if (m_UIs.contains(id))
+        ui = m_UIs.at(id);
+    else
+        throw std::runtime_error("Invalid UI id provided: " + std::to_string(id));
 }
 
 void Application::endFrame() const

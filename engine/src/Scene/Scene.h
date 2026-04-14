@@ -19,7 +19,7 @@ struct WorldContext;
 class Scene : public std::enable_shared_from_this<Scene>
 {
   public:
-    explicit Scene(std::shared_ptr<WorldContext> ctx, types::SceneId id);
+    explicit Scene(std::shared_ptr<WorldContext> ctx, const types::SceneId &id);
 
     types::SceneId getId() const
     {

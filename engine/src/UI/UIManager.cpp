@@ -4,7 +4,8 @@
 
 namespace grafyte
 {
-UIManager::UIManager(std::shared_ptr<WorldContext> ctx) : m_Texts({}), m_Ctx(std::move(ctx))
+UIManager::UIManager(std::shared_ptr<WorldContext> ctx, const types::UIId &id)
+    : m_Id(id), m_Texts({}), m_Ctx(std::move(ctx))
 {
 }
 

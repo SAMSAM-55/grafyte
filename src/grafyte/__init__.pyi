@@ -285,6 +285,8 @@ class Application:
     __input: InputManager
     __active_scene: Scene | None
     __scene_cache: dict[int, Scene]
+    __active_ui: UIManager | None
+    __ui_cache: dict[int, UIManager]
 
     @property
     def input(self) -> InputManager:
@@ -372,6 +374,17 @@ class Application:
         Creates a new UI subsystem (manager) for the application.
         :return: A new UI Manager.
         """
+        ...
+
+    @property
+    def ui(self) -> UIManager:
+        """
+        The active UI of the Application.
+        """
+        ...
+
+    @ui.setter
+    def ui(self, value: UIManager):
         ...
 
 

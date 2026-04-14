@@ -342,6 +342,9 @@ class UIManager:
     def __init__(self, native_ui_manager: _NativeUIManager):
         self.__native = native_ui_manager
 
+    def get_native(self) -> _NativeUIManager:
+        return self.__native
+
     def add_text(self,
                  pos: Vec2Like,
                  text: str,
@@ -478,6 +481,8 @@ class Application(_NativeApplication):
 
         self.__scene_cache = {}
         self.__active_scene = None
+        self.__ui_cache = {}
+        self.__active_ui = None
 
     @property
     def input(self) -> InputManager:
@@ -505,7 +510,23 @@ class Application(_NativeApplication):
 
     def make_new_ui(self) -> UIManager:
         native_ui = super().make_new_ui()
-        return UIManager(native_ui)
+        n_ui = UIManager(native_ui)
+        self.__ui_cache[id(native_ui)] = n_ui
+        self.__active_ui = n_ui
+        return n_ui
+
+    @property
+    def ui(self) -> UIManager:
+        native_ui = super().get_active_ui()
+        key = id(native_ui)
+        if key not in self.__ui_cache:
+            self.__ui_cache[key] = UIManager(native_ui)
+        return self.__ui_cache[key]
+
+    @ui.setter
+    def ui(self, value: UIManager):
+        super().set_active_ui(value.get_native())
+        self.__active_ui = value
 
     @property
     def now(self) -> float:
