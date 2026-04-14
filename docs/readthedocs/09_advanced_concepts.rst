@@ -54,7 +54,7 @@ Attach collision boxes to objects and query the results:
 
 For automatic collision resolution order, set ``player.auto_collides`` to an integer priority.
 
-For exemple, if you want the player to be blocked automatically by many walls:
+For example, if you want the player to be blocked automatically by many walls:
 
 .. code-block:: python
 
@@ -80,7 +80,7 @@ In grafyte, a higher order object will push the objects with a lower resolution 
    # ...
    ball.auto_collides = 2
 
-In the above exemple, the ball will always push back the player when the two objects are colliding.
+In the above example, the ball will always push back the player when the two objects are colliding.
 Please note that if two objects have the same order, their collisions can be unpredictable when coding (but
 deterministic at runtime)
 

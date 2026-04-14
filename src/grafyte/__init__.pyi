@@ -216,7 +216,6 @@ class Text:
     def text(self) -> str:
         """
         The current text displayed by the object.
-        This property is write-only.
         """
         ...
 
@@ -227,7 +226,6 @@ class Text:
     def scale(self) -> float:
         """
         The current scale of the text.
-        This property is write-only.
         """
         ...
 
@@ -444,7 +442,6 @@ class TextObject:
     def text(self) -> str:
         """
         The current text displayed.
-        This property is write-only.
         """
         ...
 
@@ -455,7 +452,6 @@ class TextObject:
     def scale(self) -> float:
         """
         The current scale of the text in pt.
-        This property is write-only.
         """
         ...
 
