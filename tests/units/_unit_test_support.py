@@ -182,6 +182,9 @@ class UIManager:
     def remove_text(self, native_text):
         self.removed.append(native_text)
 
+    def get_native(self) -> UIManager:
+        return self
+
 
 class InputManager:
     actions = {}
@@ -252,6 +255,13 @@ class Application:
     @staticmethod
     def get_active_scene(self) -> Scene:
         return Scene()
+
+    def set_active_ui(self, v: UIManager):
+        return
+
+    @staticmethod
+    def get_active_ui(self) -> UIManager:
+        return UIManager()
 
 
 def _make_internal_module() -> types.ModuleType:
