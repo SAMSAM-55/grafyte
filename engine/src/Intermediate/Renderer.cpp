@@ -87,22 +87,14 @@ glm::mat4 Renderer::computeModel(const types::Transform &t)
 std::array<types::Vec2, 4> Renderer::computeConers(const types::Vec2 &pos, const types::Vec2 &scale,
                                                    const types::Vec2 &size, const float &angle)
 {
-    const float hx = std::abs(size.x * scale.x);
-    const float hy = std::abs(size.y * scale.y);
+    const auto [hx, hy] = abs(size * scale);
     const float c = std::cos(glm::radians(angle));
     const float s = std::sin(glm::radians(angle));
 
-    std::array<types::Vec2, 4> result = {{{hx, hy}, {-hx, hy}, {hx, -hy}, {-hx, -hy}}};
+    std::array<types::Vec2, 4> result = {{{hx, hy}, {-hx, hy}, {-hx, -hy}, {hx, -hy}}};
 
     for (auto &p : result)
-    {
-        const auto tmpX = p.x;
-        const auto tmpY = p.y;
-        p.x = tmpX * c - tmpY * s;
-        p.y = tmpY * c + tmpX * s;
-
-        p += pos;
-    }
+        p = types::Vec2{p.x * c - p.y * s, p.x * s + p.y * c} + pos;
 
     return result;
 }
