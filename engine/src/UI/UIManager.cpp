@@ -12,10 +12,9 @@ UIManager::UIManager(std::shared_ptr<WorldContext> ctx, const types::UIId &id)
 std::shared_ptr<ui::text::Text> UIManager::addText(const types::Vec2 &pos, const std::string &text, const float &scale,
                                                    const ui::text::Anchor &anchor, const types::Color4 &color)
 {
-    m_NextTextId++;
-    m_Texts.insert_or_assign(m_NextTextId,
-                             std::make_shared<ui::text::Text>(m_NextTextId, text, pos, scale, color, anchor));
-    return m_Texts.at(m_NextTextId);
+    const auto &id = composeTextId(m_NextTextId++);
+    m_Texts.insert_or_assign(id, std::make_shared<ui::text::Text>(id, text, pos, scale, color, anchor));
+    return m_Texts.at(id);
 }
 
 void UIManager::removeText(const TextId &id)

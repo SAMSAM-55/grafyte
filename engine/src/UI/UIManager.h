@@ -80,7 +80,7 @@ class UIManager
     }
 
   private:
-    [[nodiscard]] TextId composeObjectId(const TextId localId) const
+    [[nodiscard]] TextId composeTextId(const TextId localId) const
     {
         // allows for up to 255 UIs with roughly 16e6 texts each
         return (m_Id << 24U) | (localId & 0xFFFFFFU);
