@@ -79,9 +79,11 @@ class Object:
     def add_collision_box(self, x: float, y: float, w: float, h: float):
         self.collision_boxes.append((x, y, w, h))
 
+    @staticmethod
     def collides_with(self, other):
         return Hit(False, None)
 
+    @staticmethod
     def is_colliding(self):
         return []
 
@@ -158,6 +160,9 @@ class Scene:
 
     def get_camera(self):
         return self.camera
+
+    def get_native(self) -> Scene:
+        return self
 
 
 class UIManager:
@@ -240,6 +245,13 @@ class Application:
 
     def set_clear_color(self, r: float, g: float, b: float, a: float):
         self.clear_color = (r, g, b, a)
+
+    def set_active_scene(self, v: Scene):
+        return
+
+    @staticmethod
+    def get_active_scene(self) -> Scene:
+        return Scene()
 
 
 def _make_internal_module() -> types.ModuleType:
