@@ -7,6 +7,7 @@
 
 #include "GL-Core/VertexBufferLayout.h"
 
+#include <algorithm>
 #include <array>
 
 namespace grafyte
@@ -111,10 +112,10 @@ bool Renderer::inCamera(const types::Vec2 &pos, const types::Vec2 &scale, const 
     const float camTop = camera.pos.y + halfHeight;
 
     const auto [a, b, c, d] = computeConers(pos, scale, size, angle);
-    const float objLeft = std::min({a.x, b.x, c.x, d.x});
-    const float objRight = std::max({a.x, b.x, c.x, d.x});
-    const float objBottom = std::min({a.y, b.y, c.y, d.y});
-    const float objTop = std::max({a.y, b.y, c.y, d.y});
+    const float objLeft = std::min(std::min(a.x, b.x), std::min(c.x, d.x));
+    const float objRight = std::max(std::max(a.x, b.x), std::max(c.x, d.x));
+    const float objBottom = std::min(std::min(a.y, b.y), std::min(c.y, d.y));
+    const float objTop = std::max(std::max(a.y, b.y), std::max(c.y, d.y));
 
     return objRight >= camLeft && objLeft <= camRight && objTop >= camBottom && objBottom <= camTop;
 }

@@ -6,7 +6,6 @@
 #include "GlContextState.h"
 #include "macros.hpp"
 
-#include <__msvc_ranges_to.hpp>
 #include <ranges>
 
 namespace grafyte
