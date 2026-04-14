@@ -7,6 +7,8 @@
 
 #include "GL-Core/VertexBufferLayout.h"
 
+#include <array>
+
 namespace grafyte
 {
 Renderer::Renderer(MeshManager &meshes, MaterialManager &materials)
@@ -38,7 +40,7 @@ void Renderer::draw(const types::BatchGroup &group,
         if (!mesh || !asset)
             continue;
 
-        if (!inCamera(transform.pos, transform.scale, asset->scale, camera))
+        if (!inCamera(transform.pos, transform.scale, asset->scale, transform.rot, camera))
             continue;
 
         const auto vertexOffset = static_cast<uint32_t>(m_VertexScratch.size());
@@ -82,7 +84,31 @@ glm::mat4 Renderer::computeModel(const types::Transform &t)
 
     return model;
 }
-bool Renderer::inCamera(const types::Vec2 &pos, const types::Vec2 &scale, const types::Vec2 &size, const Camera &camera)
+std::array<types::Vec2, 4> Renderer::computeConers(const types::Vec2 &pos, const types::Vec2 &scale,
+                                                   const types::Vec2 &size, const float &angle)
+{
+    const float hx = std::abs(size.x * scale.x);
+    const float hy = std::abs(size.y * scale.y);
+    const float c = std::cos(glm::radians(angle));
+    const float s = std::sin(glm::radians(angle));
+
+    std::array<types::Vec2, 4> result = {{{hx, hy}, {-hx, hy}, {hx, -hy}, {-hx, -hy}}};
+
+    for (auto &p : result)
+    {
+        const auto tmpX = p.x;
+        const auto tmpY = p.y;
+        p.x = tmpX * c - tmpY * s;
+        p.y = tmpY * c + tmpX * s;
+
+        p += pos;
+    }
+
+    return result;
+}
+
+bool Renderer::inCamera(const types::Vec2 &pos, const types::Vec2 &scale, const types::Vec2 &size, const float &angle,
+                        const Camera &camera)
 {
     const float halfWidth = (camera.right - camera.left) * 0.5f / camera.zoom;
     const float halfHeight = (camera.top - camera.bottom) * 0.5f / camera.zoom;
@@ -92,10 +118,11 @@ bool Renderer::inCamera(const types::Vec2 &pos, const types::Vec2 &scale, const 
     const float camBottom = camera.pos.y - halfHeight;
     const float camTop = camera.pos.y + halfHeight;
 
-    const float objLeft = pos.x - (size.x * scale.x);
-    const float objRight = pos.x + (size.x * scale.x);
-    const float objBottom = pos.y - (size.y * scale.y);
-    const float objTop = pos.y + (size.y * scale.y);
+    const auto [a, b, c, d] = computeConers(pos, scale, size, angle);
+    const float objLeft = std::min({a.x, b.x, c.x, d.x});
+    const float objRight = std::max({a.x, b.x, c.x, d.x});
+    const float objBottom = std::min({a.y, b.y, c.y, d.y});
+    const float objTop = std::max({a.y, b.y, c.y, d.y});
 
     return objRight >= camLeft && objLeft <= camRight && objTop >= camBottom && objBottom <= camTop;
 }

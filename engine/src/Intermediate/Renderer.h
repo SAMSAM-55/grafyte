@@ -48,7 +48,9 @@ class Renderer
     void draw(const types::BatchGroup &group, const std::unordered_map<types::ObjectId, types::Transform> &transforms,
               const std::unordered_map<types::ObjectId, types::Color4> &colors, const Camera &camera);
     static glm::mat4 computeModel(const types::Transform &t);
-    static bool inCamera(const types::Vec2 &pos, const types::Vec2 &scale, const types::Vec2 &size,
+    static std::array<types::Vec2, 4> computeConers(const types::Vec2 &pos, const types::Vec2 &scale,
+                                                    const types::Vec2 &size, const float &angle);
+    static bool inCamera(const types::Vec2 &pos, const types::Vec2 &scale, const types::Vec2 &size, const float &angle,
                          const Camera &camera);
 
     MeshManager &m_Meshes;
