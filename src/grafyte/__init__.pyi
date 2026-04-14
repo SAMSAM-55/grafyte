@@ -393,6 +393,10 @@ class Scene:
 
     def __init__(self, native_scene: _NativeScene): ...
 
+    def __eq__(self, other: Scene): ...
+
+    def __ne__(self, other: Scene): ...
+
     def spawn_object(self,
                      pos: Vec2Like,
                      size: Vec2Like,

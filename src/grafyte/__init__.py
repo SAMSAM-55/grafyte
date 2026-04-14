@@ -417,6 +417,12 @@ class Scene:
     def __init__(self, native_scene: _NativeScene):
         self.__native = native_scene
 
+    def __eq__(self, other: Scene):
+        return self is other
+
+    def __ne__(self, other: Scene):
+        return self is not other
+
     def get_native(self) -> _NativeScene:
         return self.__native
 
