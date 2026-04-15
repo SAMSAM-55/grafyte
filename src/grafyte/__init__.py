@@ -93,7 +93,12 @@ class Object:
     def _get_color(self):
         if not self.alive: return 0, 0, 0, 0
 
-        return self.__color
+        return (
+            int(self.__color[0] * 255),
+            int(self.__color[1] * 255),
+            int(self.__color[2] * 255),
+            self.__color[3]
+        )
 
     def _set_color(self, value: Color | tuple[int, int, int, float], a: float = 1):
         if not self.alive: return
@@ -373,14 +378,14 @@ class Camera:
         return self.__native.pos_v
 
     def _set_pos(self, value: Vec2Like):
-        n_value = ensure_vec2f("Object.__set_pos(value=...)", value)
+        n_value = ensure_vec2f("Camera._set_pos(value=...)", value)
         self.__native.move_to(*n_value)
 
     def _get_follow_offset(self) -> Vec2:
         return self.__native.follow_offset_v
 
     def _set_follow_offset(self, value: Vec2Like):
-        n_value = ensure_vec2f("Object.__set_pos(value=...)", value)
+        n_value = ensure_vec2f("Camera._set_follow_offset(value=...)", value)
         self.__native.follow_offset(*n_value)
 
     @property

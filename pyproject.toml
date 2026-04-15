@@ -10,7 +10,7 @@ name = "grafyte"
 version = "0.3.2"
 description = "A simple rendering engine with some game engine features made with OpenGL for Python"
 readme = "README.md"
-requires-python = ">=3.10, <=3.14"
+requires-python = ">=3.10, <3.15"
 license = { text = "MIT" }
 authors = [
     { name = "Saubion Sami", email = "sami.saubion@gmail.com" }

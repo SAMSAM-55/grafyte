@@ -81,8 +81,7 @@ In grafyte, a higher order object will push the objects with a lower resolution 
    ball.auto_collides = 2
 
 In the above example, the ball will always push back the player when the two objects are colliding.
-Please note that if two objects have the same order, their collisions can be unpredictable when coding (but
-deterministic at runtime)
+Please note that if two objects have the same order, collision handling order may be less intuitive in code, but remains deterministic at runtime.
 
 UI Text
 -------

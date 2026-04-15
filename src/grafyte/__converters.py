@@ -8,31 +8,48 @@ Vec2Like: TypeAlias = Vec2 | Vec2f | Vec2i
 Color: TypeAlias = tuple[int, int, int]
 ColorNormalized: TypeAlias = tuple[float, float, float]
 
+
 @overload
 def __clamp_float(r: tuple[float, float], v1: float) -> tuple[float]: ...
+
+
 @overload
 def __clamp_float(r: tuple[float, float], v1: float, v2: float) -> tuple[float, float]: ...
+
+
 @overload
 def __clamp_float(r: tuple[float, float], v1: float, v2: float, v3: float) -> tuple[float, float, float]: ...
+
+
 @overload
 def __clamp_float(r: tuple[float, float], v1: float, *args: float) -> tuple[float, ...]: ...
+
 
 def __clamp_float(r: tuple[float, float], v1: float, *args: float) -> tuple[float, ...]:
     lo, hi = r
     return tuple(float(min(max(x, lo), hi)) for x in (v1, *args))
 
+
 @overload
 def __clamp_int(r: tuple[int, int], v1: int) -> tuple[int]: ...
+
+
 @overload
 def __clamp_int(r: tuple[int, int], v1: int, v2: int) -> tuple[int, int]: ...
+
+
 @overload
 def __clamp_int(r: tuple[int, int], v1: int, v2: int, v3: int) -> tuple[int, int, int]: ...
+
+
 @overload
 def __clamp_int(r: tuple[int, int], v1: int, *args: int) -> tuple[int, ...]: ...
+
 
 def __clamp_int(r: tuple[int, int], v1: int, *args: int) -> tuple[int, ...]:
     lo, hi = r
     return tuple(int(min(max(x, lo), hi)) for x in (v1, *args))
+
 
 def ensure_vec2f(name: str, v: Vec2Like) -> Vec2f:
     """
@@ -54,7 +71,8 @@ def ensure_vec2f(name: str, v: Vec2Like) -> Vec2f:
         except (TypeError, ValueError):
             pass
 
-    raise TypeError(f"{name} must be Vec2(x: float, y: float) or tuple[float, float] or or tuple[int, int], got {v!r}")
+    raise TypeError(f"{name} must be Vec2(x: float, y: float) or tuple[float, float] or tuple[int, int], got {v!r}")
+
 
 def ensure_vec2i(name: str, v: Vec2Like) -> Vec2i:
     """
@@ -78,6 +96,7 @@ def ensure_vec2i(name: str, v: Vec2Like) -> Vec2i:
 
     raise TypeError(f"{name} must be Vec2(x: float, y: float) or tuple[float, float] or tuple[int, int], got {v!r}")
 
+
 def ensure_color(name: str, v: Color) -> Color:
     try:
         r, g, b = v
@@ -88,6 +107,7 @@ def ensure_color(name: str, v: Color) -> Color:
         raise TypeError(f"{name} must be Color = tuple[int, int, int], got {v!r}")
 
     return __clamp_int((0, 255), r, g, b)
+
 
 def ensure_color_normalize(name: str, v: Color) -> ColorNormalized:
     v = ensure_color(name, v)

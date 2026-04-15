@@ -43,7 +43,7 @@ class WrapperTests(unittest.TestCase):
         obj.color = ((64, 128, 255), 0.25)
 
         self.assertEqual(obj._get_native().last_color, (64 / 255, 128 / 255, 1.0, 0.25))
-        self.assertEqual(tuple(obj.color), (64 / 255, 128 / 255, 1.0, 0.25))
+        self.assertEqual(tuple(obj.color), (64, 128, 255, 0.25))
 
     def test_textured_object_rejects_color_and_accepts_tint(self):
         obj = grafyte.Object(grafyte._NativeObject(), has_texture=True)
