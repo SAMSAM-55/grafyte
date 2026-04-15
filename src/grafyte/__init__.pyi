@@ -289,7 +289,7 @@ class Application:
     @property
     def input(self) -> InputManager:
         """
-        The input system of the application
+        The inputs system of the application
         """
         ...
 
