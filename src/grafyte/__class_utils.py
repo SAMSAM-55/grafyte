@@ -42,10 +42,11 @@ class Vec2Proxy:
         return self
 
     def __isub__(self, other: Vec2Like):
-        ox, oy = ensure_vec2f("Vec2Proxy.__iadd__(other=...)", other)
+        ox, oy = ensure_vec2f("Vec2Proxy.__isub__(other=...)", other)
         v = self._get()
         self._set((v.x - ox, v.y - oy))
         return self
+
     def __imul__(self, other: float):
         v = self._get()
         self._set((v.x * other, v.y * other))
@@ -59,6 +60,7 @@ class Vec2Proxy:
     def __repr__(self):
         v = self._get()
         return f"Vec2Proxy({v.x}, {v.y})"
+
 
 class ColorProxy:
     def __init__(self, getter, setter, checker=None, name: str = "color"):
@@ -125,6 +127,7 @@ class ColorProxy:
         v = self._get()
         return f"ColorProxy({v[0]}, {v[1]}, {v[2]}, {v[3]})"
 
+
 class TintProxy(ColorProxy):
     @property
     def strength(self):
@@ -147,6 +150,7 @@ class TintProxy(ColorProxy):
     def __repr__(self):
         v = self._get()
         return f"TintProxy({v[0]}, {v[1]}, {v[2]}, {v[3]})"
+
 
 class RotProxy:
     def __init__(self, getter, setter):
@@ -196,17 +200,21 @@ class RotProxy:
     def __repr__(self):
         return f"RotProxy({self._get()})"
 
+
 class _KeyAccessor:
     def __getitem__(self, key: Key) -> bool:
         return _NativeInputManager.is_key_down(key)
+
 
 class _KeyPressedAccessor:
     def __getitem__(self, key: Key) -> bool:
         return _NativeInputManager.was_key_pressed(key)
 
+
 class _KeyReleasedAccessor:
     def __getitem__(self, key: Key) -> bool:
         return _NativeInputManager.was_key_released(key)
+
 
 class AssetResolver:
     def __init__(self, base_dir: Path):

@@ -289,7 +289,7 @@ class Application:
     @property
     def input(self) -> InputManager:
         """
-        The inputs system of the Application
+        The input system of the application
         """
         ...
 
@@ -306,7 +306,6 @@ class Application:
     def should_close(self) -> bool:
         """
         Checks if the application window should close (e.g., if the close button was clicked).
-        Also updates internal timing for delta time calculations.
 
         :return: True if the window should close, False otherwise.
         """
