@@ -42,11 +42,11 @@ jobs:
           -w /work
           grafyte-ci
           bash -lc '
-            cmake -S engine -B engine/build-native
-            -G Ninja
-            -DVCPKG_TARGET_TRIPLET=x64-linux
-            -DPython_EXECUTABLE=/opt/python/cp312-cp312/bin/python
-            -DGRAFYTE_PY_TAG=py312 &&
+            cmake -S engine -B engine/build-native \
+              -G Ninja \
+              -DVCPKG_TARGET_TRIPLET=x64-linux \
+              -DPython_EXECUTABLE=/opt/python/cp312-cp312/bin/python \
+              -DGRAFYTE_PY_TAG=py312 &&
             cmake --build engine/build-native --target grafyte_tests &&
             ctest --test-dir engine/build-native --output-on-failure
           '
