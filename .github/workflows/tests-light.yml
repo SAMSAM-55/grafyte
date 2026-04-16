@@ -1,7 +1,6 @@
-name: Tests
-
+# This workflow is just used to run basic tests on push to validate code correctness in a light way.
+name: Light Tests
 on:
-  pull_request:
   push:
     branches:
       - main

@@ -1,3 +1,4 @@
+# This workflow is used to validate compatibility across all Python versions (3.10 to 3.14) on Windows.
 name: Windows PR Matrix
 
 on:
