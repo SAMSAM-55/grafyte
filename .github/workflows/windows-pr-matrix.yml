@@ -63,5 +63,5 @@ jobs:
 
           "$PY" -m pip install .
           "$PY" -m compileall src tests
-          "$PY" -m unittest discover -s tests -p "test_import_*.py" -v
+          "$PY" -m unittest discover -s tests -p "test_import.py" -v
           "$PY" -m unittest discover -s tests -p "test_unit_*.py" -v
