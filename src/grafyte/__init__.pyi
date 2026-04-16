@@ -291,7 +291,7 @@ class Application:
     @property
     def input(self) -> InputManager:
         """
-        The inputs system of the application
+        The input system of the application
         """
         ...
 
