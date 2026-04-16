@@ -60,6 +60,7 @@ class Object:
         self.rot = 0.0
         self.alive = True
         self.last_color = None
+        self.color = (0.0, 0.0, 0.0, 1.0)
         self.last_texture = None
         self.auto_collides_order = None
         self.collision_boxes = []
@@ -74,7 +75,8 @@ class Object:
         self.rot = float(value)
 
     def set_color(self, r: float, g: float, b: float, a: float):
-        self.last_color = (r, g, b, a)
+        self.color = (r, g, b, a)
+        self.last_color = self.color
 
     def add_collision_box(self, x: float, y: float, w: float, h: float):
         self.collision_boxes.append((x, y, w, h))

@@ -2,11 +2,17 @@
 
 void bindObject(const py::module_ &m)
 {
+    const auto objectColor = [](const grafyte::Object &self) {
+        const auto [r, g, b, a] = self.getColor();
+        return py::make_tuple(r, g, b, a);
+    };
+
     py::class_<grafyte::Object, std::shared_ptr<grafyte::Object>>(m, "Object")
         .def_property_readonly("scale", &grafyte::Object::getScale)
         .def_property_readonly("pos", &grafyte::Object::getPosition)
         .def_property_readonly("rot", &grafyte::Object::getRotation)
         .def_property_readonly("alive", &grafyte::Object::isAlive)
+        .def_property_readonly("color", objectColor)
 
         // use_texture(texture_source_path, slot)
         .def("use_texture", &grafyte::Object::setTexture, py::arg("texture_source_path"), py::arg("slot"))
@@ -63,7 +69,7 @@ void bindObject(const py::module_ &m)
 
         // rotate(angle)
         .def("rotate", &grafyte::Object::rotate, py::arg("angle"))
-     // set_rotation(angle)
+        // set_rotation(angle)
         .def("set_rotation", &grafyte::Object::setRotation, py::arg("angle"))
 
         // set_scale(scale_x, scale_y)

@@ -214,6 +214,7 @@ class Object:
     rot: float
     scale: Vec2
     alive: bool
+    color: tuple[float, float, float, float]
 
     def use_texture(self, texture_source_path: str, slot: int): ...
 

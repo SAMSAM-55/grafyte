@@ -482,7 +482,6 @@ class Object:
     __color_proxy: ColorProxy
     __tint_proxy: TintProxy
     __has_texture: bool
-    __color: tuple[int, int, int, float]
 
     def _get_pos(self): ...
 

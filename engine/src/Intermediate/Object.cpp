@@ -151,6 +151,13 @@ float Object::getRotation() const
     return 0.0f;
 }
 
+types::Color4 Object::getColor() const
+{
+    if (const auto scene = m_Scene.lock(); scene && scene->containsObject(m_Id))
+        return scene->color(m_Id);
+    return {0.0f, 0.0f, 0.0f, 0.0f};
+}
+
 bool Object::collidesWith(const Object &other) const
 {
     if (const auto scene = m_Scene.lock(); scene && scene->containsObject(m_Id) && scene->containsObject(other.getId()))

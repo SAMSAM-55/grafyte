@@ -26,7 +26,7 @@ std::shared_ptr<Object> Scene::spawnObject(const types::MeshAsset &mesh, const t
     m_Renderables.insert_or_assign(id, rc);
     m_Objects.insert_or_assign(id, std::make_shared<Object>(shared_from_this(), id, geo));
     m_Transforms.insert_or_assign(id, types::Transform{.pos = pos, .rot = 0.0f, .scale = {1.0f, 1.0f}});
-    m_Colors.insert_or_assign(id, types::Color4{0.0f, 0.0f, 0.0f, 0.0f});
+    m_Colors.insert_or_assign(id, types::Color4{0.0f, 0.0f, 0.0f, 1.0f});
 
     itemsDirty = true;
     return m_Objects.at(id);

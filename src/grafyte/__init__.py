@@ -100,10 +100,10 @@ class Object:
         if not self.alive: return 0, 0, 0, 0
 
         return (
-            int(self.__color[0] * 255),
-            int(self.__color[1] * 255),
-            int(self.__color[2] * 255),
-            self.__color[3]
+            int(self.__native.color[0] * 255),
+            int(self.__native.color[1] * 255),
+            int(self.__native.color[2] * 255),
+            self.__native.color[3]
         )
 
     def _set_color(self, value: Color | tuple[int, int, int, float], a: float = 1):
@@ -119,7 +119,6 @@ class Object:
 
         n_color = ensure_color_normalize("Object.set_color(color=...)", color)
         self.__native.set_color(*n_color, a)
-        self.__color = (*n_color, float(a))
 
     def _get_tint(self):
         if not self.alive: return 0, 0, 0, 0

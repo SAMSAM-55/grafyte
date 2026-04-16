@@ -62,6 +62,7 @@ class Object
     [[nodiscard]] types::Vec2 getScale() const;
     [[nodiscard]] types::Vec2 getPosition() const;
     [[nodiscard]] float getRotation() const;
+    types::Color4 getColor() const;
 
     /* Collisions */
     [[nodiscard]] bool collidesWith(const Object &other) const;
