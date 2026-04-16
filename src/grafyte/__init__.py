@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import inspect
+from importlib.metadata import PackageNotFoundError, version as _package_version
 from pathlib import Path
 
 from __grafyte_internal import Application as _NativeApplication
@@ -17,6 +18,11 @@ from __grafyte_internal import Hit as _NativeHit
 from .__class_utils import _KeyAccessor, _KeyPressedAccessor, _KeyReleasedAccessor, Vec2Proxy, ColorProxy, TintProxy, \
     RotProxy, AssetResolver
 from .__converters import *
+
+try:
+    __version__ = _package_version("grafyte")
+except PackageNotFoundError:
+    __version__ = "0.3.2"
 
 
 class Hit(_NativeHit):

@@ -78,10 +78,10 @@ class WrapperTests(unittest.TestCase):
             with patch("grafyte.inspect.stack", return_value=[None, make_caller(str(caller_file))]):
                 app = grafyte.Application("Demo", (640.8, 480.2), "font.ttf")
 
-        native_app = NativeApplication.instances[-1]
-        self.assertIsInstance(app.input, grafyte.InputManager)
-        self.assertEqual(native_app.font_path, str(font))
-        self.assertEqual(native_app.init_args, (640, 480))
+            native_app = NativeApplication.instances[-1]
+            self.assertIsInstance(app.input, grafyte.InputManager)
+            self.assertTrue(Path(native_app.font_path).samefile(font))
+            self.assertEqual(native_app.init_args, (640, 480))
 
     def test_application_background_color_is_normalized(self):
         with patch("grafyte.inspect.stack", return_value=[None, make_caller(__file__)]):

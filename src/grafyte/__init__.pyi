@@ -17,6 +17,8 @@ from __grafyte_internal import UIManager as _NativeUIManager
 from __grafyte_internal import Text as _NativeText
 from __grafyte_internal import Anchor as _NativeAnchor
 
+__version__: str
+
 
 class Key(_NativeKey): ...
 
