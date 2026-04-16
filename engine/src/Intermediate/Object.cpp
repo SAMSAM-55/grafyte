@@ -33,7 +33,9 @@ void Object::setTexture(const std::string &textureSourcePath, const unsigned int
 void Object::setColor(const types::Color4 &c) const
 {
     if (const auto scene = m_Scene.lock(); scene && scene->containsObject(m_Id))
-        scene->color(m_Id) = c;
+    {
+        scene->setColor(m_Id, c);
+    }
 }
 
 void Object::move(const types::Vec2 offset) const
@@ -42,10 +44,16 @@ void Object::move(const types::Vec2 offset) const
     if (!scene || !scene->containsObject(m_Id))
         return;
 
-    scene->transform(m_Id).pos += offset;
+    auto t = scene->transform(m_Id);
+    t.pos += offset;
+    scene->setTransform(m_Id, t);
     scene->collisions().markDirty(m_Id);
     if (scene->collisions().autoCollides(m_Id))
-        scene->transform(m_Id).pos += scene->collisions().pushBackOnMove(m_Id, offset, *scene);
+    {
+        auto tr = scene->transform(m_Id);
+        tr.pos += scene->collisions().pushBackOnMove(m_Id, offset, *scene);
+        scene->setTransform(m_Id, tr);
+    }
 }
 
 void Object::moveTo(const types::Vec2 pos) const
@@ -55,34 +63,56 @@ void Object::moveTo(const types::Vec2 pos) const
         return;
 
     const types::Vec2 offset = pos - scene->transform(m_Id).pos;
-    scene->transform(m_Id).pos = pos;
+    auto t = scene->transform(m_Id);
+    t.pos = pos;
+    scene->setTransform(m_Id, t);
     scene->collisions().markDirty(m_Id);
     if (scene->collisions().autoCollides(m_Id))
-        scene->transform(m_Id).pos += scene->collisions().pushBackOnMove(m_Id, offset, *scene);
+    {
+        auto tr = scene->transform(m_Id);
+        tr.pos += scene->collisions().pushBackOnMove(m_Id, offset, *scene);
+        scene->setTransform(m_Id, tr);
+    }
 }
 
 void Object::rotate(const float angle) const
 {
     if (const auto scene = m_Scene.lock(); scene && scene->containsObject(m_Id))
-        scene->transform(m_Id).rot += angle;
+    {
+        auto t = scene->transform(m_Id);
+        t.rot += angle;
+        scene->setTransform(m_Id, t);
+    }
 }
 
 void Object::setRotation(const float angle) const
 {
     if (const auto scene = m_Scene.lock(); scene && scene->containsObject(m_Id))
-        scene->transform(m_Id).rot = angle;
+    {
+        auto t = scene->transform(m_Id);
+        t.rot = angle;
+        scene->setTransform(m_Id, t);
+    }
 }
 
 void Object::setScale(const float scale) const
 {
     if (const auto scene = m_Scene.lock(); scene && scene->containsObject(m_Id))
-        scene->transform(m_Id).scale = {scale, scale};
+    {
+        auto t = scene->transform(m_Id);
+        t.scale = {scale, scale};
+        scene->setTransform(m_Id, t);
+    }
 }
 
 void Object::setScale(const types::Vec2 scale) const
 {
     if (const auto scene = m_Scene.lock(); scene && scene->containsObject(m_Id))
-        scene->transform(m_Id).scale = scale;
+    {
+        auto t = scene->transform(m_Id);
+        t.scale = scale;
+        scene->setTransform(m_Id, t);
+    }
 }
 
 void Object::addCollisionBox(collision::AABB &b) const
@@ -119,6 +149,13 @@ float Object::getRotation() const
     if (const auto scene = m_Scene.lock(); scene && scene->containsObject(m_Id))
         return scene->transform(m_Id).rot;
     return 0.0f;
+}
+
+types::Color4 Object::getColor() const
+{
+    if (const auto scene = m_Scene.lock(); scene && scene->containsObject(m_Id))
+        return scene->color(m_Id);
+    return {0.0f, 0.0f, 0.0f, 0.0f};
 }
 
 bool Object::collidesWith(const Object &other) const

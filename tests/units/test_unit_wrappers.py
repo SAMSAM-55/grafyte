@@ -21,7 +21,7 @@ class WrapperTests(unittest.TestCase):
         obj = scene.spawn_object((1, 2), (3, 4), layer=5)
 
         native_scene = scene._Scene__native
-        width, height, shader_source, x, y, has_texture, layer, native_obj = native_scene.spawn_calls[-1]
+        x, y, width, height, shader_source, has_texture, layer, native_obj = native_scene.spawn_calls[-1]
         self.assertIs(obj._get_native(), native_obj)
         self.assertEqual((width, height), (3.0, 4.0))
         self.assertEqual((x, y), (1.0, 2.0))
@@ -34,7 +34,7 @@ class WrapperTests(unittest.TestCase):
 
         scene.spawn_object((0, 0), (10, 10), has_texture=True)
 
-        shader_source = scene._Scene__native.spawn_calls[-1][2]
+        shader_source = scene._Scene__native.spawn_calls[-1][4]
         self.assertEqual(shader_source, "@embed/Shaders/Texture")
 
     def test_non_textured_object_color_normalizes_before_forwarding(self):
@@ -43,7 +43,7 @@ class WrapperTests(unittest.TestCase):
         obj.color = ((64, 128, 255), 0.25)
 
         self.assertEqual(obj._get_native().last_color, (64 / 255, 128 / 255, 1.0, 0.25))
-        self.assertEqual(tuple(obj.color), (64 / 255, 128 / 255, 1.0, 0.25))
+        self.assertEqual(tuple(obj.color), (64, 128, 255, 0.25))
 
     def test_textured_object_rejects_color_and_accepts_tint(self):
         obj = grafyte.Object(grafyte._NativeObject(), has_texture=True)
@@ -78,10 +78,10 @@ class WrapperTests(unittest.TestCase):
             with patch("grafyte.inspect.stack", return_value=[None, make_caller(str(caller_file))]):
                 app = grafyte.Application("Demo", (640.8, 480.2), "font.ttf")
 
-        native_app = NativeApplication.instances[-1]
-        self.assertIsInstance(app.input, grafyte.InputManager)
-        self.assertEqual(native_app.font_path, str(font))
-        self.assertEqual(native_app.init_args, (640, 480))
+            native_app = NativeApplication.instances[-1]
+            self.assertIsInstance(app.input, grafyte.InputManager)
+            self.assertTrue(Path(native_app.font_path).samefile(font))
+            self.assertEqual(native_app.init_args, (640, 480))
 
     def test_application_background_color_is_normalized(self):
         with patch("grafyte.inspect.stack", return_value=[None, make_caller(__file__)]):
@@ -98,8 +98,8 @@ class WrapperTests(unittest.TestCase):
 
         manager.create_action("jump", grafyte.InputTrigger.Press, grafyte.Key.Space, grafyte.Key.J)
 
-        self.assertEqual(grafyte._NativeInputManager.actions["jump"][0], [grafyte.Key.Space, grafyte.Key.J])
-        self.assertEqual(grafyte._NativeInputManager.actions["jump"][1], grafyte.InputTrigger.Press)
+        self.assertEqual(grafyte._NativeInputManager.actions["jump"][0], grafyte.InputTrigger.Press)
+        self.assertEqual(grafyte._NativeInputManager.actions["jump"][1], [grafyte.Key.Space, grafyte.Key.J])
         self.assertTrue(manager["jump"])
 
 

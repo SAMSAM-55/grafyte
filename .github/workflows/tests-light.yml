@@ -1,0 +1,51 @@
+# This workflow is just used to run basic tests on push to validate code correctness in a light way.
+name: Light Tests
+on:
+  push:
+    branches:
+      - main
+      - dev
+
+jobs:
+  python-tests:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install package
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install .
+
+      - name: Run unit tests
+        run: |
+          python -m unittest discover -s tests -p "test_unit_*.py" -v
+
+  native-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build native test image
+        run: docker build -f .devcontainer/Dockerfile -t grafyte-ci .
+
+      - name: Configure, build and run native tests
+        run: >
+          docker run --rm
+          -v "${{ github.workspace }}:/work"
+          -w /work
+          grafyte-ci
+          bash -lc '
+            cmake -S engine -B engine/build-native \
+              -G Ninja \
+              -DVCPKG_TARGET_TRIPLET=x64-linux \
+              -DPython_EXECUTABLE=/opt/python/cp312-cp312/bin/python \
+              -DGRAFYTE_PY_TAG=py312 &&
+            cmake --build engine/build-native --target grafyte_tests &&
+            ctest --test-dir engine/build-native --output-on-failure
+          '

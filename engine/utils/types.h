@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+
 #include <glm/ext/matrix_transform.hpp>
 #include <glm/glm.hpp>
 #include <string>
@@ -10,6 +11,8 @@ namespace grafyte::types
 {
 
 using ObjectId = uint32_t;
+using SceneId = uint32_t;
+using UIId = uint32_t;
 
 struct Float4
 {
@@ -56,6 +59,11 @@ struct Vec2
         return {x * a, y * a};
     };
 
+    Vec2 operator*(const Vec2 &other) const
+    {
+        return {x * other.x, y * other.y};
+    };
+
     Vec2 operator/(const float &a) const
     {
         return {x / a, y / a};
@@ -70,6 +78,11 @@ struct Vec2
 inline Vec2 operator*(const float &a, const Vec2 &v)
 {
     return {v.x * a, v.y * a};
+}
+
+inline Vec2 abs(const Vec2 &v)
+{
+    return {std::abs(v.x), std::abs(v.y)};
 }
 
 struct Transform
@@ -184,26 +197,30 @@ template <> struct std::hash<grafyte::types::MeshHandle>
     }
 };
 
-template <> struct std::hash<grafyte::types::MaterialHandle>
+namespace std
+{
+
+template <> struct hash<grafyte::types::MaterialHandle>
 {
     size_t operator()(const grafyte::types::MaterialHandle &h) const noexcept
     {
-        return std::hash<grafyte::types::ObjectId>()(h.id);
+        return hash<grafyte::types::ObjectId>()(h.id);
     }
 };
 
-template <> struct std::hash<grafyte::types::TextureHandle>
+template <> struct hash<grafyte::types::TextureHandle>
 {
     size_t operator()(const grafyte::types::TextureHandle &h) const noexcept
     {
-        return std::hash<grafyte::types::ObjectId>()(h.id);
+        return hash<grafyte::types::ObjectId>()(h.id);
     }
 };
 
-template <> struct std::hash<grafyte::types::ShaderHandle>
+template <> struct hash<grafyte::types::ShaderHandle>
 {
     size_t operator()(const grafyte::types::ShaderHandle &h) const noexcept
     {
         return std::hash<grafyte::types::ObjectId>()(h.id);
     }
 };
+} // namespace std

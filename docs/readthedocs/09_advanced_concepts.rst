@@ -1,7 +1,7 @@
 Advanced Concepts
 =================
 
-This chapter covers textured objects, camera control, collision helpers, and UI text.
+This chapter covers textured objects, camera control, collision helpers, multiple scenes, and UI text.
 
 Textured Objects and Tint
 -------------------------
@@ -29,7 +29,7 @@ Each scene exposes a camera object:
 .. code-block:: python
 
    camera = scene.camera
-   camera.follow = player
+   camera.follow(player)
    camera.follow_offset = (0, 15)
    camera.zoom = 1.1
 
@@ -54,7 +54,7 @@ Attach collision boxes to objects and query the results:
 
 For automatic collision resolution order, set ``player.auto_collides`` to an integer priority.
 
-For exemple, if you want the player to be blocked automatically by many walls:
+For example, if you want the player to be blocked automatically by many walls:
 
 .. code-block:: python
 
@@ -80,9 +80,8 @@ In grafyte, a higher order object will push the objects with a lower resolution 
    # ...
    ball.auto_collides = 2
 
-In the above exemple, the ball will always push back the player when the two objects are colliding.
-Please note that if two objects have the same order, their collisions can be unpredictable when coding (but
-deterministic at runtime)
+In the above example, the ball will always push back the player when the two objects are colliding.
+Please note that if two objects have the same order, collision handling order may be less intuitive in code, but remains deterministic at runtime.
 
 UI Text
 -------
@@ -98,3 +97,33 @@ For screen-space overlays, create a UI manager:
    score.color = (255, 255, 255)
 
 UI text stays attached to the screen instead of moving with the world camera.
+
+Multiple Scenes
+---------------
+
+Grafyte supports more than one scene, which makes it easier to keep gameplay, menus, and transitional states separated. A scene can be created up front and activated when your game needs it, instead of forcing everything into a single world state.
+
+.. code-block:: python
+
+   import grafyte
+   from grafyte import InputTrigger, Key
+
+   app = grafyte.Application("Multi Scene Demo", (800, 450))
+   app.input.create_action("start_game", InputTrigger.Press, Key.Space)
+
+   menu_scene = app.make_new_scene()
+   menu_scene.spawn_text_object((20, 20), "Press Space to Start", 20)
+
+   gameplay_scene = app.make_new_scene()
+   player = gameplay_scene.spawn_object((0, 0), (32, 32))
+   gameplay_scene.spawn_text_object((20, 20), "Gameplay Scene", 18)
+
+   # Start in the menu.
+   app.scene = menu_scene
+
+   while not app.should_close():
+       if app.input["start_game"]:
+           app.scene = gameplay_scene
+       app.render()
+
+In practice, this means you can keep a gameplay scene and a menu scene alive at the same time, then switch the active scene without rebuilding the objects every frame.

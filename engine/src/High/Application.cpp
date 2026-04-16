@@ -6,6 +6,8 @@
 #include "GlContextState.h"
 #include "macros.hpp"
 
+#include <ranges>
+
 namespace grafyte
 {
 Application *Application::sAppInstance = nullptr;
@@ -81,9 +83,22 @@ void Application::quit()
         return;
     }
 
-    if (scene)
-        scene->clear();
+    for (auto &sceneEntry : m_Scenes | std::views::values)
+    {
+        if (sceneEntry)
+            sceneEntry->clear();
+    }
+    m_Scenes.clear();
     scene.reset();
+
+    for (auto &uiEntry : m_UIs | std::views::values)
+    {
+        if (uiEntry)
+            uiEntry->clear();
+    }
+    m_UIs.clear();
+    ui.reset();
+
     if (ctx)
     {
         ctx->meshes.clear();
@@ -134,7 +149,7 @@ void Application::render()
         const auto &items = scene->getBatchedRenderList();
         scene->getTextRenderList(textObjects);
 
-        ctx->renderer.render(items, transforms, colors, ctx->camera);
+        ctx->renderer.render(items, transforms, colors, scene->camera());
     }
 
     if (ui)
@@ -142,7 +157,7 @@ void Application::render()
         ui->getTexts(texts);
     }
 
-    m_TextRenderer->render(textObjects, texts, scene ? &ctx->camera : nullptr,
+    m_TextRenderer->render(textObjects, texts, scene ? &scene->camera() : nullptr,
                            {static_cast<float>(m_WinWidth), static_cast<float>(m_WinHeight)});
 
     endFrame();
@@ -157,59 +172,67 @@ void Application::setClearColor(const float r, const float g, const float b, con
 
 std::shared_ptr<Scene> Application::makeNewScene()
 {
-    if (scene)
-        scene->clear();
-
-    // Ensure the context exists and is initialized
     if (!ctx)
     {
         ctx = std::make_shared<WorldContext>();
         ctx->init();
     }
-    else
-    {
-        ctx->meshes.clear();
-        ctx->materials.clear();
-        ctx->init(); // Re-init default textures if needed
-    }
 
-    scene = std::make_shared<Scene>(ctx);
+    const types::SceneId id = m_NextSceneId++;
+    scene = std::make_shared<Scene>(ctx, id);
+    m_Scenes.insert_or_assign(id, scene);
     return scene;
+}
+void Application::setActiveScene(const types::SceneId &id)
+{
+    freezeScenes();
+    if (m_Scenes.contains(id))
+        scene = m_Scenes.at(id);
+    else
+        throw std::runtime_error("Invalid scene id provided: " + std::to_string(id));
+    scene->frozen = false;
+}
+void Application::freezeScenes()
+{
+    for (const auto &sceneEntry : m_Scenes | std::ranges::views::values)
+    {
+        sceneEntry->frozen = true;
+    }
 }
 
 std::shared_ptr<UIManager> Application::makeNewUI()
 {
-    if (ui)
-        ui->clear();
-
     if (!ctx)
     {
         ctx = std::make_shared<WorldContext>();
         ctx->init();
     }
-    else
-    {
-        ctx->meshes.clear();
-        ctx->materials.clear();
-        ctx->init(); // Re-init default textures if needed
-    }
 
-    ui = std::make_shared<UIManager>(ctx);
+    const auto id = m_NextUIId++;
+    ui = std::make_shared<UIManager>(ctx, id);
+    m_UIs.insert_or_assign(id, ui);
     return ui;
+}
+void Application::setActiveUI(const types::UIId &id)
+{
+    if (m_UIs.contains(id))
+        ui = m_UIs.at(id);
+    else
+        throw std::runtime_error("Invalid UI id provided: " + std::to_string(id));
 }
 
 void Application::endFrame() const
 {
-    if (scene)
-        ctx->collisions.resolveAutoCollides(*scene);
 }
 
 void Application::beginFrame() const
 {
     InputManager::resetInputs();
-    ctx->collisions.reset();
     if (scene)
-        ctx->collisions.rebuildGrid(*scene);
+    {
+        scene->collisions().reset();
+        scene->collisions().rebuildGrid(*scene);
+    }
 }
 
 void Application::computeCamera() const

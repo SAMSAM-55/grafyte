@@ -60,6 +60,7 @@ class Object:
         self.rot = 0.0
         self.alive = True
         self.last_color = None
+        self.color = (0.0, 0.0, 0.0, 1.0)
         self.last_texture = None
         self.auto_collides_order = None
         self.collision_boxes = []
@@ -74,14 +75,17 @@ class Object:
         self.rot = float(value)
 
     def set_color(self, r: float, g: float, b: float, a: float):
-        self.last_color = (r, g, b, a)
+        self.color = (r, g, b, a)
+        self.last_color = self.color
 
     def add_collision_box(self, x: float, y: float, w: float, h: float):
         self.collision_boxes.append((x, y, w, h))
 
+    @staticmethod
     def collides_with(self, other):
         return Hit(False, None)
 
+    @staticmethod
     def is_colliding(self):
         return []
 
@@ -159,6 +163,9 @@ class Scene:
     def get_camera(self):
         return self.camera
 
+    def get_native(self) -> Scene:
+        return self
+
 
 class UIManager:
     def __init__(self):
@@ -177,6 +184,9 @@ class UIManager:
     def remove_text(self, native_text):
         self.removed.append(native_text)
 
+    def get_native(self) -> UIManager:
+        return self
+
 
 class InputManager:
     actions = {}
@@ -189,8 +199,8 @@ class InputManager:
         pass
 
     @staticmethod
-    def create_action(name, keys, trigger):
-        InputManager.actions[name] = (list(keys), trigger)
+    def create_action(name, trigger, keys):
+        InputManager.actions[name] = (trigger, list(keys))
 
     @staticmethod
     def is_action_active(name):
@@ -240,6 +250,20 @@ class Application:
 
     def set_clear_color(self, r: float, g: float, b: float, a: float):
         self.clear_color = (r, g, b, a)
+
+    def set_active_scene(self, v: Scene):
+        return
+
+    @staticmethod
+    def get_active_scene(self) -> Scene:
+        return Scene()
+
+    def set_active_ui(self, v: UIManager):
+        return
+
+    @staticmethod
+    def get_active_ui(self) -> UIManager:
+        return UIManager()
 
 
 def _make_internal_module() -> types.ModuleType:

@@ -9,11 +9,14 @@ if (UNIX AND NOT APPLE)
     set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 endif ()
 
+# ==================================================
+# [SECTION] PyBind11 & grafyte config
+# ==================================================
+
 set(PYBIND11_FINDPYTHON ON)
 set(Python_FIND_REGISTRY NEVER)
 set(Python_FIND_STRATEGY LOCATION)
 
-# Le tag est fourni par preset (py310/py311/py312/py313)
 set(GRAFYTE_PY_TAG "py313" CACHE STRING "Python tag: py310/py311/py312/py313")
 set(MODNAME "grafyte_${GRAFYTE_PY_TAG}")
 
@@ -28,7 +31,11 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(pybind11)
 
-# --- Core ---
+
+# ==================================================
+# [SECTION] grafyte core
+# ==================================================
+
 add_library(grafyte_core STATIC
         vendor/stb_image/stb_image.cpp
 
@@ -78,7 +85,10 @@ target_link_libraries(grafyte_core PUBLIC
         OpenGL::GL
 )
 
-# --- Python module ---
+# ==================================================
+# [SECTION] Python module
+# ==================================================
+
 pybind11_add_module(${MODNAME} MODULE bindings/bindings.cpp)
 target_link_libraries(${MODNAME} PRIVATE grafyte_core)
 
@@ -88,13 +98,13 @@ target_compile_definitions(${MODNAME} PRIVATE
 
 set_target_properties(${MODNAME} PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
-# où sort le .pyd dans ce build-dir
+# The output of the python extension inside the build dir
 set_target_properties(${MODNAME} PROPERTIES
         LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/python"
         RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/python"
 )
 
-# Extension pour le module Python (.pyd sur Windows, .so sur Unix)
+# Detecting OS for python extension file extension (.so/.pyd)
 if (WIN32)
     set(PY_EXT "pyd")
     set(GRAFYTE_INTERNAL_DIR
@@ -111,7 +121,7 @@ endif ()
 
 message(STATUS "Will copy .${PY_EXT} to: ${GRAFYTE_INTERNAL_DIR}")
 
-# Copie + renommage stable (ex: grafyte_py313.pyd ou .so)
+# Copy & rename
 add_custom_command(TARGET ${MODNAME} POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E make_directory "${GRAFYTE_INTERNAL_DIR}"
         COMMAND ${CMAKE_COMMAND} -E copy
@@ -119,3 +129,31 @@ add_custom_command(TARGET ${MODNAME} POST_BUILD
         "${GRAFYTE_INTERNAL_DIR}/${MODNAME}.${PY_EXT}"
         COMMENT "Copy + rename to ${GRAFYTE_INTERNAL_DIR}/${MODNAME}.${PY_EXT}"
 )
+
+# ==================================================
+# [SECTION] Tests
+# ==================================================
+
+include(CTest)
+enable_testing()
+
+find_package(doctest CONFIG REQUIRED)
+
+add_executable(grafyte_tests
+        tests/test_main.cpp
+        tests/test_camera.cpp
+        tests/test_collision_solver.cpp
+        tests/test_spatial_grid.cpp
+        tests/test_types.cpp
+)
+
+target_link_libraries(grafyte_tests PRIVATE
+        grafyte_core
+        doctest::doctest
+)
+
+target_include_directories(grafyte_tests PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/tests
+)
+
+add_test(NAME grafyte_tests COMMAND grafyte_tests)

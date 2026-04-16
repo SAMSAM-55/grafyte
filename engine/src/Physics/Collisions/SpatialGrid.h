@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cmath>
 #include <functional>
 
 #include "Scene/Managers/Shapes.h"
@@ -41,6 +42,7 @@ class SpatialGrid
     void clear()
     {
         m_Cells.clear();
+        m_ObjectsCells.clear();
     }
 
     void insert(const types::ObjectId &id, const AABB &aabb);
@@ -51,6 +53,7 @@ class SpatialGrid
   private:
     float m_CellSize;
     std::unordered_map<GridCoord, std::vector<types::ObjectId>, GridCoordHash> m_Cells;
+    std::unordered_map<types::ObjectId, std::vector<GridCoord>> m_ObjectsCells;
 
     [[nodiscard]] int toCell(const float value) const
     {

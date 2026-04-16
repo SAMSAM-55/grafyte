@@ -1,7 +1,5 @@
-from typing import overload, Union
-
 from .__converters import Vec2f, Color, Vec2Like
-from .__class_utils import _KeyAccessor, _KeyPressedAccessor, _KeyReleasedAccessor, _ActionAccessor
+from .__class_utils import _KeyAccessor, _KeyPressedAccessor, _KeyReleasedAccessor
 
 from __grafyte_internal import Key as _NativeKey
 from __grafyte_internal import InputTrigger as _NativeInputTrigger
@@ -18,6 +16,8 @@ from __grafyte_internal import Camera as _NativeCamera
 from __grafyte_internal import UIManager as _NativeUIManager
 from __grafyte_internal import Text as _NativeText
 from __grafyte_internal import Anchor as _NativeAnchor
+
+__version__: str
 
 
 class Key(_NativeKey): ...
@@ -218,7 +218,6 @@ class Text:
     def text(self) -> str:
         """
         The current text displayed by the object.
-        This property is write-only.
         """
         ...
 
@@ -229,7 +228,6 @@ class Text:
     def scale(self) -> float:
         """
         The current scale of the text.
-        This property is write-only.
         """
         ...
 
@@ -285,11 +283,15 @@ class Application:
     """
 
     __input: InputManager
+    __active_scene: Scene | None
+    __scene_cache: dict[int, Scene]
+    __active_ui: UIManager | None
+    __ui_cache: dict[int, UIManager]
 
     @property
     def input(self) -> InputManager:
         """
-        The inputs system of the Application
+        The input system of the application
         """
         ...
 
@@ -306,7 +308,6 @@ class Application:
     def should_close(self) -> bool:
         """
         Checks if the application window should close (e.g., if the close button was clicked).
-        Also updates internal timing for delta time calculations.
 
         :return: True if the window should close, False otherwise.
         """
@@ -356,6 +357,17 @@ class Application:
         """
         ...
 
+    @property
+    def scene(self) -> Scene:
+        """
+        The active scene of the Application.
+        """
+        ...
+
+    @scene.setter
+    def scene(self, value: Scene):
+        ...
+
     def make_new_ui(self) -> UIManager:
         """
         Creates a new UI subsystem (manager) for the application.
@@ -363,11 +375,26 @@ class Application:
         """
         ...
 
+    @property
+    def ui(self) -> UIManager:
+        """
+        The active UI of the Application.
+        """
+        ...
+
+    @ui.setter
+    def ui(self, value: UIManager):
+        ...
+
 
 class Scene:
     __native: _NativeScene
 
     def __init__(self, native_scene: _NativeScene): ...
+
+    def __eq__(self, other: Scene): ...
+
+    def __ne__(self, other: Scene): ...
 
     def spawn_object(self,
                      pos: Vec2Like,
@@ -416,7 +443,6 @@ class TextObject:
     def text(self) -> str:
         """
         The current text displayed.
-        This property is write-only.
         """
         ...
 
@@ -427,7 +453,6 @@ class TextObject:
     def scale(self) -> float:
         """
         The current scale of the text in pt.
-        This property is write-only.
         """
         ...
 
@@ -457,7 +482,6 @@ class Object:
     __color_proxy: ColorProxy
     __tint_proxy: TintProxy
     __has_texture: bool
-    __color: tuple[int, int, int, float]
 
     def _get_pos(self): ...
 

@@ -1,11 +1,12 @@
 {
   "name": "grafyte",
-  "version-string": "0.3.2",
+  "version-string": "0.3.3",
   "builtin-baseline": "e238b4b4a4239829e1fde2c7db2ab668b65ae1dd",
   "dependencies": [
     "glfw3",
     "glad",
     "glm",
-    "freetype"
+    "freetype",
+    "doctest"
   ]
 }
