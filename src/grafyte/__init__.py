@@ -22,7 +22,7 @@ from .__converters import *
 try:
     __version__ = _package_version("grafyte")
 except PackageNotFoundError:
-    __version__ = "0.3.2"
+    __version__ = "0.3.3"
 
 
 class Hit(_NativeHit):
